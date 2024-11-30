@@ -24,16 +24,29 @@ const TimeDisplay: React.FC<TimeDisplayProps> = ({ timeZone, locale = 'en-GB' })
 
     useEffect(() => {
         const updateTime = () => {
-            const now = new Date();
-            const options: Intl.DateTimeFormatOptions = {
-                timeZone,
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false,
-            };
-            const timeString = new Intl.DateTimeFormat(locale, options).format(now);
-            setCurrentTime(timeString);
+            try {
+                const now = new Date();
+                const options = {
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: true,
+                };
+                // Ensure locale is valid and fallback to 'en' if not
+                const safeLocale = Intl.DateTimeFormat.supportedLocalesOf([locale]).length > 0 
+                    ? locale 
+                    : 'en';
+                
+                const timeString = new Intl.DateTimeFormat(safeLocale, {
+                    hour: 'numeric',
+                    minute: 'numeric', 
+                    hour12: true
+                }).format(now);
+                setCurrentTime(timeString);
+            } catch (error) {
+                // Fallback to basic time format if something goes wrong
+                const now = new Date();
+                setCurrentTime(now.toLocaleTimeString(undefined, { hour12: true }));
+            }
         };
 
         updateTime();
