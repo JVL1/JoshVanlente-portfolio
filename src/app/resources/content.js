@@ -8,7 +8,7 @@ const person = {
     },
     role:      'Product Leader',
     avatar:    '/images/avatar.jpeg',
-    location:  'America/Los Angeles',        // Expecting the IANA time zone identifier, e.g., 'Europe/Vienna'
+    location:  'America/Los_Angeles',
     languages: ['English'],
 }
 
