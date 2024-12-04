@@ -1,6 +1,5 @@
 import { InlineCode } from "@/once-ui/components";
 import Link from 'next/link';
-import 'remixicon/fonts/remixicon.css'
 
 const person = {
     firstName: 'Josh',
