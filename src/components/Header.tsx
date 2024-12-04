@@ -116,7 +116,7 @@ export const Header = () => {
                             textVariant="body-default-s">
                             { routes['/'] && (
                                 <ToggleButton
-                                    prefixIcon={<RemixIcon name="ri-home-line" size="s" />}
+                                    prefixIcon="home"
                                     href={`/${params?.locale}`}
                                     selected={pathname === "/"}>
                                     <Flex paddingX="2" hide="s">{home.label}</Flex>
@@ -124,7 +124,7 @@ export const Header = () => {
                             )}
                             { routes['/about'] && (
                                 <ToggleButton
-                                    prefixIcon={<RemixIcon name="ri-user-line" size="s" />}
+                                    prefixIcon="person"
                                     href={`/${params?.locale}/about`}
                                     selected={pathname === "/about"}>
                                     <Flex paddingX="2" hide="s">{about.label}</Flex>
@@ -132,7 +132,7 @@ export const Header = () => {
                             )}
                             { routes['/work'] && (
                                 <ToggleButton
-                                    prefixIcon={<RemixIcon name="ri-briefcase-line" size="s" />}
+                                    prefixIcon="grid"
                                     href={`/${params?.locale}/work`}
                                     selected={pathname.startsWith('/work')}>
                                     <Flex paddingX="2" hide="s">{work.label}</Flex>
