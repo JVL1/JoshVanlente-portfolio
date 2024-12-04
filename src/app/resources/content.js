@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 const person = {
     firstName: 'Josh',
-    lastName:  'Van Lente',
+    lastName:  'Vanlente',
     get name() {
         return `${this.firstName} ${this.lastName}`;
     },
@@ -11,12 +11,6 @@ const person = {
     avatar:    '/images/avatar.jpeg',
     location:  'America/Los_Angeles',
     languages: ['English'],
-}
-
-const newsletter = {
-    display: true,
-    title: <>Subscribe to {person.firstName}'s Newsletter</>,
-    description: <>I occasionally write about design, technology, and share thoughts on the intersection of creativity and engineering.</>
 }
 
 const social = [
@@ -301,4 +295,4 @@ const gallery = {
     ]
 }
 
-export { person, social, newsletter, home, about, blog, work, gallery };
+export { person, social, home, about, blog, work, gallery };
