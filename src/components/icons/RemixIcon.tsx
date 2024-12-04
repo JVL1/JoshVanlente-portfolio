@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import 'remixicon/fonts/remixicon.css';
 
 interface RemixIconProps {
     name: string;
