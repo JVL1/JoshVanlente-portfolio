@@ -138,17 +138,17 @@ export const Header = () => {
                                     <Flex paddingX="2" hide="s">{work.label}</Flex>
                                 </ToggleButton>
                             )}
-                            { routes['/blog'] && blog && 'display' in blog && blog.display && (
+                            { routes['/blog'] && blog && typeof blog === 'object' && 'display' in blog && blog.display && (
                                 <ToggleButton
-                                    prefixIcon={<RemixIcon name="ri-article-line" size="s" />}
+                                    prefixIcon="book"
                                     href={`/${params?.locale}/blog`}
                                     selected={pathname.startsWith('/blog')}>
                                     <Flex paddingX="2" hide="s">{blog.label}</Flex>
                                 </ToggleButton>
                             )}
-                            { routes['/gallery'] && gallery && 'display' in gallery && gallery.display && (
+                            { routes['/gallery'] && gallery && typeof gallery === 'object' && 'display' in gallery && gallery.display && (
                                 <ToggleButton
-                                    prefixIcon={<RemixIcon name="ri-image-line" size="s" />}
+                                    prefixIcon="gallery"
                                     href={`/${params?.locale}/gallery`}
                                     selected={pathname.startsWith('/gallery')}>
                                     <Flex paddingX="2" hide="s">{gallery.label}</Flex>
