@@ -8,7 +8,7 @@ const person = {
         return `${this.firstName} ${this.lastName}`;
     },
     role:      'Product Leader',
-    avatar:    '/images/avatar.jpg',
+    avatar:    '/images/avatar.jpeg',
     location:  'America/Los_Angeles',
     languages: ['English'],
 }
