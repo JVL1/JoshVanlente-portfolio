@@ -2,7 +2,6 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
-import { RemixIcon } from './icons/RemixIcon';
 
 import { Flex, ToggleButton } from "@/once-ui/components"
 import styles from '@/components/Header.module.scss'
@@ -14,6 +13,11 @@ import { Locale, usePathname, useRouter } from '@/i18n/routing';
 import { renderContent } from "@/app/resources";
 import { useTranslations } from "next-intl";
 import { i18n } from "@/app/resources/config";
+
+interface ContentSection {
+    label: string;
+    display?: boolean;
+}
 
 type TimeDisplayProps = {
     timeZone: string;
@@ -82,7 +86,14 @@ export const Header = () => {
     }
 
     const t = useTranslations();
-    const { person, home, about, blog, work, gallery } = renderContent(t);
+    const { person, home, about, blog, work, gallery } = renderContent(t) as {
+        person: { location: string };
+        home: ContentSection;
+        about: ContentSection;
+        blog: ContentSection;
+        work: ContentSection;
+        gallery: ContentSection;
+    };
 
     return (
         <>
@@ -117,7 +128,7 @@ export const Header = () => {
                             textVariant="body-default-s">
                             { routes['/'] && (
                                 <ToggleButton
-                                    prefixIcon={<RemixIcon name="ri-home-line" size="s" />}
+                                    prefixIcon="home"
                                     href={`/${params?.locale}`}
                                     selected={pathname === "/"}>
                                     <Flex paddingX="2" hide="s">{home.label}</Flex>
@@ -125,7 +136,7 @@ export const Header = () => {
                             )}
                             { routes['/about'] && (
                                 <ToggleButton
-                                    prefixIcon={<RemixIcon name="ri-user-line" size="s" />}
+                                    prefixIcon="person"
                                     href={`/${params?.locale}/about`}
                                     selected={pathname === "/about"}>
                                     <Flex paddingX="2" hide="s">{about.label}</Flex>
@@ -133,23 +144,23 @@ export const Header = () => {
                             )}
                             { routes['/work'] && (
                                 <ToggleButton
-                                    prefixIcon={<RemixIcon name="ri-briefcase-line" size="s" />}
+                                    prefixIcon="grid"
                                     href={`/${params?.locale}/work`}
                                     selected={pathname.startsWith('/work')}>
                                     <Flex paddingX="2" hide="s">{work.label}</Flex>
                                 </ToggleButton>
                             )}
-                            { routes['/blog'] && blog && 'display' in blog && blog.display && (
+                            { routes['/blog'] && blog?.display && (
                                 <ToggleButton
-                                    prefixIcon={<RemixIcon name="ri-article-line" size="s" />}
+                                    prefixIcon="book"
                                     href={`/${params?.locale}/blog`}
                                     selected={pathname.startsWith('/blog')}>
                                     <Flex paddingX="2" hide="s">{blog.label}</Flex>
                                 </ToggleButton>
                             )}
-                            { routes['/gallery'] && gallery && 'display' in gallery && gallery.display && (
+                            { routes['/gallery'] && gallery?.display && (
                                 <ToggleButton
-                                    prefixIcon={<RemixIcon name="ri-image-line" size="s" />}
+                                    prefixIcon="gallery"
                                     href={`/${params?.locale}/gallery`}
                                     selected={pathname.startsWith('/gallery')}>
                                     <Flex paddingX="2" hide="s">{gallery.label}</Flex>

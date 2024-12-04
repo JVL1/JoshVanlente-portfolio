@@ -1,6 +1,5 @@
 import { InlineCode } from "@/once-ui/components";
 import Link from 'next/link';
-import 'remixicon/fonts/remixicon.css'
 
 const person = {
     firstName: 'Josh',
@@ -9,7 +8,7 @@ const person = {
         return `${this.firstName} ${this.lastName}`;
     },
     role:      'Product Leader',
-    avatar:    '/images/avatar.jpg',
+    avatar:    '/images/avatar.jpeg',
     location:  'America/Los_Angeles',
     languages: ['English'],
 }
