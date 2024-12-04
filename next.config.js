@@ -3,6 +3,9 @@ const withNextIntl = require('next-intl/plugin')();
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ['remixicon'],
+  sassOptions: {
+    includePaths: ['./src'],
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -10,10 +13,6 @@ const nextConfig = {
         punycode: false,
       };
     }
-    config.module.rules.push({
-      test: /\.(css)$/,
-      use: ['style-loader', 'css-loader'],
-    });
     return config;
   },
 };
