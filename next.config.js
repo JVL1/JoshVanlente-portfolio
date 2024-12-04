@@ -5,6 +5,9 @@ const nextConfig = {
   sassOptions: {
     includePaths: ['./src'],
   },
+  eslint: {
+    ignoreDuringBuilds: false
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
