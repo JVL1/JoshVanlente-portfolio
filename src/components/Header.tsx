@@ -117,7 +117,7 @@ export const Header = () => {
                             textVariant="body-default-s">
                             { routes['/'] && (
                                 <ToggleButton
-                                    prefixIcon={<RemixIcon name="ri-home-line" size="s" />}
+                                    prefixIcon="home"
                                     href={`/${params?.locale}`}
                                     selected={pathname === "/"}>
                                     <Flex paddingX="2" hide="s">{home.label}</Flex>
@@ -125,7 +125,7 @@ export const Header = () => {
                             )}
                             { routes['/about'] && (
                                 <ToggleButton
-                                    prefixIcon={<RemixIcon name="ri-user-line" size="s" />}
+                                    prefixIcon="person"
                                     href={`/${params?.locale}/about`}
                                     selected={pathname === "/about"}>
                                     <Flex paddingX="2" hide="s">{about.label}</Flex>
@@ -133,7 +133,7 @@ export const Header = () => {
                             )}
                             { routes['/work'] && (
                                 <ToggleButton
-                                    prefixIcon={<RemixIcon name="ri-briefcase-line" size="s" />}
+                                    prefixIcon="grid"
                                     href={`/${params?.locale}/work`}
                                     selected={pathname.startsWith('/work')}>
                                     <Flex paddingX="2" hide="s">{work.label}</Flex>
@@ -141,7 +141,7 @@ export const Header = () => {
                             )}
                             { routes['/blog'] && blog && 'display' in blog && blog.display && (
                                 <ToggleButton
-                                    prefixIcon={<RemixIcon name="ri-article-line" size="s" />}
+                                    prefixIcon="book"
                                     href={`/${params?.locale}/blog`}
                                     selected={pathname.startsWith('/blog')}>
                                     <Flex paddingX="2" hide="s">{blog.label}</Flex>
@@ -149,7 +149,7 @@ export const Header = () => {
                             )}
                             { routes['/gallery'] && gallery && 'display' in gallery && gallery.display && (
                                 <ToggleButton
-                                    prefixIcon={<RemixIcon name="ri-image-line" size="s" />}
+                                    prefixIcon="gallery"
                                     href={`/${params?.locale}/gallery`}
                                     selected={pathname.startsWith('/gallery')}>
                                     <Flex paddingX="2" hide="s">{gallery.label}</Flex>

@@ -54,19 +54,19 @@ const home = {
     - Led as a player-coach while scaling Azibo from few thousand users to 20k+, expanding from 1 to 7 products, and improving margins 61 points.<br/>
     - Developed and executed a unique product led growth strategy that became Azibo's primary growth channel and most profitable user segment.<br/>
     - Scaled loan servicing at Upstart from 10s of thousands to 100s of thousands of loans, and 100s of millions of monthly payments with minimal team growth by leveraging automation and workflow efficiency improvements.<br/>
-    <br/>You can learn more <Link href="/about"><i className="ri-user-line"></i> about me here</Link> or <Link href="/work"><i className="ri-briefcase-line"></i> my work here</Link>.
+    <br/>Check out my work <Link href="/work">here</Link>.
     <br/><br/>
     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
         <Link href="https://github.com/JVL1" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', padding: '0.5rem', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem' }}>
-            <i className="ri-github-line" style={{ fontSize: '1.25rem' }}></i>
+            <i className="github" style={{ fontSize: '1.25rem' }}></i>
             <span style={{ marginLeft: '0.5rem' }}>GitHub</span>
         </Link>
         <Link href="https://www.linkedin.com/in/josh-van-lente/" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', padding: '0.5rem', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem' }}>
-            <i className="ri-linkedin-line" style={{ fontSize: '1.25rem' }}></i>
+            <i className="linkedin" style={{ fontSize: '1.25rem' }}></i>
             <span style={{ marginLeft: '0.5rem' }}>LinkedIn</span>
         </Link>
         <Link href="mailto:Josh@vanlente.net" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', padding: '0.5rem', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem' }}>
-            <i className="ri-mail-line" style={{ fontSize: '1.25rem' }}></i>
+            <i className="email" style={{ fontSize: '1.25rem' }}></i>
             <span style={{ marginLeft: '0.5rem' }}>Email</span>
         </Link>
     </div>
