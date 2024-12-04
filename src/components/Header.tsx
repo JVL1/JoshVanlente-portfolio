@@ -14,6 +14,11 @@ import { renderContent } from "@/app/resources";
 import { useTranslations } from "next-intl";
 import { i18n } from "@/app/resources/config";
 
+interface ContentSection {
+    label: string;
+    display?: boolean;
+}
+
 type TimeDisplayProps = {
     timeZone: string;
     locale?: string;  // Optionally allow locale, defaulting to 'en-GB'
@@ -81,7 +86,14 @@ export const Header = () => {
     }
 
     const t = useTranslations();
-    const { person, home, about, blog, work, gallery } = renderContent(t);
+    const { person, home, about, blog, work, gallery } = renderContent(t) as {
+        person: { location: string };
+        home: ContentSection;
+        about: ContentSection;
+        blog: ContentSection;
+        work: ContentSection;
+        gallery: ContentSection;
+    };
 
     return (
         <>
@@ -138,7 +150,7 @@ export const Header = () => {
                                     <Flex paddingX="2" hide="s">{work.label}</Flex>
                                 </ToggleButton>
                             )}
-                            { routes['/blog'] && blog && typeof blog === 'object' && 'display' in blog && blog.display && (
+                            { routes['/blog'] && blog?.display && (
                                 <ToggleButton
                                     prefixIcon="book"
                                     href={`/${params?.locale}/blog`}
@@ -146,7 +158,7 @@ export const Header = () => {
                                     <Flex paddingX="2" hide="s">{blog.label}</Flex>
                                 </ToggleButton>
                             )}
-                            { routes['/gallery'] && gallery && typeof gallery === 'object' && 'display' in gallery && gallery.display && (
+                            { routes['/gallery'] && gallery?.display && (
                                 <ToggleButton
                                     prefixIcon="gallery"
                                     href={`/${params?.locale}/gallery`}
