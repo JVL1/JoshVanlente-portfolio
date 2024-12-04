@@ -128,7 +128,7 @@ export default function Project({ params }: WorkParams) {
 					variant="tertiary"
 					size="s"
 					prefixIcon="chevronLeft">
-					Projects
+					Work
 				</Button>
 				<Heading
 					variant="display-strong-s">
