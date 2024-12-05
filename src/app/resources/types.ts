@@ -6,6 +6,12 @@ export interface Institution {
     bullets?: string[];
 }
 
+export interface Skill {
+    title: string;
+    description: ReactNode;
+    icon?: string;
+}
+
 export interface About {
     label: string;
     title: string;
@@ -31,5 +37,9 @@ export interface About {
         title: string;
         institutions: Institution[];
     };
-    // Add other sections as needed
+    technical: {
+        display: boolean;
+        title: string;
+        skills: Skill[];
+    };
 } 

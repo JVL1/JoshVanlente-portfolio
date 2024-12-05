@@ -1,11 +1,12 @@
 'use client';
 
 import { Heading, Text, Icon } from '@/once-ui/components';
+import { ReactNode } from 'react';
 import styles from './SkillCard.module.scss';
 
 interface SkillCardProps {
     title: string;
-    description: string;
+    description: ReactNode;
     icon: string;
 }
 
