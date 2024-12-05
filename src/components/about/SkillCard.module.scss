@@ -1,0 +1,30 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 32px;
+    background-color: rgba(20, 24, 44, 0.5);
+    border-radius: 12px;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+        background-color: rgba(20, 24, 44, 0.8);
+        transform: translateY(-4px);
+    }
+}
+
+.iconContainer {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(91, 233, 185, 0.1);
+    border-radius: 12px;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+} 

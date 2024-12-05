@@ -1,7 +1,5 @@
 import { getPosts } from '@/app/utils/utils';
-import { Flex } from '@/once-ui/components';
-
-import { ProjectCard } from '@/components';
+import { CaseStudyCard } from './CaseStudyCard';
 
 interface ProjectsProps {
     range?: [number, number?];
@@ -20,19 +18,21 @@ export function Projects({ range, locale }: ProjectsProps) {
         : sortedProjects;
 
     return (
-        <Flex
-            fillWidth gap="xl" marginBottom="40" paddingX="l"
-            direction="column">
+        <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '48px',
+            marginBottom: '64px'
+        }}>
             {displayedProjects.map((post) => (
-                <ProjectCard
+                <CaseStudyCard
                     key={post.slug}
                     href={`work/${post.slug}`}
-                    images={post.metadata.images}
+                    image={post.metadata.images[0]}
                     title={post.metadata.title}
                     description={post.metadata.summary}
-                    content={post.content}
-                    avatars={post.metadata.team?.map((member) => ({ src: member.avatar })) || []}/>
+                />
             ))}
-        </Flex>
+        </div>
     );
 }

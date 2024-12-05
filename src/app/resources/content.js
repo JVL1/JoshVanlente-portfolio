@@ -120,7 +120,7 @@ const about = {
                 timeframe: '2022 - 2023',
                 role: 'Senior Product Manager',
                 achievements: [
-                    <>Activated what is now the primary growth channel and most profitable user segment through a unique product led growth initiative; including closing multiple partnerships (<a href="https://www.azibo.com/blog/azibo-partners-with-rentec-north-america">1</a>).</>,
+                    <>Activated what is now the primary growth channel and most profitable user segment through a unique product led growth initiative; including closing multiple partnerships (<a href="https://www.azibo.com/blog/azibo-partnership-with-rhawa">1</a>).</>,
                     <>Led the effort to rebuild the entire UX which now frequently results in kudos from customers and prospects, as well as, won several industry awards (<a href="https://proptechbreakthrough.com/2023-winners/">1</a>, <a href="https://gdusa.com/2024-digital-design-awards-winner?rns=0|4824">2</a>).</>
                 ],
                 images: [ // optional: leave the array empty if you don't want to display images
@@ -157,7 +157,7 @@ const about = {
         institutions: [
             {
                 name: 'San Diego State University',
-                description: <>B.S. Finance, and Sustainability (I helped create the area of focus for the university).</>,
+                description: <>B.S. Finance, minor Environmental Economics</>,
                 bullets: [
                     'Associated Students representative',
                     'Environmental Business Club finance officer',
@@ -168,7 +168,7 @@ const about = {
     },
     technical: {
         display: true, // set to false to hide this section
-        title: 'Technical skills',
+        title: 'Skills',
         skills: [
             {
                 title: 'Figma',

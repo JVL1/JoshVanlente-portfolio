@@ -1,0 +1,50 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 32px;
+    background-color: rgba(20, 24, 44, 0.5);
+    border-radius: 12px;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+        background-color: rgba(20, 24, 44, 0.8);
+        transform: translateY(-4px);
+    }
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 4px;
+}
+
+.role {
+    margin-bottom: 16px;
+}
+
+.achievements {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+        position: relative;
+        padding-left: 20px;
+
+        &::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 10px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: rgb(91, 233, 185);
+        }
+    }
+} 
