@@ -281,7 +281,7 @@ export default function About(
                                         key={`${institution.name}-${index}`}
                                         name={institution.name}
                                         description={institution.description}
-                                        bullets={institution.bullets}
+                                        bullets={institution.bullets || []}
                                     />
                                 ))}
                             </Flex>

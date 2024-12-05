@@ -6,7 +6,7 @@ const nextConfig = {
     includePaths: ['./src'],
   },
   eslint: {
-    ignoreDuringBuilds: false
+    dirs: ['src']
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
