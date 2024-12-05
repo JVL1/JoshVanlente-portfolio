@@ -18,7 +18,11 @@ import {
 	HiMiniGlobeAsiaAustralia,
 	HiEnvelope,
 	HiCalendarDays,
-	HiClipboard
+	HiClipboard,
+	HiBriefcase,
+	HiPencil,
+	HiComputerDesktop,
+	HiCodeBracket
 } from "react-icons/hi2";
 
 import {
@@ -33,8 +37,16 @@ import {
 	FaDiscord,
 	FaGithub,
 	FaLinkedin,
-	FaXTwitter
+	FaXTwitter,
+	FaMapLocationDot,
+	FaBullhorn,
+	FaHandFist,
+	FaGavel
 } from "react-icons/fa6";
+
+import {
+	GiArchiveResearch
+} from "react-icons/gi";
 
 export const iconLibrary: Record<string, IconType> = {
 	chevronUp: HiChevronUp,
@@ -63,5 +75,14 @@ export const iconLibrary: Record<string, IconType> = {
 	github: FaGithub,
 	linkedin: FaLinkedin,
 	x: FaXTwitter,
-	clipboard: HiClipboard
+	clipboard: HiClipboard,
+	briefcase: HiBriefcase,
+	pen: HiPencil,
+	computer: HiComputerDesktop,
+	code: HiCodeBracket,
+	location: FaMapLocationDot,
+	bullhorn: FaBullhorn,
+	fist: FaHandFist,
+	research: GiArchiveResearch,
+	gavel: FaGavel
 };

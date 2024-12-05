@@ -1,9 +1,12 @@
 import { Avatar, Button, Flex, Heading, Icon, IconButton, SmartImage, Tag, Text } from '@/once-ui/components';
 import { baseURL, renderContent } from '@/app/resources';
-import TableOfContents from '@/components/about/TableOfContents';
-import styles from '@/components/about/about.module.scss'
+import TableOfContents from '../../../components/about/TableOfContents';
+import { CaseStudyPreview, SkillCard, WorkCard, EducationCard } from '../../../components';
+import styles from '../../../components/about/about.module.scss'
 import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
 import { useTranslations } from 'next-intl';
+import { getPosts } from '@/app/utils/utils';
+import { About as AboutType, Institution } from '@/app/resources/types';
 
 export async function generateMetadata(
     {params: {locale}}: { params: { locale: string }}
@@ -44,6 +47,12 @@ export default function About(
     unstable_setRequestLocale(locale);
     const t = useTranslations();
     const {person, about, social } = renderContent(t);
+    const allProjects = getPosts(['src', 'app', '[locale]', 'work', 'projects', locale]);
+    
+    // Find the specific case studies
+    const buildingOnceUI = allProjects.find(project => project.slug === 'building-once-ui-a-customizable-design-system');
+    const automateDesign = allProjects.find(project => project.slug === 'automate-design-handovers-with-a-figma-to-code-pipeline');
+
     const structure = [
         { 
             title: about.intro.title,
@@ -226,61 +235,29 @@ export default function About(
                                     <Flex
                                         key={`${experience.company}-${experience.role}-${index}`}
                                         fillWidth
-                                        direction="column">
-                                        <Flex
-                                            fillWidth
-                                            justifyContent="space-between"
-                                            alignItems="flex-end"
-                                            marginBottom="4">
-                                            <Text
-                                                id={experience.company}
-                                                variant="heading-strong-l">
-                                                {experience.company}
-                                            </Text>
-                                            <Text
-                                                variant="heading-default-xs"
-                                                onBackground="neutral-weak">
-                                                {experience.timeframe}
-                                            </Text>
-                                        </Flex>
-                                        <Text
-                                            variant="body-default-s"
-                                            onBackground="brand-weak"
-                                            marginBottom="m">
-                                            {experience.role}
-                                        </Text>
-                                        <Flex
-                                            as="ul"
-                                            direction="column" gap="16">
-                                            {experience.achievements.map((achievement: string, index: any) => (
-                                                <Text
-                                                    as="li"
-                                                    variant="body-default-m"
-                                                    key={`${experience.company}-${index}`}>
-                                                    {achievement}
-                                                </Text>
-                                            ))}
-                                        </Flex>
-                                        {experience.images.length > 0 && (
-                                            <Flex
-                                                fillWidth paddingTop="m" paddingLeft="40"
-                                                wrap>
-                                                {experience.images.map((image, index) => (
-                                                    <Flex
-                                                        key={index}
-                                                        border="neutral-medium"
-                                                        borderStyle="solid-1"
-                                                        radius="m"
-                                                        minWidth={image.width} height={image.height}>
-                                                        <SmartImage
-                                                            enlarge
-                                                            radius="m"
-                                                            sizes={image.width.toString()}
-                                                            alt={image.alt}
-                                                            src={image.src}/>
-                                                    </Flex>
-                                                ))}
-                                            </Flex>
+                                        direction="column"
+                                        gap="l">
+                                        <WorkCard
+                                            company={experience.company}
+                                            timeframe={experience.timeframe}
+                                            role={experience.role}
+                                            achievements={experience.achievements}
+                                        />
+                                        {index === 0 && buildingOnceUI && (
+                                            <CaseStudyPreview
+                                                title={buildingOnceUI.metadata.title}
+                                                description={buildingOnceUI.metadata.summary}
+                                                href={`/work/${buildingOnceUI.slug}`}
+                                                image={buildingOnceUI.metadata.images[0]}
+                                            />
+                                        )}
+                                        {index === 1 && automateDesign && (
+                                            <CaseStudyPreview
+                                                title={automateDesign.metadata.title}
+                                                description={automateDesign.metadata.summary}
+                                                href={`/work/${automateDesign.slug}`}
+                                                image={automateDesign.metadata.images[0]}
+                                            />
                                         )}
                                     </Flex>
                                 ))}
@@ -300,22 +277,13 @@ export default function About(
                             <Flex
                                 direction="column"
                                 fillWidth gap="l" marginBottom="40">
-                                {about.studies.institutions.map((institution, index) => (
-                                    <Flex
+                                {(about.studies.institutions as Institution[]).map((institution, index) => (
+                                    <EducationCard
                                         key={`${institution.name}-${index}`}
-                                        fillWidth gap="4"
-                                        direction="column">
-                                        <Text
-                                            id={institution.name}
-                                            variant="heading-strong-l">
-                                            {institution.name}
-                                        </Text>
-                                        <Text
-                                            variant="heading-default-xs"
-                                            onBackground="neutral-weak">
-                                            {institution.description}
-                                        </Text>
-                                    </Flex>
+                                        name={institution.name}
+                                        description={institution.description}
+                                        bullets={institution.bullets}
+                                    />
                                 ))}
                             </Flex>
                         </>
@@ -326,50 +294,41 @@ export default function About(
                             <Heading
                                 as="h2"
                                 id={about.technical.title}
-                                variant="display-strong-s" marginBottom="40">
+                                variant="display-strong-s" 
+                                marginBottom="xl">
                                 {about.technical.title}
                             </Heading>
-                            <Flex
-                                direction="column"
-                                fillWidth gap="l">
-                                {about.technical.skills.map((skill, index) => (
-                                    <Flex
-                                        key={`${skill}-${index}`}
-                                        fillWidth gap="4"
-                                        direction="column">
-                                        <Text
-                                            variant="heading-strong-l">
-                                            {skill.title}
-                                        </Text>
-                                        <Text
-                                            variant="body-default-m"
-                                            onBackground="neutral-weak">
-                                            {skill.description}
-                                        </Text>
-                                        {skill.images.length > 0 && (
-                                            <Flex
-                                                fillWidth paddingTop="m" gap="12"
-                                                wrap>
-                                                {skill.images.map((image, index) => (
-                                                    <Flex
-                                                        key={index}
-                                                        border="neutral-medium"
-                                                        borderStyle="solid-1"
-                                                        radius="m"
-                                                        minWidth={image.width} height={image.height}>
-                                                        <SmartImage
-                                                            enlarge
-                                                            radius="m"
-                                                            sizes={image.width.toString()}
-                                                            alt={image.alt}
-                                                            src={image.src}/>
-                                                    </Flex>
-                                                ))}
-                                            </Flex>
-                                        )}
-                                    </Flex>
-                                ))}
-                            </Flex>
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(2, 1fr)',
+                                gap: '24px',
+                                marginBottom: '64px'
+                            }}>
+                                <SkillCard
+                                    title="Product Strategy"
+                                    description="Finding the intersection of user needs and business goals is a passion of mine.  I thrive on what comes next, creating and executing a plan to realize those goals while finding ways derisk assumptions and deliver value sooner."
+                                    icon="location"
+                                />
+                                <SkillCard
+                                    title="Decision making"
+                                    description={
+                                        <>
+                                            I like the <a href="https://www.inc.com/jeff-haden/amazon-founder-jeff-bezos-this-is-how-successful-people-make-such-smart-decisions.html" target="_blank" rel="noopener noreferrer">one-way, two-way door</a> framework to guide how much time to spend on decisions. I pride myself in spending the right amount of time on decisions and using the right tool, be that analytics, surveys, interviews, insights from the sales team, or just 'product instincts'.
+                                        </>
+                                    }
+                                    icon="gavel"
+                                />
+                                <SkillCard
+                                    title="Empowerment"
+                                    description="I always strive to empower others to work autonomously. If I've shared enough customer insights and business justifications that a designer, engieer or another product manager can make a good descion without me, I feel like I'm doing my job well."
+                                    icon="fist"
+                                />
+                                <SkillCard
+                                    title="Communication"
+                                    description="Product management is a team sport, so keeping stakeholders aligned and informed is key.  As I've progressed in my career, my apprecaition for effective communication has grown."
+                                    icon="bullhorn"
+                                />
+                            </div>
                         </>
                     )}
                 </Flex>
