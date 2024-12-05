@@ -6,6 +6,7 @@ import styles from '../../../components/about/about.module.scss'
 import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
 import { useTranslations } from 'next-intl';
 import { getPosts } from '@/app/utils/utils';
+import { About as AboutType, Institution } from '@/app/resources/types';
 
 export async function generateMetadata(
     {params: {locale}}: { params: { locale: string }}
@@ -276,12 +277,12 @@ export default function About(
                             <Flex
                                 direction="column"
                                 fillWidth gap="l" marginBottom="40">
-                                {about.studies.institutions.map((institution, index) => (
+                                {(about.studies.institutions as Institution[]).map((institution, index) => (
                                     <EducationCard
                                         key={`${institution.name}-${index}`}
                                         name={institution.name}
                                         description={institution.description}
-                                        bullets={institution.bullets || []}
+                                        bullets={institution.bullets}
                                     />
                                 ))}
                             </Flex>
