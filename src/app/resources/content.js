@@ -137,8 +137,44 @@ const about = {
                 timeframe: '2019 - 2022',
                 role: 'Prouct Manager',
                 achievements: [
-                    <>Developed a design system that unified the brand across multiple platforms, improving design consistency by 40%.</>,
-                    <>Led a cross-functional team to launch a new product line, contributing to a 15% increase in overall company revenue.</>
+                    <>Scaled loan servicing from 10s of thousands to 100s of thousands of loans and 100s of millions of monthly payments with minimal team growth by leveraging automation and workflow efficiency improvements.</>,
+                    <>Expanded Upstart's TAM 10% by launching a Spanish-language personal loan product, which approved ~1.5x more hispanic borrowers than traditional models (<a href="https://ir.upstart.com/news-releases/news-release-details/upstart-launches-first-digital-lending-platform-spanish">3</a>).</>,
+                    <>Created COVID hardship plans with 80% CSAT that preserved investor returns; partnered with data science to secure investor buy-in for making the program permanent (<a href="https://ir.upstart.com/news-releases/news-release-details/upstart-announces-new-covid-19-hardship-plans-and-additional-support-for">4 pg 5</a>).</>,
+                    <>Reduced customer support contact rate by 34% and improved NPS by 4% by redesigning the borrower repayment UI.</>
+                ],
+                images: [
+                    {
+                    src: '/images/projects/project-01/cover-01.jpg',
+                    alt: 'Once UI Project',
+                    width: 16,
+                    height: 9
+                    }
+                ]
+            },
+            {
+                company: 'Twitter',
+                timeframe: '2018 - 2019',
+                role: 'Prouct Manager',
+                achievements: [
+                    <>Conducted research on high-value advertising  customers' workflows and Twitter’s role within them; presented findings to 30+ PMs, influencing multiple team roadmaps.</>,
+                    <>Built a multi-team roadmap and aligned resources  for Business Manager to  address gaps preventing adoption. </>
+                ],
+                images: [
+                    {
+                    src: '/images/projects/project-01/cover-01.jpg',
+                    alt: 'Once UI Project',
+                    width: 16,
+                    height: 9
+                    }
+                ]
+            },
+            {
+                company: 'Ampush',
+                timeframe: '2013 - 2018',
+                role: 'Prouct Manager',
+                achievements: [
+                    <>Brought to market AMP, a cross-publisher (Meta, Adwords, etc) media buying platform that optimizes 300+ million dollars in annual media buying.</>,
+                    <>Developed algorithms that optimized media buying for clients, including Uber, Zynga, Dollar Shave Club, and others.</>
                 ],
                 images: [
                     {
