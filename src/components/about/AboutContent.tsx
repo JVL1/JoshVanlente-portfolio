@@ -229,6 +229,7 @@ export function AboutContent({
                                                 description={productLedGrowth.metadata.summary}
                                                 href={`/work/${productLedGrowth.slug}`}
                                                 image={productLedGrowth.metadata.images[0]}
+                                                imagePosition="left top"
                                             />
                                         )}
                                     </Flex>
