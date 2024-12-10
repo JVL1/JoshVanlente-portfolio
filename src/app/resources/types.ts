@@ -9,7 +9,7 @@ export interface Institution {
 export interface Skill {
     title: string;
     description: ReactNode;
-    icon?: string;
+    icon: string;
 }
 
 export interface WorkExperience {
