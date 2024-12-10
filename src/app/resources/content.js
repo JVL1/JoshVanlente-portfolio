@@ -209,6 +209,7 @@ const about = {
             {
                 title: 'Figma',
                 description: <>Able to prototype in Figma with Once UI with unnatural speed.</>,
+                icon: 'pen',
                 images: [
                     {
                         src: '/images/projects/project-01/cover-02.jpg',
@@ -227,6 +228,7 @@ const about = {
             {
                 title: 'Next.js',
                 description: <>Building next gen apps with Next.js + Once UI + Supabase.</>,
+                icon: 'code',
                 images: [
                     {
                         src: '/images/projects/project-01/cover-04.jpg',

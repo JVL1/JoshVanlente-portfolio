@@ -120,6 +120,7 @@ const createI18nContent = (t) => {
                 {
                     title: 'Figma',
                     description: <>{t("about.technical.skills.Figma.description")}</>,
+                    icon: 'pen',
                     images: [
                         {
                             src: '/images/projects/project-01/cover-02.jpg',
@@ -138,6 +139,7 @@ const createI18nContent = (t) => {
                 {
                     title: 'Next.js',
                     description: <>{t("about.technical.skills.Nextjs.description")}</>, // "." not accepted in next-intl namespace
+                    icon: 'code',
                     images: [
                         {
                             src: '/images/projects/project-01/cover-04.jpg',
