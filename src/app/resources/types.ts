@@ -12,6 +12,13 @@ export interface Skill {
     icon?: string;
 }
 
+export interface WorkExperience {
+    company: string;
+    timeframe: string;
+    role: string;
+    achievements: ReactNode[];
+}
+
 export interface About {
     label: string;
     title: string;
@@ -31,6 +38,11 @@ export interface About {
         display: boolean;
         title: string;
         description: ReactNode;
+    };
+    work: {
+        display: boolean;
+        title: string;
+        experiences: WorkExperience[];
     };
     studies: {
         display: boolean;
