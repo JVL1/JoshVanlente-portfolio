@@ -9,7 +9,14 @@ export interface Institution {
 export interface Skill {
     title: string;
     description: ReactNode;
-    icon?: string;
+    icon: string;
+}
+
+export interface WorkExperience {
+    company: string;
+    timeframe: string;
+    role: string;
+    achievements: ReactNode[];
 }
 
 export interface About {
@@ -32,6 +39,11 @@ export interface About {
         title: string;
         description: ReactNode;
     };
+    work: {
+        display: boolean;
+        title: string;
+        experiences: WorkExperience[];
+    };
     studies: {
         display: boolean;
         title: string;
@@ -41,5 +53,9 @@ export interface About {
         display: boolean;
         title: string;
         skills: Skill[];
+    };
+    caseStudies: {
+        display: boolean;
+        title: string;
     };
 } 

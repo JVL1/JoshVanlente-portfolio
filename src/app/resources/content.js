@@ -76,22 +76,22 @@ const home = {
 const about = {
     label: 'About',
     title: 'About me',
-    description: `Meet ${person.name}, ${person.role} from ${person.location}`,
+    description: 'Meet Josh, Product Manager from America/Los_Angeles',
     tableOfContent: {
         display: true,
         subItems: false
     },
     avatar: {
         display: true
-    },calendar: {
+    },
+    calendar: {
         display: false,
         link: ''
     },
     intro: {
         display: true,
         title: 'Introduction',
-        description: <>I am an experienced product leader with a strong track record of delivering impactful results as both a team leader and hands-on contributor. Highly adaptable and skilled at navigating the ambiguity of 0-to-1 innovation, as well as, the complexity of scaling established products. With expertise spanning fintech, proptech, adtech, and both B2C and B2B markets, I bring strategic vision, cross-functional collaboration, and a passion for continuous learning to every challenge.
-</>
+        description: <>I'm a product manager with a passion for building products that solve real problems. I've spent the last 10 years working in fintech, where I've led teams to build products that help people manage their money better.</>
     },
     work: {
         display: true, // set to false to hide this section
@@ -137,8 +137,44 @@ const about = {
                 timeframe: '2019 - 2022',
                 role: 'Prouct Manager',
                 achievements: [
-                    <>Developed a design system that unified the brand across multiple platforms, improving design consistency by 40%.</>,
-                    <>Led a cross-functional team to launch a new product line, contributing to a 15% increase in overall company revenue.</>
+                    <>Scaled loan servicing from 10s of thousands to 100s of thousands of loans and 100s of millions of monthly payments with minimal team growth by leveraging automation and workflow efficiency improvements.</>,
+                    <>Expanded Upstart's TAM 10% by launching a Spanish-language personal loan product, which approved ~1.5x more hispanic borrowers than traditional models (<a href="https://ir.upstart.com/news-releases/news-release-details/upstart-launches-first-digital-lending-platform-spanish">3</a>).</>,
+                    <>Created COVID hardship plans with 80% CSAT that preserved investor returns; partnered with data science to secure investor buy-in for making the program permanent (<a href="https://ir.upstart.com/news-releases/news-release-details/upstart-announces-new-covid-19-hardship-plans-and-additional-support-for">4 pg 5</a>).</>,
+                    <>Reduced customer support contact rate by 34% and improved NPS by 4% by redesigning the borrower repayment UI.</>
+                ],
+                images: [
+                    {
+                    src: '/images/projects/project-01/cover-01.jpg',
+                    alt: 'Once UI Project',
+                    width: 16,
+                    height: 9
+                    }
+                ]
+            },
+            {
+                company: 'Twitter',
+                timeframe: '2018 - 2019',
+                role: 'Prouct Manager',
+                achievements: [
+                    <>Conducted research on high-value advertising  customers' workflows and Twitter’s role within them; presented findings to 30+ PMs, influencing multiple team roadmaps.</>,
+                    <>Built a multi-team roadmap and aligned resources  for Business Manager to  address gaps preventing adoption. </>
+                ],
+                images: [
+                    {
+                    src: '/images/projects/project-01/cover-01.jpg',
+                    alt: 'Once UI Project',
+                    width: 16,
+                    height: 9
+                    }
+                ]
+            },
+            {
+                company: 'Ampush',
+                timeframe: '2013 - 2018',
+                role: 'Prouct Manager',
+                achievements: [
+                    <>Brought to market AMP, a cross-publisher (Meta, Adwords, etc) media buying platform that optimizes 300+ million dollars in annual media buying.</>,
+                    <>Developed algorithms that optimized media buying for clients, including Uber, Zynga, Dollar Shave Club, and others.</>
                 ],
                 images: [
                     {
@@ -171,36 +207,30 @@ const about = {
         title: 'Skills',
         skills: [
             {
-                title: 'Figma',
-                description: <>Able to prototype in Figma with Once UI with unnatural speed.</>,
-                images: [
-                    {
-                        src: '/images/projects/project-01/cover-02.jpg',
-                        alt: 'Project image',
-                        width: 16,
-                        height: 9
-                    },
-                    {
-                        src: '/images/projects/project-01/cover-03.jpg',
-                        alt: 'Project image',
-                        width: 16,
-                        height: 9
-                    },
-                ]
+                title: 'Product Strategy',
+                description: <>Finding the intersection of user needs and business goals is a passion of mine. I thrive on what comes next, creating and executing a plan to realize those goals while finding ways derisk assumptions and deliver value sooner.</>,
+                icon: 'location'
             },
             {
-                title: 'Next.js',
-                description: <>Building next gen apps with Next.js + Once UI + Supabase.</>,
-                images: [
-                    {
-                        src: '/images/projects/project-01/cover-04.jpg',
-                        alt: 'Project image',
-                        width: 16,
-                        height: 9
-                    },
-                ]
+                title: 'Decision making',
+                description: <>I like the <a href="https://www.inc.com/jeff-haden/amazon-founder-jeff-bezos-this-is-how-successful-people-make-such-smart-decisions.html" target="_blank" rel="noopener noreferrer">one-way, two-way door</a> framework to guide how much time to spend on decisions. I pride myself in spending the right amount of time on decisions and using the right tool, be that analytics, surveys, interviews, insights from the sales team, or just 'product instincts'.</>,
+                icon: 'gavel'
+            },
+            {
+                title: 'Empowerment',
+                description: <>I always strive to empower others to work autonomously. If I've shared enough customer insights and business justifications that a designer, engieer or another product manager can make a good descion without me, I feel like I'm doing my job well.</>,
+                icon: 'fist'
+            },
+            {
+                title: 'Communication',
+                description: <>Product management is a team sport, so keeping stakeholders aligned and informed is key. As I've progressed in my career, my apprecaition for effective communication has grown.</>,
+                icon: 'bullhorn'
             }
         ]
+    },
+    caseStudies: {
+        display: true,
+        title: 'Case Studies'
     }
 }
 

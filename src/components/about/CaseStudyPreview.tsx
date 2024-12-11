@@ -9,6 +9,7 @@ interface CaseStudyPreviewProps {
     description: string;
     href: string;
     image: string;
+    imagePosition?: string;
 }
 
 export function CaseStudyPreview({
@@ -16,6 +17,7 @@ export function CaseStudyPreview({
     description,
     href,
     image,
+    imagePosition = 'center center', // default position
 }: CaseStudyPreviewProps) {
     return (
         <Link 
@@ -26,6 +28,7 @@ export function CaseStudyPreview({
                     src={image}
                     alt={title}
                     className={styles.image}
+                    style={{ objectPosition: imagePosition }}
                 />
             </div>
             <div className={styles.content}>

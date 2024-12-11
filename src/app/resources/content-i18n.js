@@ -118,36 +118,30 @@ const createI18nContent = (t) => {
             title: t("about.technical.title"),
             skills: [
                 {
-                    title: 'Figma',
-                    description: <>{t("about.technical.skills.Figma.description")}</>,
-                    images: [
-                        {
-                            src: '/images/projects/project-01/cover-02.jpg',
-                            alt: 'Project image',
-                            width: 16,
-                            height: 9
-                        },
-                        {
-                            src: '/images/projects/project-01/cover-03.jpg',
-                            alt: 'Project image',
-                            width: 16,
-                            height: 9
-                        },
-                    ]
+                    title: t("about.technical.skills.ProductStrategy.title"),
+                    description: <>{t("about.technical.skills.ProductStrategy.description")}</>,
+                    icon: t("about.technical.skills.ProductStrategy.icon")
                 },
                 {
-                    title: 'Next.js',
-                    description: <>{t("about.technical.skills.Nextjs.description")}</>, // "." not accepted in next-intl namespace
-                    images: [
-                        {
-                            src: '/images/projects/project-01/cover-04.jpg',
-                            alt: 'Project image',
-                            width: 16,
-                            height: 9
-                        },
-                    ]
+                    title: t("about.technical.skills.DecisionMaking.title"),
+                    description: <>{t("about.technical.skills.DecisionMaking.description")}</>,
+                    icon: t("about.technical.skills.DecisionMaking.icon")
+                },
+                {
+                    title: t("about.technical.skills.Empowerment.title"),
+                    description: <>{t("about.technical.skills.Empowerment.description")}</>,
+                    icon: t("about.technical.skills.Empowerment.icon")
+                },
+                {
+                    title: t("about.technical.skills.Communication.title"),
+                    description: <>{t("about.technical.skills.Communication.description")}</>,
+                    icon: t("about.technical.skills.Communication.icon")
                 }
             ]
+        },
+        caseStudies: {
+            display: true,
+            title: t("about.caseStudies.title")
         }
     }
 
