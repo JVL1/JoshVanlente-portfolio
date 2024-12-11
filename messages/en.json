@@ -52,10 +52,12 @@
             "title": "Technical skills",
             "skills": {
                 "Figma": {
-                    "description": "Able to prototype in Figma with Once UI with unnatural speed."
+                    "description": "Able to prototype in Figma with Once UI with unnatural speed.",
+                    "icon": "pen"
                 },
                 "Nextjs": {
-                    "description": "Building next gen apps with Next.js + Once UI + Supabase."
+                    "description": "Building next gen apps with Next.js + Once UI + Supabase.",
+                    "icon": "code"
                 }
             }
         }
