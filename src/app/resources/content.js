@@ -79,7 +79,7 @@ const about = {
     description: 'Meet Josh, Product Manager from America/Los_Angeles',
     tableOfContent: {
         display: true,
-        subItems: true
+        subItems: false
     },
     avatar: {
         display: true

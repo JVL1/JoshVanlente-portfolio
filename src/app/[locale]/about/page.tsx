@@ -64,18 +64,23 @@ export default function About(
         { 
             title: about.work.title,
             display: about.work.display,
-            items: about.work.experiences.map(experience => experience.company)
+            items: []
         },
         { 
             title: about.studies.title,
             display: about.studies.display,
-            items: about.studies.institutions.map(institution => institution.name)
+            items: []
         },
         { 
             title: about.technical.title,
             display: about.technical.display,
-            items: about.technical.skills.map(skill => skill.title)
+            items: []
         },
+        {
+            title: about.caseStudies.title,
+            display: about.caseStudies.display,
+            items: []
+        }
     ]
     return (
         <Flex
