@@ -207,36 +207,24 @@ const about = {
         title: 'Skills',
         skills: [
             {
-                title: 'Figma',
-                description: <>Able to prototype in Figma with Once UI with unnatural speed.</>,
-                icon: 'pen',
-                images: [
-                    {
-                        src: '/images/projects/project-01/cover-02.jpg',
-                        alt: 'Project image',
-                        width: 16,
-                        height: 9
-                    },
-                    {
-                        src: '/images/projects/project-01/cover-03.jpg',
-                        alt: 'Project image',
-                        width: 16,
-                        height: 9
-                    },
-                ]
+                title: 'Product Strategy',
+                description: <>Finding the intersection of user needs and business goals is a passion of mine. I thrive on what comes next, creating and executing a plan to realize those goals while finding ways derisk assumptions and deliver value sooner.</>,
+                icon: 'location'
             },
             {
-                title: 'Next.js',
-                description: <>Building next gen apps with Next.js + Once UI + Supabase.</>,
-                icon: 'code',
-                images: [
-                    {
-                        src: '/images/projects/project-01/cover-04.jpg',
-                        alt: 'Project image',
-                        width: 16,
-                        height: 9
-                    },
-                ]
+                title: 'Decision making',
+                description: <>I like the <a href="https://www.inc.com/jeff-haden/amazon-founder-jeff-bezos-this-is-how-successful-people-make-such-smart-decisions.html" target="_blank" rel="noopener noreferrer">one-way, two-way door</a> framework to guide how much time to spend on decisions. I pride myself in spending the right amount of time on decisions and using the right tool, be that analytics, surveys, interviews, insights from the sales team, or just 'product instincts'.</>,
+                icon: 'gavel'
+            },
+            {
+                title: 'Empowerment',
+                description: <>I always strive to empower others to work autonomously. If I've shared enough customer insights and business justifications that a designer, engieer or another product manager can make a good descion without me, I feel like I'm doing my job well.</>,
+                icon: 'fist'
+            },
+            {
+                title: 'Communication',
+                description: <>Product management is a team sport, so keeping stakeholders aligned and informed is key. As I've progressed in my career, my apprecaition for effective communication has grown.</>,
+                icon: 'bullhorn'
             }
         ]
     },

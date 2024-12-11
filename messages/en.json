@@ -49,15 +49,27 @@
             }
         },
         "technical": {
-            "title": "Technical skills",
+            "title": "Skills",
             "skills": {
-                "Figma": {
-                    "description": "Able to prototype in Figma with Once UI with unnatural speed.",
-                    "icon": "pen"
+                "ProductStrategy": {
+                    "title": "Product Strategy",
+                    "description": "Finding the intersection of user needs and business goals is a passion of mine. I thrive on what comes next, creating and executing a plan to realize those goals while finding ways derisk assumptions and deliver value sooner.",
+                    "icon": "location"
                 },
-                "Nextjs": {
-                    "description": "Building next gen apps with Next.js + Once UI + Supabase.",
-                    "icon": "code"
+                "DecisionMaking": {
+                    "title": "Decision making",
+                    "description": "I like the one-way, two-way door framework to guide how much time to spend on decisions. I pride myself in spending the right amount of time on decisions and using the right tool, be that analytics, surveys, interviews, insights from the sales team, or just 'product instincts'.",
+                    "icon": "gavel"
+                },
+                "Empowerment": {
+                    "title": "Empowerment",
+                    "description": "I always strive to empower others to work autonomously. If I've shared enough customer insights and business justifications that a designer, engieer or another product manager can make a good descion without me, I feel like I'm doing my job well.",
+                    "icon": "fist"
+                },
+                "Communication": {
+                    "title": "Communication",
+                    "description": "Product management is a team sport, so keeping stakeholders aligned and informed is key. As I've progressed in my career, my apprecaition for effective communication has grown.",
+                    "icon": "bullhorn"
                 }
             }
         },
