@@ -76,22 +76,22 @@ const home = {
 const about = {
     label: 'About',
     title: 'About me',
-    description: `Meet ${person.name}, ${person.role} from ${person.location}`,
+    description: 'Meet Josh, Product Manager from America/Los_Angeles',
     tableOfContent: {
         display: true,
-        subItems: false
+        subItems: true
     },
     avatar: {
         display: true
-    },calendar: {
+    },
+    calendar: {
         display: false,
         link: ''
     },
     intro: {
         display: true,
         title: 'Introduction',
-        description: <>I am an experienced product leader with a strong track record of delivering impactful results as both a team leader and hands-on contributor. Highly adaptable and skilled at navigating the ambiguity of 0-to-1 innovation, as well as, the complexity of scaling established products. With expertise spanning fintech, proptech, adtech, and both B2C and B2B markets, I bring strategic vision, cross-functional collaboration, and a passion for continuous learning to every challenge.
-</>
+        description: <>I'm a product manager with a passion for building products that solve real problems. I've spent the last 10 years working in fintech, where I've led teams to build products that help people manage their money better.</>
     },
     work: {
         display: true, // set to false to hide this section
@@ -239,6 +239,10 @@ const about = {
                 ]
             }
         ]
+    },
+    caseStudies: {
+        display: true,
+        title: 'Case Studies'
     }
 }
 
