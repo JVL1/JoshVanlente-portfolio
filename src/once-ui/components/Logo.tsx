@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import classNames from 'classnames';
 import styles from './Logo.module.scss';
 import { SpacingToken } from '../types';
@@ -52,11 +53,15 @@ const Logo: React.FC<LogoProps> = ({
                 />
             )}
             {iconSrc && (
-                <img
-                    style={{ height: `var(--static-space-${sizeMap[size]})`, width: 'auto' }}
-                    alt="Trademark"
-                    src={iconSrc}
-                />
+                <div style={{ position: 'relative', height: `var(--static-space-${sizeMap[size]})`, width: 'auto' }}>
+                    <Image
+                        src={iconSrc}
+                        alt="Logo icon"
+                        fill
+                        style={{ objectFit: 'contain' }}
+                        sizes={`${parseInt(sizeMap[size]) * 4}px`}
+                    />
+                </div>
             )}
             {wordmark && !wordmarkSrc && (
                 <div
@@ -65,11 +70,15 @@ const Logo: React.FC<LogoProps> = ({
                 />
             )}
             {wordmarkSrc && (
-                <img
-                    style={{ height: `var(--static-space-${sizeMap[size]})`, width: 'auto'}}
-                    alt="Trademark"
-                    src={wordmarkSrc}
-                />
+                <div style={{ position: 'relative', height: `var(--static-space-${sizeMap[size]})`, width: 'auto' }}>
+                    <Image
+                        src={wordmarkSrc}
+                        alt="Logo wordmark"
+                        fill
+                        style={{ objectFit: 'contain' }}
+                        sizes={`${parseInt(sizeMap[size]) * 4}px`}
+                    />
+                </div>
             )}
         </>
     );
@@ -79,7 +88,7 @@ const Logo: React.FC<LogoProps> = ({
             className={classNames('radius-l', 'flex', className)}
             style={{ height: 'fit-content', ...style }}
             href={href}
-            aria-label="Trademark"
+            aria-label="Logo link"
             {...props}>
             {content}
         </Link>
@@ -87,7 +96,7 @@ const Logo: React.FC<LogoProps> = ({
         <Flex
             className={classNames('radius-l', 'flex', className)}
             style={{ height: 'fit-content', ...style }}
-            aria-label="Trademark">
+            aria-label="Logo">
             {content}
         </Flex>
     );

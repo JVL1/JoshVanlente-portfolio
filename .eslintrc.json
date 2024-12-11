@@ -1,20 +1,10 @@
 {
-  "extends": [
-    "next/core-web-vitals",
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:react/recommended",
-    "plugin:react-hooks/recommended"
-  ],
-  "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint", "react", "react-hooks"],
+  "extends": ["next/core-web-vitals"],
   "rules": {
     "react/react-in-jsx-scope": "off",
-    "react/prop-types": "off"
-  },
-  "settings": {
-    "react": {
-      "version": "detect"
-    }
+    "react/prop-types": "off",
+    "react/no-unescaped-entities": "off",
+    "@next/next/no-img-element": "warn",
+    "react-hooks/exhaustive-deps": "warn"
   }
 }

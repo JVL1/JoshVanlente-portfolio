@@ -1,12 +1,12 @@
 'use client';
 
 import React, { CSSProperties, useState, useRef, useEffect } from 'react';
-import Image, { ImageProps } from 'next/image';
+import NextImage from 'next/image';
 import classNames from 'classnames';
 
 import { Flex, Skeleton } from '@/once-ui/components';
 
-export type SmartImageProps = ImageProps & {
+export type SmartImageProps = Omit<React.ComponentProps<typeof NextImage>, 'alt'> & {
     className?: string;
     style?: React.CSSProperties;
     aspectRatio?: string;
@@ -144,14 +144,16 @@ const SmartImage: React.FC<SmartImageProps> = ({
                     />
                 )}
                 {!isLoading && !isVideo && !isYouTube && (
-                    <Image
+                    <NextImage
                         {...props}
                         src={src}
                         alt={alt}
                         fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         style={{ 
                             objectFit: isEnlarged ? 'contain' : objectFit,
                         }}
+                        priority={props.priority}
                     />
                 )}
             </Flex>
@@ -194,7 +196,7 @@ const SmartImage: React.FC<SmartImageProps> = ({
                                 }}
                             />
                         ) : (
-                            <Image
+                            <NextImage
                                 {...props}
                                 src={src}
                                 alt={alt}
@@ -202,6 +204,7 @@ const SmartImage: React.FC<SmartImageProps> = ({
                                 sizes="90vw"
                                 unoptimized={unoptimized}
                                 style={{ objectFit: 'contain' }}
+                                priority={props.priority}
                             />
                         )}
                     </Flex>

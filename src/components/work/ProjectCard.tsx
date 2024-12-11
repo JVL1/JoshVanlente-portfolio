@@ -3,6 +3,7 @@
 import { Heading, Text } from '@/once-ui/components';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface ProjectCardProps {
     title: string;
@@ -40,15 +41,12 @@ export function ProjectCard({
                     backgroundColor: '#000',
                     marginBottom: '1.5rem'
                 }}>
-                    <img
+                    <Image
                         src={mainImage}
                         alt={title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
                             objectFit: 'cover',
                             opacity: 0.8,
                         }}

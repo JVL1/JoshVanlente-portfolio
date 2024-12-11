@@ -51,13 +51,16 @@ export async function GET(request: Request) {
                             alignItems: 'center',
                             gap: '5rem'
                         }}>
-                        <img src={'https://' + baseURL + person.avatar}
+                        <img 
+                            src={'https://' + baseURL + person.avatar}
+                            alt={`${person.name}'s avatar`}
                             style={{
                                 width: '12rem',
                                 height: '12rem',
                                 objectFit: 'cover',
                                 borderRadius: '100%',
-                            }}/>
+                            }}
+                        />
                         <div
                             style={{
                                 display: 'flex',
