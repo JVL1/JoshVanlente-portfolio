@@ -2,6 +2,7 @@
 
 import { Heading, Text } from '@/once-ui/components';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './CaseStudyPreview.module.scss';
 
 interface CaseStudyPreviewProps {
@@ -24,9 +25,11 @@ export function CaseStudyPreview({
             href={href} 
             className={styles.container}>
             <div className={styles.imageContainer}>
-                <img
+                <Image
                     src={image}
                     alt={title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className={styles.image}
                     style={{ objectPosition: imagePosition }}
                 />

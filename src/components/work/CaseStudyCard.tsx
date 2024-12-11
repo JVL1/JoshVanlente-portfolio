@@ -2,6 +2,7 @@
 
 import { Heading, Text } from '@/once-ui/components';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './CaseStudyCard.module.scss';
 
 interface CaseStudyCardProps {
@@ -23,9 +24,11 @@ export function CaseStudyCard({
             className={styles.card}>
             <div className={styles.imageContainer}>
                 <div className={styles.overlay} />
-                <img
+                <Image
                     src={image}
                     alt={title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className={styles.image}
                 />
             </div>

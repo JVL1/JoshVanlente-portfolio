@@ -1,14 +1,26 @@
 import createMiddleware from 'next-intl/middleware';
- 
+import { locales, defaultLocale, localePrefix } from './i18n.config';
+
 export default createMiddleware({
-  // A list of all locales that are supported
-  locales: ['en', 'de'],
- 
-  // If this locale is matched, pathnames work without a prefix (e.g. `/about`)
-  defaultLocale: 'en'
+  locales,
+  defaultLocale,
+  localePrefix
 });
- 
+
 export const config = {
-  // Skip all paths that should not be internationalized
-  matcher: ['/((?!api|_next|.*\\..*).*)']
+  matcher: [
+    // Match all pathnames except for
+    // - … if they start with
+    //   - api (API routes)
+    //   - _next (Next.js internals)
+    //   - _vercel (Vercel internals)
+    //   - .*\\. (files with an extension)
+    '/((?!api|_next|_vercel|.*\\.).*)',
+    // However, match all pathnames within /api, except for
+    // - … if they start with
+    //   - _next (Next.js internals)
+    //   - _vercel (Vercel internals)
+    //   - .*\\. (files with an extension)
+    '/api/(?!_next|_vercel|.*\\.).*'
+  ]
 }; 
