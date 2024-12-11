@@ -60,6 +60,10 @@
                     "icon": "code"
                 }
             }
+        },
+        "caseStudies": {
+            "title": "Case Studies",
+            "display": true
         }
     },
     "blog": {

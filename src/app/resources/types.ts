@@ -54,4 +54,8 @@ export interface About {
         title: string;
         skills: Skill[];
     };
+    caseStudies: {
+        display: boolean;
+        title: string;
+    };
 } 

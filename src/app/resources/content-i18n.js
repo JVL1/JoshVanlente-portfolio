@@ -150,6 +150,10 @@ const createI18nContent = (t) => {
                     ]
                 }
             ]
+        },
+        caseStudies: {
+            display: true,
+            title: t("about.caseStudies.title")
         }
     }
 
