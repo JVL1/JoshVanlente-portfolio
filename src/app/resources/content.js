@@ -228,7 +228,7 @@ const about = {
             },
             {
                 title: 'Learning',
-                description: <>I'm a lifelong learner and always looking for knowledge that will improve outcomes for me or my team. I've recently been learning about AI and built this site using Dev0 and Cursor.</>,
+                description: <>I'm a lifelong learner.  Many times over I've become a subject matter expert in a new area. Recently I've been learning about AI, and built this site using Dev0 and Cursor.</>,
                 icon: 'book'
             },
             {
