@@ -91,7 +91,7 @@ const about = {
     intro: {
         display: true,
         title: 'Introduction',
-        description: <>I'm a product manager with a passion for building products that solve real problems. I've spent the last 10 years working in fintech, where I've led teams to build products that help people manage their money better.</>
+        description: <>I am an experienced product leader with a strong track record of delivering impactful results as both a team leader and hands-on contributor. Highly adaptable and skilled at navigating the ambiguity of 0-to-1 innovation, as well as, the complexity of scaling established products. With expertise spanning fintech, proptech, adtech, and both B2C and B2B markets, I bring strategic vision, cross-functional collaboration, and a passion for continuous learning to every challenge.</>
     },
     work: {
         display: true, // set to false to hide this section
