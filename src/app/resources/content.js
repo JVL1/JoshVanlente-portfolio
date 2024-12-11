@@ -213,7 +213,7 @@ const about = {
             },
             {
                 title: 'Decision making',
-                description: <>I like the <a href="https://www.inc.com/jeff-haden/amazon-founder-jeff-bezos-this-is-how-successful-people-make-such-smart-decisions.html" target="_blank" rel="noopener noreferrer">one-way, two-way door</a> framework to guide how much time to spend on decisions. I pride myself in spending the right amount of time on decisions and using the right tool, be that analytics, surveys, interviews, insights from the sales team, or just 'product instincts'.</>,
+                description: <>I like the <a href="https://www.inc.com/jeff-haden/amazon-founder-jeff-bezos-this-is-how-successful-people-make-such-smart-decisions.html" target="_blank" rel="noopener noreferrer">one-way, two-way door</a> dec making framework. I strive to spend the right amount of time on decisions and use the right tool, be that analytics, surveys, interviews, insights from the sales team, or just 'product instincts'.</>,
                 icon: 'gavel'
             },
             {
@@ -225,6 +225,16 @@ const about = {
                 title: 'Communication',
                 description: <>Product management is a team sport, so keeping stakeholders aligned and informed is key. As I've progressed in my career, my apprecaition for effective communication has grown.</>,
                 icon: 'bullhorn'
+            },
+            {
+                title: 'Learning',
+                description: <>I'm a lifelong learner.  Many times over I've become a subject matter expert in a new area. Recently I've been learning about AI, and built this site using Dev0 and Cursor.</>,
+                icon: 'book'
+            },
+            {
+                title: 'Coaching',
+                description: <>I find it rewarding to help others grow. I'm a big beliver that feedback is a gift that should be shared often.</>,
+                icon: 'person'
             }
         ]
     },
