@@ -51,7 +51,7 @@ const home = {
     headline: <>Product Leader and builder</>,
     subline: <>👋 Hello <br></br><br></br>I'm Josh, a <InlineCode>results-driven</InlineCode>, <InlineCode>remote-first</InlineCode> product leader with 10+ years of product experience across a variety of B2C, B2B, and B2B2C industries.
     <br/> Here are some highlights from my career:<br/><br/>
-    - Led as a player-coach while scaling Azibo from few thousand users to 20k+, expanding from 1 to 7 products, and improving margins 61 points.<br/>
+    - Led as a player-coach while scaling Azibo from few thousand users to tens of thousands of users, expanding from 1 to 7 products, and significantly improving gross margin.<br/>
     - Developed and executed a unique product led growth strategy that became Azibo's primary growth channel and most profitable user segment.<br/>
     - Scaled loan servicing at Upstart from 10s of thousands to 100s of thousands of loans, and 100s of millions of monthly payments with minimal team growth by leveraging automation and workflow efficiency improvements.<br/>
     <br/>You can learn more <Link href="/about"><i className="ri-user-line"></i> about me here</Link> or <Link href="/work"><i className="ri-briefcase-line"></i> my work here</Link>.

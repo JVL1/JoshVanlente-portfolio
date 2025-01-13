@@ -14,6 +14,7 @@ interface AboutContentProps {
     buildingOnceUI: any;
     automateDesign: any;
     productLedGrowth: any;
+    smarterPayouts: any;
 }
 
 export function AboutContent({
@@ -22,7 +23,8 @@ export function AboutContent({
     social,
     buildingOnceUI,
     automateDesign,
-    productLedGrowth
+    productLedGrowth,
+    smarterPayouts
 }: AboutContentProps) {
     const structure = [
         { 
@@ -229,6 +231,15 @@ export function AboutContent({
                                                 description={productLedGrowth.metadata.summary}
                                                 href={`/work/${productLedGrowth.slug}`}
                                                 image={productLedGrowth.metadata.images[0]}
+                                                imagePosition="left top"
+                                            />
+                                        )}
+                                        {experience.timeframe === '2019 - 2022' && smarterPayouts && (
+                                            <CaseStudyPreview
+                                                title={smarterPayouts.metadata.title}
+                                                description={smarterPayouts.metadata.summary}
+                                                href={`/work/${smarterPayouts.slug}`}
+                                                image={smarterPayouts.metadata.images[0]}
                                                 imagePosition="left top"
                                             />
                                         )}

@@ -1,0 +1,56 @@
+---
+title: "Smarter Payouts: Leveraging AI to Train and Deploy Predictive Models"
+publishedAt: "2024-04-08"
+summary: "How I led the development of an AI-powered system to optimize payment processing and reduce failed transactions."
+images:
+  - "/images/projects/project-01/smarter-payouts.jpg"
+team:
+  - name: "Josh Van Lente"
+    role: "Product Manager"
+    avatar: "/images/avatar.jpeg"
+    linkedIn: "https://www.linkedin.com/in/josh-van-lente/"
+---
+
+## Context
+
+Azibo processes rent payments for tenants and landlords, acting as an intermediary to minimize fraud and enable additional payment methods like credit cards and BNPL. Landlords highly value receiving their money quickly, so when Azibo is confident a payment will succeed, it pays out to the landlord instantly. However, issues arise when a tenant payment fails, requiring Azibo to claw back funds from the landlord.
+
+To mitigate clawbacks, Azibo initially checked tenant account balances and delayed payouts if a failure due to insufficient funds was expected. The challenge was that not all tenants provided the necessary access to check their balances, which resulted in some payments being unnecessarily delayed.
+
+## Goal
+The primary goal was to reduce the percentage of payments unnecessarily delayed without increasing risk for Azibo. A secondary goal, given the project was part of Azibo Hackweek, was to learn how to leverage AI to help code.
+
+## Approach
+
+- **Predict Payment Failures**: Recognizing that a subset of users would always lack balance check data, I identified payment failure prediction as the next best solution.
+- **Layer Predictions with Balance Checks**: Since balance checks provide ground-truth data, I implemented a waterfall approach, using predictions only when balance checks were unavailable. This strategy simplified the data pipeline by avoiding the need to integrate third-party data into the model and maintained a focus on leveraging the most predictive and reliable inputs.
+
+
+## Solution
+
+1. **Data Analysis and Feature Engineering**:
+Used Sklearn to analyze nearly a million historical transactions to identify key predictors of payment success.
+Engineered features based on bank account patterns, payment history, and customer behavior.
+Created a comprehensive dataset optimized for model training.
+2. **Model Development and Training**:
+Developed a classification model using XGBoost to predict payment success probabilities.
+Validated model performance with a reserved 20% of the dataset.
+Tested the model on a recent month of transactions to measure theoretical impact post-training.
+3. **System Integration and Deployment**:
+Built and deployed a real-time prediction API, using Docker for scalability.
+Collaborated with engineering to integrate the prediction endpoint into Azibo’s payment processing system.
+Implemented monitoring and feedback loops to ensure continuous model improvement.
+
+## Outcomes
+
+The AI-powered solution delivered impactful results:
+- **Increased Payout Speed**: Accelerated payouts delivered within two days by 35%.
+- **Minimal Additional Risk**: Achieved less than a 0.1% increase in payout clawbacks.
+- **Enhanced Customer Experience**: Eliminated negative mentions of payout delays in NPS surveys.
+
+
+## Key Takeaways
+
+- **Real-World AI Impact**: This project showcased how AI can directly address customer pain points and drive meaningful business outcomes.
+- **Learning and Adapting Quickly**: Despite limited hands-on experience with ML, I leveraged foundational knowledge, tools like Colab, and LLMs like Claude to build, train, and deploy an effective model in under a week.
+- **Technical Execution with Strategic Focus**: By focusing on simplifying the data pipeline and layering predictions on top of balance checks, I ensured that the solution was both technically sound and operationally impactful.

@@ -18,6 +18,9 @@ const nextConfig = {
   },
   experimental: {
     mdxRs: true,
+  },
+  env: {
+    YAHOO_REDIRECT_URI: process.env.YAHOO_REDIRECT_URI
   }
 };
 
