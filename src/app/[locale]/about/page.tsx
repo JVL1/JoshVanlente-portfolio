@@ -47,9 +47,10 @@ export default async function About({
     const {person, about, social } = renderContent(t);
     const allProjects = getPosts(['src', 'app', '[locale]', 'work', 'projects', locale]);
     
-    const buildingOnceUI = allProjects.find(project => project.slug === 'building-once-ui-a-customizable-design-system');
+    const buildingOnceUI = allProjects.find(project => project.slug === 'vision-for-a-all-in-one-rental-platform');
     const automateDesign = allProjects.find(project => project.slug === 'automate-design-handovers-with-a-figma-to-code-pipeline');
     const productLedGrowth = allProjects.find(project => project.slug === 'a-unique-product-led-growth-strategy');
+    const smarterPayouts = allProjects.find(project => project.slug === 'smarter-payouts-leveraging-ai-for-predictive-model');
 
     return (
         <Flex
@@ -62,6 +63,7 @@ export default async function About({
                 buildingOnceUI={buildingOnceUI}
                 automateDesign={automateDesign}
                 productLedGrowth={productLedGrowth}
+                smarterPayouts={smarterPayouts}
             />
         </Flex>
     );
