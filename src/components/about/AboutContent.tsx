@@ -217,7 +217,7 @@ export function AboutContent({
                                             role={experience.role}
                                             achievements={experience.achievements}
                                         />
-                                        {experience.timeframe === '2023 - Present' && buildingOnceUI && (
+                                        {experience.company === 'Azibo' && experience.role === 'Senior Manager, Product Management' && buildingOnceUI && (
                                             <CaseStudyPreview
                                                 title={buildingOnceUI.metadata.title}
                                                 description={buildingOnceUI.metadata.summary}
@@ -231,15 +231,6 @@ export function AboutContent({
                                                 description={productLedGrowth.metadata.summary}
                                                 href={`/work/${productLedGrowth.slug}`}
                                                 image={productLedGrowth.metadata.images[0]}
-                                                imagePosition="left top"
-                                            />
-                                        )}
-                                        {experience.timeframe === '2019 - 2022' && smarterPayouts && (
-                                            <CaseStudyPreview
-                                                title={smarterPayouts.metadata.title}
-                                                description={smarterPayouts.metadata.summary}
-                                                href={`/work/${smarterPayouts.slug}`}
-                                                image={smarterPayouts.metadata.images[0]}
                                                 imagePosition="left top"
                                             />
                                         )}
