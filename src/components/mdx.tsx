@@ -4,6 +4,7 @@ import React, { ReactNode } from 'react';
 import { SmartImage, SmartLink, Text } from '@/once-ui/components';
 import { CodeBlock } from '@/once-ui/modules';
 import { HeadingLink } from '@/components';
+import { BeforeAfterSlider } from '@/components/BeforeAfterSlider';
 
 import { TextProps } from '@/once-ui/interfaces';
 import { SmartImageProps } from '@/once-ui/components/SmartImage';
@@ -133,7 +134,8 @@ const components = {
     img: createImage as any,
     a: CustomLink as any,
     Table,
-    CodeBlock
+    CodeBlock,
+    BeforeAfterSlider
 };
 
 type CustomMDXProps = MDXRemoteProps & {
