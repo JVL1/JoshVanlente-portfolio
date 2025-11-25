@@ -30,7 +30,7 @@ export const Footer = () => {
                         {person.name}
                     </Text>
                     <Text onBackground="neutral-weak">
-                        / Built with Next.js V0 and Cursor
+                        / Built with Next.js and Claude Code
                     </Text>
                 </Text>
                 <Flex
