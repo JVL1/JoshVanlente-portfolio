@@ -308,14 +308,23 @@ Accessibility and performance are measured by Lighthouse CI rather than axe, so 
 - **Where the metric strip sits relative to the work list.** Roughly 240px was trimmed from the hero to keep case-study thumbnails near the fold. If the 1280×800 criterion cannot be met with the strip above the work list, the strip moves below it and becomes the closer.
 - **About page content.** The shape is settled — narrative plus supporting credentials, with work history staying on the homepage. The copy is not written.
 
-## Copy decisions raised by review, not yet made
+## Voice
 
-The UX critique raised four copy questions. They are Josh's voice, so they are recorded rather than decided.
+The homepage copy was rewritten after the UX critique. The register matters more than the individual sentences, so it is recorded here as the standard for anything written into the site later.
 
-- **The headline.** "I ship the parts everyone else defers" was called distinctive but risky: "parts" may undersell Staff-level scope, and "everyone else" casts colleagues as the obstacle, which can read as poor cross-functional posture to the VP who would hire him.
-- **Metric labels.** "Monetized users" and "Product suite" need interpretation from a non-technical recruiter. "Paying users" and "Products in suite" say the same thing without a translation step.
-- **Attribution format.** Three metrics carry a date range and one carries a project descriptor ("Azibo · platform rebuild"), so the slot means two different things.
-- **Case-study summaries.** They lead with mechanism ("SSIM and luminance guardrails", "AI-powered") more than with judgment or result. A VP reads for the decision and its consequence; unexplained acronyms cost more than they signal.
+**The work is exploratory, and the copy should say so.** The first drafts claimed a certainty the job does not have — "I win the budget, then lead the build" implies the answer was already known and only permission was missing. What actually happens is research, collaboration, and working out whether a bet is worth making at all, then de-risking it by shipping proof that either buys insight or captures value. Copy that projects unearned confidence reads as posturing to exactly the people best equipped to notice.
+
+**Headline:** *I find the bet worth making, then earn the right to finish it.*
+
+It names the hard part — deciding which bet deserves the investment, rather than executing one handed to you — and then the method. "Earn the right to finish it" concedes the project might not survive its own evidence, which is a seniority signal: it implies killing your own work when the proof says to.
+
+**Lede:** Ten years building 0→1 products and platforms in vertical SaaS and fintech. Mostly that means research, collaboration, and working out when a bet is actually worth making — then shipping proof along the way that earns the next step. Currently building AI agent platforms at Evernest.
+
+**Metric labels** are written for a non-technical recruiter, with no translation step: "Paying users", "Annual payment volume", "Products in the suite", "Faster time to lease".
+
+**Attribution is uniformly `Org · period`.** The prototype mixed date ranges with a project descriptor, so one slot meant two things. Three consecutive `Azibo · 2023—25` entries are the honest result and worth keeping: read straight, they say one sustained run with compounding results.
+
+**Case summaries lead with the decision and land on the result.** Mechanism appears only where it is itself the evidence of judgment. "Multi-agent enhancement with SSIM and luminance guardrails" tells a VP what was used; "chose a deterministic pipeline over a single generative pass, so every enhancement is reproducible" tells them what was decided and what it bought.
 
 ## Known content gaps
 
@@ -323,6 +332,8 @@ Content problems, not design problems; the rebuild does not fix them.
 
 - `mindblown-wow.gif` is the live cover for the Smarter Payouts write-up. It auto-plays, cannot be paused, is the only motion on the page, and a reaction meme undercuts the register the serif numerals establish. Needs replacing with a static frame.
 - Source images need resizing, not just `next/image` treatment: 6.0MB and 671KB originals cannot be served at 148px without a real asset pass.
+- **The Smarter Payouts summary still describes a system rather than a decision.** The current line — "predicted which payouts would fail before they did, so fewer transactions bounced" — is accurate but says nothing about the judgment involved or what it cost. The underlying write-up has the same gap, so this is a content fix, not a copy fix. Every other case summary names a decision; this one cannot until the write-up does.
+- **"Paying users" needs verifying against "monetized users."** The résumé says monetized. If that figure includes users monetized indirectly — partner revenue, float, interchange — then "paying" overstates it and the label should read "Revenue-generating users."
 
 - No write-up covers Evernest or Built. The strongest and most current work exists only as résumé bullets. Drafts are in progress.
 - None of the four existing write-ups carries a quantified outcome, so step 3 involves real authoring, not mechanical porting.
