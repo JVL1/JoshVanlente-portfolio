@@ -318,9 +318,11 @@ The homepage copy was rewritten after the UX critique. The register matters more
 
 It names the hard part — deciding which bet deserves the investment, rather than executing one handed to you — and then the method. "Earn the right to finish it" concedes the project might not survive its own evidence, which is a seniority signal: it implies killing your own work when the proof says to.
 
-**Lede:** Ten years building 0→1 products and platforms in vertical SaaS and fintech. Mostly that means research, collaboration, and working out when a bet is actually worth making — then shipping proof along the way that earns the next step. Currently building AI agent platforms at Evernest.
+**Lede:** Ten years building 0→1 products and platforms in vertical SaaS and fintech. Mostly that means research, collaboration, and working out when a bet is actually worth making — then shipping proof along the way that earns the next step. Currently building an AI agent platform at Evernest.
 
-**Metric labels** are written for a non-technical recruiter, with no translation step: "Paying users", "Annual payment volume", "Products in the suite", "Faster time to lease".
+**Metric labels** are written for a non-technical recruiter, with no translation step: "Monetized users", "Annual payment volume", "Products in the suite", "Faster time to lease".
+
+"Monetized" stays rather than becoming "paying": those users were not all paying directly, and some were monetized through other channels. The plainer word would have been the less accurate one, which is the wrong trade on a page whose entire job is credibility.
 
 **Attribution is uniformly `Org · period`.** The prototype mixed date ranges with a project descriptor, so one slot meant two things. Three consecutive `Azibo · 2023—25` entries are the honest result and worth keeping: read straight, they say one sustained run with compounding results.
 
@@ -332,8 +334,7 @@ Content problems, not design problems; the rebuild does not fix them.
 
 - `mindblown-wow.gif` is the live cover for the Smarter Payouts write-up. It auto-plays, cannot be paused, is the only motion on the page, and a reaction meme undercuts the register the serif numerals establish. Needs replacing with a static frame.
 - Source images need resizing, not just `next/image` treatment: 6.0MB and 671KB originals cannot be served at 148px without a real asset pass.
-- **The Smarter Payouts summary still describes a system rather than a decision.** The current line — "predicted which payouts would fail before they did, so fewer transactions bounced" — is accurate but says nothing about the judgment involved or what it cost. The underlying write-up has the same gap, so this is a content fix, not a copy fix. Every other case summary names a decision; this one cannot until the write-up does.
-- **"Paying users" needs verifying against "monetized users."** The résumé says monetized. If that figure includes users monetized indirectly — partner revenue, float, interchange — then "paying" overstates it and the label should read "Revenue-generating users."
+- **The Smarter Payouts summary describes a system rather than a decision.** The current line — "predicted which payouts would fail before they did, so fewer transactions bounced" — is accurate but says nothing about the judgment involved or what it cost. The underlying write-up has the same gap, so this is a content fix rather than a copy fix, and it stays as-is until the write-up itself names a decision. Every other case summary does.
 
 - No write-up covers Evernest or Built. The strongest and most current work exists only as résumé bullets. Drafts are in progress.
 - None of the four existing write-ups carries a quantified outcome, so step 3 involves real authoring, not mechanical porting.
