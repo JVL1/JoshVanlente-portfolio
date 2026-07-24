@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" width="2400" height="1120" font-family="Inter, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#9CA3AF"/>
+    </marker>
+  </defs>
+
+  <text x="26" y="34" font-size="20" font-weight="600" fill="#111827">The analysis never changed. The generation did.</text>
+
+  <!-- ================= BEFORE ================= -->
+  <text x="26" y="82" font-size="13" font-weight="700" fill="#6B7280" letter-spacing="1.6">BEFORE</text>
+
+  <rect x="26" y="98" width="286" height="104" rx="10" fill="#F9FAFB" stroke="#D1D5DB" stroke-dasharray="6 4"/>
+  <text x="44" y="122" font-size="12" font-weight="600" fill="#4B5563">Analysis — text only</text>
+  <text x="44" y="146" font-size="13" fill="#374151">Classify the scene, then decide</text>
+  <text x="44" y="166" font-size="13" fill="#374151">which corrections this photo</text>
+  <text x="44" y="186" font-size="13" fill="#374151">needs and how much.</text>
+
+  <g stroke="#9CA3AF" stroke-width="1.4" marker-end="url(#arrow)">
+    <line x1="320" y1="150" x2="348" y2="150"/>
+  </g>
+
+  <g font-size="12" fill="#7C2D12" text-anchor="middle">
+    <rect x="358" y="104" width="112" height="42" rx="6" fill="#FFF3EC" stroke="#E9A882"/>
+    <text x="414" y="130">Perspective</text>
+    <rect x="358" y="156" width="112" height="42" rx="6" fill="#FFF3EC" stroke="#E9A882"/>
+    <text x="414" y="182">Brighten</text>
+    <rect x="486" y="104" width="112" height="42" rx="6" fill="#FFF3EC" stroke="#E9A882"/>
+    <text x="542" y="130">Window pull</text>
+    <rect x="486" y="156" width="112" height="42" rx="6" fill="#FFF3EC" stroke="#E9A882"/>
+    <text x="542" y="176">White</text><text x="542" y="191">balance</text>
+    <rect x="614" y="104" width="112" height="42" rx="6" fill="#FFF3EC" stroke="#E9A882"/>
+    <text x="670" y="130">Relight</text>
+    <rect x="614" y="156" width="112" height="42" rx="6" fill="#FFF3EC" stroke="#E9A882"/>
+    <text x="670" y="182">Sky</text>
+    <rect x="742" y="130" width="112" height="42" rx="6" fill="#FFF3EC" stroke="#E9A882"/>
+    <text x="798" y="150">Color</text><text x="798" y="165">correction</text>
+  </g>
+
+  <text x="884" y="140" font-size="26" font-weight="700" fill="#B23C0C">3.5 passes</text>
+  <text x="884" y="164" font-size="13" fill="#6B7280">on an average photo, up to 7,</text>
+  <text x="884" y="182" font-size="13" fill="#6B7280">each one chained into the next</text>
+
+  <line x1="26" y1="252" x2="1174" y2="252" stroke="#E5E7EB"/>
+
+  <!-- ================= AFTER ================= -->
+  <text x="26" y="302" font-size="13" font-weight="700" fill="#6B7280" letter-spacing="1.6">AFTER</text>
+
+  <rect x="26" y="318" width="286" height="104" rx="10" fill="#F9FAFB" stroke="#D1D5DB" stroke-dasharray="6 4"/>
+  <text x="44" y="342" font-size="12" font-weight="600" fill="#4B5563">Analysis — unchanged</text>
+  <text x="44" y="366" font-size="13" fill="#374151">Classify the scene, then decide</text>
+  <text x="44" y="386" font-size="13" fill="#374151">which corrections this photo</text>
+  <text x="44" y="406" font-size="13" fill="#374151">needs and how much.</text>
+
+  <g stroke="#9CA3AF" stroke-width="1.4" marker-end="url(#arrow)">
+    <line x1="320" y1="370" x2="348" y2="370"/>
+  </g>
+
+  <rect x="358" y="340" width="496" height="60" rx="8" fill="#FFF3EC" stroke="#B23C0C" stroke-width="2"/>
+  <text x="606" y="368" font-size="15" font-weight="600" fill="#7C2D12" text-anchor="middle">One combined edit</text>
+  <text x="606" y="388" font-size="12" fill="#9A3412" text-anchor="middle">the same corrections, assembled into a single prompt</text>
+
+  <text x="884" y="360" font-size="26" font-weight="700" fill="#15803D">1 pass</text>
+  <text x="884" y="384" font-size="13" fill="#6B7280">every photo, nothing chained</text>
+
+  <text x="26" y="480" font-size="14" fill="#6B7280">Newer models hold every correction in one pass. Older ones dropped or hallucinated corrections when you asked for more than one.</text>
+  <text x="26" y="504" font-size="14" fill="#6B7280">Benchmark quality held at 40.8 out of 50. Cost per photo fell from about $0.40 to about $0.17.</text>
+</svg>
