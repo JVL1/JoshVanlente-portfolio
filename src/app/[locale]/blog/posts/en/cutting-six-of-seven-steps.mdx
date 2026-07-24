@@ -1,0 +1,62 @@
+---
+title: "Cutting six of seven steps made photos 58% cheaper and leasing 9% faster"
+publishedAt: "2026-07-24"
+summary: "An automated research loop showed my seven-step photo pipeline was obsolete. Collapsing it to one generative pass held quality at 58% of the cost, and made room for tenant item removal and virtual staging."
+image: "/images/blog/pipeline-drift/staging-comparison.jpg"
+tag: "Technology"
+outcomes:
+  - metric: "58%"
+    label: "Lower cost per enhanced photo"
+  - metric: "7 → 1"
+    label: "Generative passes per photo"
+  - metric: "9%"
+    label: "Faster time to lease"
+---
+
+A year ago I published a [case study](/work/AI-Pipeline-for-Real-Estate-Photos) arguing that the best thing about my real-estate photo pipeline was its seven modular steps. Newer models and an automated research loop have since cut those seven steps to one, which made room for two things we couldn't fit before: removing tenant belongings from a photo, and virtually staging an empty room.
+
+## Seven steps was right for 2025 models
+
+Ask a 2025 image model to brighten *and* correct color *and* replace the sky in one prompt and it would quietly drop half the instructions, or invent something to fill the gap.
+
+So I split them. Each correction got its own call and the model's full attention. Brightening alone lifted mean luminance 0.05 to 0.12 on a 0-to-1 scale, where a listing-ready interior sits around 0.60, and it did that without blowing out the windows.
+
+## Then the models caught up
+
+Newer models could accurately apply multiple corrections in a single pass. I confirmed it on an eval benchmark I built: twelve production photos, scored by a vision model across clarity, structural fidelity, brightness, color and sky. The single-prompt version scored 40.8 out of 50 against the seven-step chain's 40.6.
+
+The benchmark runs as a loop rather than a one-off. Each iteration changes one prompt, re-runs the twelve photos, scores every output, and keeps the change only if the mean score improves; if it doesn't, the loop resets itself and tries something else. Pointing that loop at a newer model is what surfaced the result above.
+
+![Before and after: the analysis stays the same, the generation collapses from up to seven chained passes into one](/images/blog/pipeline-drift/generative-passes.svg)
+
+## What the headroom bought
+
+Step count matters here because an image model repaints the photo rather than editing it. Every step is another full re-render, and **every re-render drifts**, meaning small unrequested changes to the room. Enhancement already averaged 3.5 generative passes per photo, and we couldn't risk adding more.
+
+![Passes per photo: up to nine under the old design, three today](/images/blog/pipeline-drift/drift-budget.svg)
+
+Stacking item removal and staging onto the old chain meant up to nine re-renders of one photo, which would certainly invent a new window or ceiling fan.
+
+### Tenant item removal
+
+We wanted to list a unit sooner by using the photos already taken at the move-out inspection, tenant furniture and all, instead of waiting for the tenant to leave and sending a photographer back.
+
+![An occupied living room before and after one item-removal pass](/images/blog/pipeline-drift/declutter-comparison.jpg)
+
+### Virtual staging
+
+We didn't stage at all before this. A digital staging service runs upward of $25 a photo. The bigger problem was the vendor: human editors are slow, and AI editors would reintroduce the drift we had just eliminated. Staging inside our own pipeline costs cents and adds no step to the process.
+
+![An empty living room before and after one virtual-staging pass](/images/blog/pipeline-drift/staging-comparison.jpg)
+
+## Two things I didn't expect
+
+**1. The structural check went nearly quiet.** It existed to catch drift between steps. With no steps in between, retries fell from 0.5–0.6 per photo to about 0.1.
+
+**2. The check had to learn what kind of edit it was looking at.** Removing a car from a driveway *is* a structural change, so the check that protects enhancement would have rejected every correct removal. Staging has its own rule: adding a couch or a plant is fine, adding a window or a kitchen island is not. So preservation became a pass-fail gate defined per change type rather than one averaged score. A single number rates "removed all the clutter but rebuilt the kitchen island" a 7 out of 10, and rebuilding a kitchen island in a rental listing is not a 7.
+
+## What it added up to
+
+Enhancement went from 3.5 generative passes to 1 at the same quality, and cost per photo fell from about $0.40 to about $0.17 across tens of thousands of photos a month.
+
+Eliminating that drift is what made room for item removal and staging, and together the changes cut time to lease 9%.

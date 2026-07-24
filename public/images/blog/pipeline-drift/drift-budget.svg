@@ -1,43 +1,40 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="2400" height="840" font-family="Inter, Helvetica, Arial, sans-serif">
-  <text x="26" y="34" font-size="20" font-weight="600" fill="#111827">What a photo costs, in generative passes</text>
-  <text x="26" y="60" font-size="14" fill="#6B7280">Every pass is a re-render, and every re-render is a chance to lose a window frame or invent a countertop.</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" width="2400" height="720" font-family="Inter, Helvetica, Arial, sans-serif">
+  <!-- BEFORE -->
+  <text x="26" y="34" font-size="13" font-weight="700" fill="#6B7280" letter-spacing="1.6">BEFORE, WITH BOTH NEW FEATURES ADDED</text>
 
-  <!-- OLD -->
-  <text x="26" y="112" font-size="13" font-weight="700" fill="#6B7280" letter-spacing="1.6">THE OLD DESIGN, WITH BOTH NEW FEATURES ADDED</text>
-
-  <text x="26" y="156" font-size="14" fill="#374151">Enhancement</text>
+  <text x="26" y="78" font-size="14" fill="#374151">Enhancement</text>
   <g>
-    <circle cx="290" cy="151" r="12" fill="#B23C0C"/>
-    <circle cx="322" cy="151" r="12" fill="#B23C0C"/>
-    <circle cx="354" cy="151" r="12" fill="#B23C0C"/>
-    <path d="M 386 139 a 12 12 0 0 0 0 24 z" fill="#B23C0C"/>
-    <circle cx="386" cy="151" r="12" fill="none" stroke="#E9A882" stroke-dasharray="3 3"/>
-    <circle cx="418" cy="151" r="12" fill="none" stroke="#E9A882" stroke-dasharray="3 3"/>
-    <circle cx="450" cy="151" r="12" fill="none" stroke="#E9A882" stroke-dasharray="3 3"/>
-    <circle cx="482" cy="151" r="12" fill="none" stroke="#E9A882" stroke-dasharray="3 3"/>
+    <circle cx="290" cy="73" r="12" fill="#B23C0C"/>
+    <circle cx="322" cy="73" r="12" fill="#B23C0C"/>
+    <circle cx="354" cy="73" r="12" fill="#B23C0C"/>
+    <path d="M 386 61 a 12 12 0 0 0 0 24 z" fill="#B23C0C"/>
+    <circle cx="386" cy="73" r="12" fill="none" stroke="#E9A882" stroke-dasharray="3 3"/>
+    <circle cx="418" cy="73" r="12" fill="none" stroke="#E9A882" stroke-dasharray="3 3"/>
+    <circle cx="450" cy="73" r="12" fill="none" stroke="#E9A882" stroke-dasharray="3 3"/>
+    <circle cx="482" cy="73" r="12" fill="none" stroke="#E9A882" stroke-dasharray="3 3"/>
   </g>
-  <text x="510" y="156" font-size="13" fill="#6B7280">3.5 on average, up to 7</text>
+  <text x="510" y="78" font-size="13" fill="#6B7280">3.5 on average, up to 7</text>
 
-  <text x="26" y="196" font-size="14" fill="#374151">Tenant item removal</text>
-  <circle cx="290" cy="191" r="12" fill="#B23C0C"/>
-  <text x="26" y="232" font-size="14" fill="#374151">Virtual staging</text>
-  <circle cx="290" cy="227" r="12" fill="#B23C0C"/>
+  <text x="26" y="118" font-size="14" fill="#374151">Tenant item removal</text>
+  <circle cx="290" cy="113" r="12" fill="#B23C0C"/>
+  <text x="26" y="154" font-size="14" fill="#374151">Virtual staging</text>
+  <circle cx="290" cy="149" r="12" fill="#B23C0C"/>
 
-  <text x="790" y="196" font-size="30" font-weight="700" fill="#B23C0C">5.5 to 9</text>
-  <text x="790" y="220" font-size="13" fill="#6B7280">There was no drift budget left to spend.</text>
+  <text x="790" y="118" font-size="30" font-weight="700" fill="#B23C0C">5.5 to 9</text>
+  <text x="790" y="142" font-size="13" fill="#6B7280">There was no drift budget left to spend.</text>
 
-  <line x1="26" y1="266" x2="1174" y2="266" stroke="#E5E7EB"/>
+  <line x1="26" y1="188" x2="1174" y2="188" stroke="#E5E7EB"/>
 
-  <!-- NEW -->
-  <text x="26" y="306" font-size="13" font-weight="700" fill="#6B7280" letter-spacing="1.6">WHAT SHIPPED</text>
+  <!-- AFTER -->
+  <text x="26" y="228" font-size="13" font-weight="700" fill="#6B7280" letter-spacing="1.6">AFTER — WHAT SHIPPED</text>
 
-  <text x="26" y="350" font-size="14" fill="#374151">Tenant item removal</text>
-  <circle cx="290" cy="345" r="12" fill="#B23C0C"/>
-  <text x="26" y="382" font-size="14" fill="#374151">Enhancement</text>
-  <circle cx="322" cy="377" r="12" fill="#B23C0C"/>
-  <text x="26" y="414" font-size="14" fill="#374151">Virtual staging</text>
-  <circle cx="354" cy="409" r="12" fill="#B23C0C"/>
+  <text x="26" y="272" font-size="14" fill="#374151">Tenant item removal</text>
+  <circle cx="290" cy="267" r="12" fill="#B23C0C"/>
+  <text x="26" y="304" font-size="14" fill="#374151">Enhancement</text>
+  <circle cx="322" cy="299" r="12" fill="#B23C0C"/>
+  <text x="26" y="336" font-size="14" fill="#374151">Virtual staging</text>
+  <circle cx="354" cy="331" r="12" fill="#B23C0C"/>
 
-  <text x="790" y="378" font-size="30" font-weight="700" fill="#15803D">3</text>
-  <text x="790" y="402" font-size="13" fill="#6B7280">And only for an occupied unit. A vacant one costs 1 or 2.</text>
+  <text x="790" y="300" font-size="30" font-weight="700" fill="#15803D">3</text>
+  <text x="790" y="324" font-size="13" fill="#6B7280">And only for an occupied unit. A vacant one costs 1 or 2.</text>
 </svg>
