@@ -26,11 +26,34 @@ and a positioning of "forward-thinking, experimental, yet experienced"?
 - **Numbered `01–04` index** — redundant signal alongside thumbnails, pure visual noise.
 - **"Open to work" chip** — reads as actively hunting.
 
+## Changed after the UX critique (Claude + Gemini + Codex, 2026-07-24)
+
+Scored 27/40 on Nielsen's heuristics before fixes. Applied to variant E:
+
+- **Neutral scale cut from six greys to three.** `#565a56` (2.81:1) and `#6d716c` (3.97:1) both
+  failed WCAG AA. The first rendered the email address and every metric attribution — the
+  contact path and the evidence, in the least legible ink on the page. Now `#eceeec` / `#adb1ac`
+  / `#8a8e89`, measuring 16.90 / 9.07 / 5.92.
+- **`:focus-visible` mirrors every hover treatment**, plus a skip link. The whole interaction
+  language was mouse-only; keyboard users got a browser default ring.
+- **`prefers-reduced-motion`** gates the row slide and thumbnail zoom.
+- **Real anchors** — nav pointed at three dead `#`s.
+- **Rail scrolls** — below ~420px of viewport height the contact links clipped unreachably.
+- **Azibo's two roles split apart.** The prototype had merged them under the later title,
+  contradicting the seven-role table in the design doc.
+
 ## Open
 
 - Whether the work list clears the fold at real viewport heights. The `fold` button in the
   switcher measures it live; ~240px was trimmed from the hero to buy room.
 - Whether the metric strip should sit below the work list instead, if the fold stays tight.
+- Four copy questions (headline framing, metric label wording, attribution format, and whether
+  case summaries lead with mechanism instead of judgment) — recorded in the design doc, not
+  decided, because they are Josh's voice.
+- Whether the design's identity survives the Swap Test. One reviewer's verdict: it clears the
+  AI-slop bar, but the identity lives in the serif numerals, the metric attribution, and the
+  headline voice rather than the layout — "swap in another product person's content and nothing
+  breaks." Protect those three in the rebuild.
 
 ## Cleanup
 

@@ -61,8 +61,13 @@ The content is also a year stale. The live site shows Azibo as the current job a
   | Twitter | Product Manager | 2018 – 2019 |
   | Ampush | Senior Product Manager | 2013 – 2018 |
 
-- [ ] At 390×844 (iPhone 14 viewport) the rail is collapsed, all navigation is reachable, and no horizontal scroll occurs.
+- [ ] At 390×844 (iPhone 14 viewport) the rail is collapsed, all navigation is reachable, no horizontal scroll occurs, and the headline appears above the contact links in DOM order.
+- [ ] At 320px wide, a 120-character case-study title causes no horizontal overflow.
 - [ ] At 1280×800, at least half of the first case-study thumbnail is visible without scrolling.
+- [ ] Every interactive element has a `:focus-visible` style distinct from the browser default, and a skip link is the first focusable element.
+- [ ] Every text colour used at any size clears 4.5:1 against its background, asserted by a unit test over the token file.
+- [ ] No rendered text is smaller than 12px.
+- [ ] No `.gif` is referenced from `content/` or `src/`; the total transferred image weight on the homepage is under 500KB.
 - [ ] `/en/*` returns 404 (pinning the deliberate no-redirect decision, so it is a choice rather than an accident).
 
 **Quality**
@@ -175,9 +180,17 @@ All frontmatter-driven images render through `next/image` with explicit dimensio
 
 ## Responsive behavior
 
-The sticky rail is a desktop layout and does not survive narrow viewports. Below 900px the shell collapses to a single column: the rail becomes a static header carrying the name and role, navigation moves to a horizontal row beneath it, and contact links move to the footer. The metric strip goes from four columns to two. Case rows drop the year column and shrink the thumbnail to 90px.
+The sticky rail is a desktop layout and does not survive narrow viewports. Two breakpoints, not one:
 
-This is the one layout question the prototype answers only approximately — its media queries were written to keep the mock honest, not to be a specification. The mobile layout gets its own prototype pass before implementation.
+**Below 900px** the shell collapses to a single column. The rail becomes a static header carrying the name and role, navigation moves to a horizontal row beneath it, and contact links move to the footer rather than staying above the hero. The metric strip goes from four columns to two. Case rows drop the year column and shrink the thumbnail to 90px.
+
+**Below 600px** case rows stack the thumbnail above the text rather than beside it. At 320px the side-by-side layout leaves roughly 148px for the title and summary, which is not a readable measure. Grid columns use `minmax(0, 1fr)` and text uses `overflow-wrap: anywhere` so a long unbroken title cannot force horizontal overflow.
+
+The ordering rule at every width: positioning and evidence come before chrome. The prototype's single 900px breakpoint left the full navigation and all three contact links ahead of the headline on a phone, which inverts the priority the desktop layout was designed around.
+
+Interaction states are authored for `:focus-visible` as well as `:hover` — the same green treatment, never a bare browser default — and the page carries a skip link, because the rail places six links ahead of the content on every load. Motion is gated behind `prefers-reduced-motion`.
+
+This is the one layout question the prototype answers only approximately. The mobile layout gets its own prototype pass before implementation.
 
 ## Stack
 
@@ -215,9 +228,31 @@ shadcn is the decided answer for behavioral widgets, but nothing in the current 
 
 Variant E from the prototype. A sticky left identity rail carries the name, navigation, and contact details permanently on screen. The main column runs an editorial headline with a serif italic accent, then a metric strip, then case rows with thumbnails near the fold, then the track record.
 
-Acid green `#c8ff2e` is spent in exactly three places — the headline italic, hover states, and the availability indicator — because an accent used everywhere stops being an accent. Metric numerals are set in light Instrument Serif rather than bold sans, which reads closer to an annual report than a startup dashboard. Every metric is attributed with company and year, since an unattributed number reads as a claim and an attributed one reads as evidence.
+Acid green `#c8ff2e` is spent in exactly three places — the headline italic, hover and focus states, and the primary call to action — because an accent used everywhere stops being an accent. (The availability indicator this list originally named was cut along with the "open to work" chip.) Metric numerals are set in light Instrument Serif rather than bold sans, which reads closer to an annual report than a startup dashboard. Every metric is attributed with company and year, since an unattributed number reads as a claim and an attributed one reads as evidence.
 
 Fonts load through `next/font` — Inter for text, Instrument Serif for numerals and the headline italic, JetBrains Mono for labels. Full rationale in `prototypes/NOTES.md`.
+
+### Colour and type floors
+
+The neutral scale is three steps, not the six the prototype originally drifted into. All three clear WCAG 2.2 AA against the `#0a0b0b` background:
+
+| Token | Hex | Contrast | Use |
+|---|---|---|---|
+| `text` | `#eceeec` | 16.90 | Headings, body |
+| `text-muted` | `#adb1ac` | 9.07 | Lede, navigation, metric labels, summaries |
+| `text-subtle` | `#8a8e89` | 5.92 | Attribution, years, tags, achievements |
+| `accent` | `#c8ff2e` | 16.70 | The three places above |
+| `border` | `#1d1f1e`, `#262a27` | — | Rules and dividers only, never text |
+
+The two greys these replace measured 3.97 and 2.81 — the second rendered the email address in the rail and the company attribution under every metric, so the least legible text on the page was the contact path and the evidence that makes the numbers credible.
+
+No text renders below 12px. The prototype used 10px JetBrains Mono for metric labels, attribution, and tags; at that size, uppercase mono reads as log output rather than considered detail, and it compounds any contrast weakness.
+
+### Image budget
+
+Frontmatter images render through `next/image` with `sizes` matching their real display width, in AVIF or WebP, lazy below the fold. This is a hard requirement, not an optimization: the four prototype thumbnails currently total 7.6MB — a 6.0MB 2048×1499 PNG, an 863KB animated GIF, and a 671KB 2572×1522 JPEG — all displayed at roughly 148px wide. The ≥95 Lighthouse performance criterion is unreachable until the source assets are also resized.
+
+No auto-playing animated media. An animated GIF cannot be gated behind `prefers-reduced-motion` and has no pause control, which fails WCAG 2.2.2 for motion lasting over five seconds. Where motion genuinely helps, use a `<video>` with a poster frame that plays on hover or focus.
 
 ## Components and data flow
 
@@ -227,6 +262,7 @@ Fonts load through `next/font` — Inter for text, Instrument Serif for numerals
 | `MetricStrip` | `profile.ts` → `headlineOutcomes` |
 | `TrackRecord` | `profile.ts` → `roles` |
 | `CaseRow` | `lib/content.ts` |
+| — semantics | `<ul>` of `<li>`; the title is a real `<h3>` and the anchor wraps the title only, with the hit area stretched by a pseudo-element. Wrapping the whole row makes the link's accessible name the concatenation of title, summary, tags, and year. |
 | `SectionHeader` | props, used three times |
 | `Prose` | props |
 | `MDXContent` | server-side evaluator; registry supplies widgets |
@@ -272,9 +308,21 @@ Accessibility and performance are measured by Lighthouse CI rather than axe, so 
 - **Where the metric strip sits relative to the work list.** Roughly 240px was trimmed from the hero to keep case-study thumbnails near the fold. If the 1280×800 criterion cannot be met with the strip above the work list, the strip moves below it and becomes the closer.
 - **About page content.** The shape is settled — narrative plus supporting credentials, with work history staying on the homepage. The copy is not written.
 
+## Copy decisions raised by review, not yet made
+
+The UX critique raised four copy questions. They are Josh's voice, so they are recorded rather than decided.
+
+- **The headline.** "I ship the parts everyone else defers" was called distinctive but risky: "parts" may undersell Staff-level scope, and "everyone else" casts colleagues as the obstacle, which can read as poor cross-functional posture to the VP who would hire him.
+- **Metric labels.** "Monetized users" and "Product suite" need interpretation from a non-technical recruiter. "Paying users" and "Products in suite" say the same thing without a translation step.
+- **Attribution format.** Three metrics carry a date range and one carries a project descriptor ("Azibo · platform rebuild"), so the slot means two different things.
+- **Case-study summaries.** They lead with mechanism ("SSIM and luminance guardrails", "AI-powered") more than with judgment or result. A VP reads for the decision and its consequence; unexplained acronyms cost more than they signal.
+
 ## Known content gaps
 
 Content problems, not design problems; the rebuild does not fix them.
+
+- `mindblown-wow.gif` is the live cover for the Smarter Payouts write-up. It auto-plays, cannot be paused, is the only motion on the page, and a reaction meme undercuts the register the serif numerals establish. Needs replacing with a static frame.
+- Source images need resizing, not just `next/image` treatment: 6.0MB and 671KB originals cannot be served at 148px without a real asset pass.
 
 - No write-up covers Evernest or Built. The strongest and most current work exists only as résumé bullets. Drafts are in progress.
 - None of the four existing write-ups carries a quantified outcome, so step 3 involves real authoring, not mechanical porting.
