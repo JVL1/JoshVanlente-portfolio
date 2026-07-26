@@ -27,13 +27,13 @@ Newer models could accurately apply multiple corrections in a single pass. I con
 
 The benchmark runs as a loop rather than a one-off. Each iteration changes one prompt, re-runs the twelve photos, scores every output, and keeps the change only if the mean score improves; if it doesn't, the loop resets itself and tries something else. Pointing that loop at a newer model is what surfaced the result above.
 
-![Before and after: the analysis stays the same, the generation collapses from up to seven chained passes into one](/images/blog/pipeline-drift/generative-passes.svg)
+![Before and after: the analysis stays the same, the generation collapses from up to seven chained passes into one](/images/blog/pipeline-drift/generative-passes.png)
 
 ## What the headroom bought
 
 Step count matters here because an image model repaints the photo rather than editing it. Every step is another full re-render, and **every re-render drifts**, meaning small unrequested changes to the room. Enhancement already averaged 3.5 generative passes per photo, and we couldn't risk adding more.
 
-![Passes per photo: up to nine under the old design, three today](/images/blog/pipeline-drift/drift-budget.svg)
+![Passes per photo: up to nine under the old design, three today](/images/blog/pipeline-drift/drift-budget.png)
 
 Stacking item removal and staging onto the old chain meant up to nine re-renders of one photo, which would certainly invent a new window or ceiling fan.
 
