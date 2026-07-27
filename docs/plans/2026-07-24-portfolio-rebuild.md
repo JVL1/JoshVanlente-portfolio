@@ -38,7 +38,7 @@ Suite is 62 tests green. `npx next build` exits 0.
 
 ### Blockers and open questions
 
-- **Task 7 needs four things from Josh** and stops without the first three: a quantified outcome for `deterministic-ai-photo-pipeline`, one for `product-led-growth-strategy`, a static replacement cover for Smarter Payouts, and the About narrative (Task 15). Do not invent any of them.
+- **Task 7 is now blocked on exactly one thing** (answered 2026-07-27 — see "Content inputs, as answered" below): a business outcome for `deterministic-ai-photo-pipeline` that Josh supplies. Task 15 still needs the About narrative. Do not invent either.
 - **Vercel preview deployments sit behind SSO**, which breaks Tasks 22 and 23 as written — Playwright and the manual checklist would both test the auth wall, and LinkedIn's crawler cannot authenticate. Three options are written up in the spike result doc. **Raise it with Josh at Task 20**, so the answer exists before Task 22 needs it.
 - **`README.md` still sells the Once UI template**, including a Deploy button pointing at `once-ui-system/magic-portfolio`. No task owns it, and Task 21's hygiene grep is scoped to `src/` so it reports green regardless. Rewriting it needs Josh's voice.
 - A hard-killed test run leaks a fixture directory under `tests/.tmp/`. Gitignored and inert, but they accumulate; a `globalSetup` that clears the directory would sweep them.
@@ -49,6 +49,18 @@ Four items came out of Task 6's review that its own three-file scope could not f
 - **`s.path()` also strips a trailing `/index`.** A file at `content/work/index.mdx` arrives as `sourcePath === "work"`, so the filename-mismatch error would name `content/work.mdx` and advise a rename in a circle. The fix is `s.path({ removeIndex: false })` in `velite.config.ts` — Task 5's file, one line. No write-up is named `index`, so this is a trap rather than a live bug.
 - **Nothing stops a page importing `work` from `#content` directly** and rendering drafts, which would route around the single filtering point the loader exists to be. About six lines of `no-restricted-imports` in `eslint.config.mjs` would enforce it. **Task 21's hygiene sweep is the natural home.**
 - **`Rawish` in `content-rules.ts` is a hand-written shadow of the schema**, and its optional properties mean renaming `roleId` in `velite.config.ts` typechecks clean and fails at runtime blaming the content author. This is a real cost of the two-module split, accepted knowingly rather than overlooked.
+
+### Content inputs, as answered on 2026-07-27
+
+Josh answered four of the five blocking inputs. Task 7 writes these verbatim; it does not improve on them.
+
+| Input | Answer |
+|---|---|
+| `deterministic-ai-photo-pipeline` outcome | **Still open.** Josh supplies a business number — photos processed, cost per listing, turnaround, rework rate. The plan's claim that this write-up "contains no numbers" was wrong: its Results section already carries "+0.05–0.12 increase in mean luminance … keeping SSIM within our target threshold". Josh declined that line as a headline metric because it is an instrument reading a reader cannot calibrate, not because it is untrue. Keep it in the body. |
+| `product-led-growth-strategy` outcome | `metric: "#1"` / `label: "Growth channel by new users and units"`, plus `metric: "Lowest"` / `label: "Acquisition cost of any channel"`. Neither is new: the write-up's Outcome section says "#1 Growth Channel … top source of new users and units", and `profile.ts` says "Activated the company's #1 growth channel via a PLG initiative". A rank is not a measure, and that limitation is accepted knowingly. |
+| Smarter Payouts cover | A typographic cover built in the site's three-token palette from the write-up's own Outcomes section — "35% faster payouts", "<0.1% added clawbacks", "Azibo · 2024". Every figure is verbatim from the body. It is a real designed asset, not a placeholder, and it replaces `mindblown-wow.gif` (864KB, auto-playing, a reaction meme). Built in Task 8; Task 7 writes the path. |
+| `timeframe` for all five | Derived from the role each write-up maps to and the periods already in `headlineOutcomes`, **not** from the year in `publishedAt`. That documented default is wrong for at least three of five — `product-led-growth-strategy` is published 2024-04 but the work sits in `azibo-senior-pm`, which ended 2023-03, and `all-in-one-rental-platform` is published 2024-04 while its own headline metric reads 2023—2025. Derived values: PLG `2022–2023`, all-in-one `2023–2025`, smarter-payouts `2024`, photo pipeline `2025`, cutting-six `2025–2026`. Show Josh the five before committing. |
+| `product-led-growth-strategy` → `azibo-senior-pm` | **Confirmed by the repo, no longer a question.** `profile.ts` attaches "Activated the company's #1 growth channel via a PLG initiative" to `azibo-senior-pm` (2022-02 → 2023-03). |
 
 ### Verification, until Task 7
 
