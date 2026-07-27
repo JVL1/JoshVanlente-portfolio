@@ -6,3 +6,69 @@
 @import "tailwindcss" source(none);
 @source "../../src";
 @source "../../content";
+
+@theme {
+  /* Colour — three neutral steps, not six. Contrast against #0a0b0b in comments. */
+  --color-bg:            #0a0b0b;
+  --color-surface:       #171918;  /* thumbnail placeholder */
+  --color-text:          #eceeec;  /* 16.90 — headings, body */
+  --color-text-muted:    #adb1ac;  /*  9.07 — lede, nav, metric labels, summaries */
+  --color-text-subtle:   #8a8e89;  /*  5.92 — attribution, years, tags, achievements */
+  --color-accent:        #c8ff2e;  /* 16.70 — headline italic, hover/focus, primary CTA */
+  --color-accent-hover:  #d8ff63;
+  --color-border:        #1d1f1e;
+  --color-border-strong: #262a27;
+  --color-border-cta:    #2c302d;
+
+  /* Type — 12px floor. The prototype's 10px and 11px mono both become --text-xs. */
+  --text-xs:   0.75rem;    /* 12px */
+  --text-sm:   0.8125rem;  /* 13px */
+  --text-base: 0.875rem;   /* 14px */
+  --text-md:   0.9375rem;  /* 15px */
+  --text-lg:   1rem;       /* 16px */
+  --text-xl:   1.125rem;   /* 18px */
+
+  --font-sans:  var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), Georgia, serif;
+  --font-mono:  var(--font-jetbrains-mono), ui-monospace, monospace;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+  }
+
+  /* Every focusable element gets a visible ring distinct from the browser default. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
