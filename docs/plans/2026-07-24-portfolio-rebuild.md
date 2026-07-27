@@ -8,9 +8,9 @@
 
 ## Execution status — last updated 2026-07-27
 
-**Tasks 0 through 5 are complete and reviewed. Task 6 is next.**
+**Tasks 0 through 6 are complete and reviewed. Task 7 is next, and it is blocked on Josh.**
 
-Work happens in the worktree at `/Users/joshvanlente/Development/JoshVanlente-portfolio-impl` on `feat/portfolio-rebuild-impl`, 12 commits ahead of `feat/portfolio-rebuild`. The original checkout at `/Users/joshvanlente/Development/JoshVanlente-portfolio` stays on `feat/portfolio-rebuild` as a deliberate untouched copy of the old MDX tree — **do not modify it**; Task 7 may need to read from it, and Task 9 recovers `BeforeAfterSlider.tsx` from that branch's history.
+Work happens in the worktree at `/Users/joshvanlente/Development/JoshVanlente-portfolio-impl` on `feat/portfolio-rebuild-impl`, 15 commits ahead of `feat/portfolio-rebuild`. The original checkout at `/Users/joshvanlente/Development/JoshVanlente-portfolio` stays on `feat/portfolio-rebuild` as a deliberate untouched copy of the old MDX tree — **do not modify it**; Task 7 may need to read from it, and Task 9 recovers `BeforeAfterSlider.tsx` from that branch's history.
 
 | Task | State | Review |
 |---|---|---|
@@ -20,9 +20,10 @@ Work happens in the worktree at `/Users/joshvanlente/Development/JoshVanlente-po
 | 3. Design tokens and fonts | done | 3 models, quorum 3/3, 20 fixes across the 3–4 group |
 | 4. `src/data/profile.ts` | done | reviewed with Task 3 |
 | 5. `velite.config.ts` + fixtures | done | 3 models, quorum 3/3, **2 criticals** found and fixed |
-| 6 onward | not started | — |
+| 6. Content loader | done | 3 models, quorum 3/3, **2 majors** found and fixed |
+| 7 onward | not started | — |
 
-Suite is 43 tests green. `npx next build` exits 0.
+Suite is 62 tests green. `npx next build` exits 0.
 
 ### Decisions taken during execution, in addition to the three at the top of this file
 
@@ -33,6 +34,7 @@ Suite is 43 tests green. `npx next build` exits 0.
 5. **Task 21's dependency criterion was amended**, with `cookie` via `@lhci/cli` recorded as an accepted exception. See the Acceptance Criteria section.
 6. **The `dev` script keeps the `&` form**, with its watcher-orphaning hazard documented in `AGENTS.md` rather than fixed with a new dependency.
 7. **`@theme static`** in `globals.css` — without `static`, Tailwind 4 tree-shook 11 of 16 tokens out of the shipped CSS, and Tasks 9 and 13 reference tokens through raw `var()`, which Tailwind cannot see.
+8. **Task 6 ships two deviations from its own written implementation**, both from its review, and both there to make a claimed invariant provable. `resolveRole` and `filterPublished` are now composed by `resolveAndFilter` in `content-rules.ts` rather than sequenced inline in `content.ts`, because the plan's version of the "resolve drafts before filtering" test called `resolveRole` directly — and `resolveRole` never reads `draft`, so the test passed whichever order the loader used. `assertHeadlineSlugs` takes an optional third argument, every item including drafts, so a headline slug pointing at a real-but-drafted write-up says so instead of reading like a misspelling. Neither changes the loader's runtime behaviour. Both are the two-module split doing its job, so do not "restore" the plan text over them.
 
 ### Blockers and open questions
 
@@ -40,6 +42,13 @@ Suite is 43 tests green. `npx next build` exits 0.
 - **Vercel preview deployments sit behind SSO**, which breaks Tasks 22 and 23 as written — Playwright and the manual checklist would both test the auth wall, and LinkedIn's crawler cannot authenticate. Three options are written up in the spike result doc. **Raise it with Josh at Task 20**, so the answer exists before Task 22 needs it.
 - **`README.md` still sells the Once UI template**, including a Deploy button pointing at `once-ui-system/magic-portfolio`. No task owns it, and Task 21's hygiene grep is scoped to `src/` so it reports green regardless. Rewriting it needs Josh's voice.
 - A hard-killed test run leaks a fixture directory under `tests/.tmp/`. Gitignored and inert, but they accumulate; a `globalSetup` that clears the directory would sweep them.
+
+Four items came out of Task 6's review that its own three-file scope could not fix. Each names where it belongs:
+
+- **`s.isodate()` accepts a date that parses in local time, and Task 7 is where that bites.** The schema only requires `Date.parse` not to return `NaN`, so `2026-1-1` is accepted and resolves against the machine's timezone — in Tokyo it lands in the previous year. Every canonical `YYYY-MM-DD` date is unaffected, so today's content is safe. **Write every `publishedAt` in Task 7 as a full `YYYY-MM-DD`**, and consider tightening the schema to a regex.
+- **`s.path()` also strips a trailing `/index`.** A file at `content/work/index.mdx` arrives as `sourcePath === "work"`, so the filename-mismatch error would name `content/work.mdx` and advise a rename in a circle. The fix is `s.path({ removeIndex: false })` in `velite.config.ts` — Task 5's file, one line. No write-up is named `index`, so this is a trap rather than a live bug.
+- **Nothing stops a page importing `work` from `#content` directly** and rendering drafts, which would route around the single filtering point the loader exists to be. About six lines of `no-restricted-imports` in `eslint.config.mjs` would enforce it. **Task 21's hygiene sweep is the natural home.**
+- **`Rawish` in `content-rules.ts` is a hand-written shadow of the schema**, and its optional properties mean renaming `roleId` in `velite.config.ts` typechecks clean and fails at runtime blaming the content author. This is a real cost of the two-module split, accepted knowingly rather than overlooked.
 
 ### Verification, until Task 7
 
