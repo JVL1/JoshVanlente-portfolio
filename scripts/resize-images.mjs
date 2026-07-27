@@ -34,8 +34,11 @@ const JOBS = [
   ["content/work/product-led-growth-strategy/cover.jpg", 1200],
   ["public/images/blog/pipeline-drift/staging-comparison.jpg", 1600],
   ["public/images/blog/pipeline-drift/declutter-comparison.jpg", 1600],
-  ["public/images/blog/pipeline-drift/generative-passes.png", 1600],
-  ["public/images/blog/pipeline-drift/drift-budget.png", 1600],
+  // generative-passes and drift-budget used to convert here from PNG exports.
+  // They are hand-authored SVG, and their live source is now the SVG itself, so
+  // they moved to scripts/export-charts.mjs — which is re-runnable and deletes
+  // nothing. Running a vector source through this script would unlink the only
+  // editable copy, which is how those two files were lost once already.
   ["public/images/projects/ai-re-photos/photo45-original.png", 1280],
   ["public/images/projects/ai-re-photos/photo45-enhnaced.png", 1280],
 ];

@@ -156,8 +156,22 @@ asset, check whether it is the source of one that is referenced.
   Do not introduce a raw hex value or an arbitrary Tailwind colour — the contrast
   test cannot see them, and the palette is three neutral steps plus one accent by
   design.
-- **The accent (`--color-accent`, acid green) is spent in exactly three places:**
-  the headline italic, hover and focus states, and the primary CTA. Nowhere else.
+- **The accent (`--color-accent`, acid green) is spent in exactly four places:**
+  the headline italic, hover and focus states, the primary CTA, and the single
+  payoff figure in a chart. Nowhere else.
+
+  The fourth was added on 2026-07-27, on Josh's call, when the two
+  `pipeline-drift` charts were recoloured for the dark palette. A chart makes one
+  claim — passes dropping from 5.5–9 to 3 — and an all-neutral version rendered
+  the before- and after-numbers at identical weight, so the payoff read flat.
+  **One accent mark per chart, on the number the chart exists to show.** A second
+  mark in the same image spends the budget: `generative-passes.svg` lifts its
+  "One combined edit" box with a brighter border (`#4a4f4b`) instead.
+
+  Chart SVGs hard-code the token hex values rather than referencing
+  `var(--color-*)`, because sharp rasterizes them outside the browser and cannot
+  resolve a CSS custom property. That is the one sanctioned place a raw hex
+  appears; it does not license one in `src/`.
 - **No rendered text below 12px** (`--text-xs`). This is an acceptance criterion,
   asserted by both a unit test and a Playwright sweep.
 - **Every interactive element needs a `:focus-visible` style** distinct from the
