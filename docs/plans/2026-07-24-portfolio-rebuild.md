@@ -8,9 +8,9 @@
 
 ## Execution status — last updated 2026-07-27
 
-**Tasks 0 through 6 are complete and reviewed. Task 7 is next, and it is blocked on Josh.**
+**Tasks 0 through 8 are complete and reviewed. Task 9 is next, and nothing blocks it.**
 
-Work happens in the worktree at `/Users/joshvanlente/Development/JoshVanlente-portfolio-impl` on `feat/portfolio-rebuild-impl`, 15 commits ahead of `feat/portfolio-rebuild`. The original checkout at `/Users/joshvanlente/Development/JoshVanlente-portfolio` stays on `feat/portfolio-rebuild` as a deliberate untouched copy of the old MDX tree — **do not modify it**; Task 7 may need to read from it, and Task 9 recovers `BeforeAfterSlider.tsx` from that branch's history.
+Work happens in the worktree at `/Users/joshvanlente/Development/JoshVanlente-portfolio-impl` on `feat/portfolio-rebuild-impl`, 25 commits ahead of `feat/portfolio-rebuild`. The original checkout at `/Users/joshvanlente/Development/JoshVanlente-portfolio` stays on `feat/portfolio-rebuild` as a deliberate untouched copy of the old MDX tree — **do not modify it**; Task 7 may need to read from it, and Task 9 recovers `BeforeAfterSlider.tsx` from that branch's history.
 
 | Task | State | Review |
 |---|---|---|
@@ -21,9 +21,11 @@ Work happens in the worktree at `/Users/joshvanlente/Development/JoshVanlente-po
 | 4. `src/data/profile.ts` | done | reviewed with Task 3 |
 | 5. `velite.config.ts` + fixtures | done | 3 models, quorum 3/3, **2 criticals** found and fixed |
 | 6. Content loader | done | 3 models, quorum 3/3, **2 majors** found and fixed |
-| 7 onward | not started | — |
+| 7. Frontmatter for five write-ups | done | reviewed with Task 8 |
+| 8. Image asset pass | done | 3 models, quorum 3/3, 13 findings, 10 fixed, 3 escalated to Josh and resolved |
+| 9 onward | not started | — |
 
-Suite is 62 tests green. `npx next build` exits 0.
+Suite is 77 tests green across 8 files. **`npm run build`, `npm run test`, and `npm run typecheck` all work now** — Task 7 authored the valid content they were waiting on, so the bare-`npx` workaround below is history rather than instruction.
 
 ### Decisions taken during execution, in addition to the three at the top of this file
 
@@ -34,16 +36,20 @@ Suite is 62 tests green. `npx next build` exits 0.
 5. **Task 21's dependency criterion was amended**, with `cookie` via `@lhci/cli` recorded as an accepted exception. See the Acceptance Criteria section.
 6. **The `dev` script keeps the `&` form**, with its watcher-orphaning hazard documented in `AGENTS.md` rather than fixed with a new dependency.
 7. **`@theme static`** in `globals.css` — without `static`, Tailwind 4 tree-shook 11 of 16 tokens out of the shipped CSS, and Tasks 9 and 13 reference tokens through raw `var()`, which Tailwind cannot see.
-8. **Task 6 ships two deviations from its own written implementation**, both from its review, and both there to make a claimed invariant provable. `resolveRole` and `filterPublished` are now composed by `resolveAndFilter` in `content-rules.ts` rather than sequenced inline in `content.ts`, because the plan's version of the "resolve drafts before filtering" test called `resolveRole` directly — and `resolveRole` never reads `draft`, so the test passed whichever order the loader used. `assertHeadlineSlugs` takes an optional third argument, every item including drafts, so a headline slug pointing at a real-but-drafted write-up says so instead of reading like a misspelling. Neither changes the loader's runtime behaviour. Both are the two-module split doing its job, so do not "restore" the plan text over them.
+9. **Images are split across two scripts, and the split is load-bearing.** `scripts/resize-images.mjs` was a one-time photo migration: it deletes each source after converting, and all ten sources are already gone, so it cannot re-run without `git checkout 7a8489b -- public/images content/work` first. `scripts/export-charts.mjs` and `scripts/make-smarter-payouts-cover.mjs` are re-runnable generators that delete nothing. **Never route a hand-authored source through the resize script** — doing that destroyed the two chart SVGs once already. A new photograph goes through a trimmed `JOBS` list; a new chart or generated card gets a generator.
+10. **The comparison slider's two frames are processed identically, and two tests enforce it.** They ship at 1280×720 and the same WebP quantizer index. Task 8 originally squeezed each under the 300KB budget independently, landing them at quality 59 and 78 — which degraded the *unenhanced* frame more than the enhanced one, in the one widget whose job is letting a reader judge the enhancement. `tests/unit/helpers/webp-quantizer.ts` reads the quality back out of the VP8 header, because sharp can write a quality but cannot read one. Task 9 renders this slider; do not re-encode either frame alone.
+11. **Charts spend the accent once, on the payoff number.** `AGENTS.md`'s accent rule now names four places rather than three. Both `pipeline-drift` charts were drawn light-mode and would have rendered as white slabs on `#0a0b0b`; they are recoloured to the tokens, with hex values hard-coded because sharp rasterizes them outside the browser and cannot resolve a CSS custom property. Task 9 is the first task that actually renders them.
+12. **Task 6 ships two deviations from its own written implementation**, both from its review, and both there to make a claimed invariant provable. `resolveRole` and `filterPublished` are now composed by `resolveAndFilter` in `content-rules.ts` rather than sequenced inline in `content.ts`, because the plan's version of the "resolve drafts before filtering" test called `resolveRole` directly — and `resolveRole` never reads `draft`, so the test passed whichever order the loader used. `assertHeadlineSlugs` takes an optional third argument, every item including drafts, so a headline slug pointing at a real-but-drafted write-up says so instead of reading like a misspelling. Neither changes the loader's runtime behaviour. Both are the two-module split doing its job, so do not "restore" the plan text over them.
 
 ### Blockers and open questions
 
-- **Task 7 is unblocked.** All five content inputs were answered on 2026-07-27 — see "Content inputs, as answered" below. Task 15 still needs the About narrative from Josh. Do not invent it.
+- **All content inputs for Tasks 7 and 8 are answered and shipped** — see "Content inputs, as answered" below. **Task 15 still needs the About narrative from Josh.** Do not invent it.
+- **The image budget test now scans all of `public/`, not just `public/images/`.** Task 10's OG route and any favicon export land inside that scope, so an oversized card fails the suite rather than shipping quietly. Task 17's OG route is the one to watch.
 - **Vercel preview deployments sit behind SSO**, which breaks Tasks 22 and 23 as written — Playwright and the manual checklist would both test the auth wall, and LinkedIn's crawler cannot authenticate. Three options are written up in the spike result doc. **Raise it with Josh at Task 20**, so the answer exists before Task 22 needs it.
 - **`README.md` still sells the Once UI template**, including a Deploy button pointing at `once-ui-system/magic-portfolio`. No task owns it, and Task 21's hygiene grep is scoped to `src/` so it reports green regardless. Rewriting it needs Josh's voice.
 - A hard-killed test run leaks a fixture directory under `tests/.tmp/`. Gitignored and inert, but they accumulate; a `globalSetup` that clears the directory would sweep them.
 
-Four items came out of Task 6's review that its own three-file scope could not fix. Each names where it belongs:
+Four items came out of Task 6's review that its own three-file scope could not fix. Each names where it belongs. (The `s.isodate()` one has already served its purpose — Task 7's dates are all canonical — but the schema is still loose, so it stays listed for Task 5's file.)
 
 - **`s.isodate()` accepts a date that parses in local time, and Task 7 is where that bites.** The schema only requires `Date.parse` not to return `NaN`, so `2026-1-1` is accepted and resolves against the machine's timezone — in Tokyo it lands in the previous year. Every canonical `YYYY-MM-DD` date is unaffected, so today's content is safe. **Write every `publishedAt` in Task 7 as a full `YYYY-MM-DD`**, and consider tightening the schema to a regex.
 - **`s.path()` also strips a trailing `/index`.** A file at `content/work/index.mdx` arrives as `sourcePath === "work"`, so the filename-mismatch error would name `content/work.mdx` and advise a rename in a circle. The fix is `s.path({ removeIndex: false })` in `velite.config.ts` — Task 5's file, one line. No write-up is named `index`, so this is a trap rather than a live bug.
@@ -59,14 +65,19 @@ Josh answered four of the five blocking inputs. Task 7 writes these verbatim; it
 | `deterministic-ai-photo-pipeline` outcome | `metric: "Cost parity"` / `label: "Matched the incumbent vendor, in-house"`, plus `metric: "Per-step"` / `label: "Audit log for every enhancement"`. **This write-up has no win metric, and that is the finding, not a gap to paper over.** Josh's account: the goal was to cut cost, the pipeline roughly matched the outgoing vendor's cost, and quality improved — but he never benchmarked the vendor's photos, so the quality gain is unmeasured and must not be given a number. The `BeforeAfterSlider` already in the body carries that claim by showing it. Cost parity is a real result: it brought the pipeline in-house, which is what made the sequel's 50% reduction possible. The plan's claim that this write-up "contains no numbers" was also wrong — its Results section carries "+0.05–0.12 increase in mean luminance … keeping SSIM within our target threshold". That line stays in the body; it was declined as a headline metric because a reader cannot calibrate it, not because it is untrue. |
 | `product-led-growth-strategy` outcome | `metric: "#1"` / `label: "Growth channel by new users and units"`, plus `metric: "Lowest"` / `label: "Acquisition cost of any channel"`. Neither is new: the write-up's Outcome section says "#1 Growth Channel … top source of new users and units", and `profile.ts` says "Activated the company's #1 growth channel via a PLG initiative". A rank is not a measure, and that limitation is accepted knowingly. |
 | Smarter Payouts cover | A typographic cover built in the site's three-token palette from the write-up's own Outcomes section — "35% faster payouts", "<0.1% added clawbacks", "Azibo · 2024". Every figure is verbatim from the body. It is a real designed asset, not a placeholder, and it replaces `mindblown-wow.gif` (864KB, auto-playing, a reaction meme). Built in Task 8; Task 7 writes the path. |
-| `timeframe` for all five | Derived from the role each write-up maps to and the periods already in `headlineOutcomes`, **not** from the year in `publishedAt`. That documented default is wrong for at least three of five — `product-led-growth-strategy` is published 2024-04 but the work sits in `azibo-senior-pm`, which ended 2023-03, and `all-in-one-rental-platform` is published 2024-04 while its own headline metric reads 2023—2025. Derived values: PLG `2022–2023`, all-in-one `2023–2025`, smarter-payouts `2024`, photo pipeline `2025`, cutting-six `2025–2026`. Show Josh the five before committing. |
+| `timeframe` for all five | Derived from the role each write-up maps to and the periods already in `headlineOutcomes`, **not** from the year in `publishedAt`. That documented default is wrong for at least three of five — `product-led-growth-strategy` is published 2024-04 but the work sits in `azibo-senior-pm`, which ended 2023-03, and `all-in-one-rental-platform` is published 2024-04 while its own headline metric reads 2023—2025. Shipped values, all using an em dash to match `profile.ts`: PLG `2022—2023`, all-in-one `2023—2025`, smarter-payouts `2024`, photo pipeline `2025`, cutting-six `2025—2026`. |
+| `cutting-six-of-seven-steps` cost figure | **Corrected after Task 7 ran, twice.** The file shipped with the title claiming "58% cheaper" and the summary claiming "58% of the cost" — the same digits meaning a 58% cut and a 42% cut, both on one card. Then Josh corrected the starting cost from `$0.40` to `$0.34`. `$0.17 ÷ $0.34` is exactly one half, so the title, the summary, and the outcome metric all read **50%** and the body reads `$0.34 → $0.17`. `$0.34` appears nowhere in either repo or in git history — it came from Josh directly, which is why it could not have been caught by reading the tree. |
 | `product-led-growth-strategy` → `azibo-senior-pm` | **Confirmed by the repo, no longer a question.** `profile.ts` attaches "Activated the company's #1 growth channel via a PLG initiative" to `azibo-senior-pm` (2022-02 → 2023-03). |
 
-### Verification, until Task 7
+### Verification
 
-`npm run build`, `npm run test`, and `npm run typecheck` all invoke Velite against the real content tree, which is invalid until Task 7 authors frontmatter. **All three fail by design.** Verify with `npx next build`, `npx vitest run`, `npx tsc --noEmit`, and `npx eslint .` directly, and do not weaken any of the three scripts to make them run early.
+**From Task 7 onward the normal commands work.** `npm run test`, `npm run build`, and `npm run typecheck` are all green, and they are what to use. Each regenerates `.velite/` first, so they exercise the real content tree.
 
-Recovery tags `pre-task-3`, `pre-task-4`, and `pre-task-5` mark the commit before each of those tasks.
+Before Task 7 all three failed by design, because they invoke Velite against frontmatter that was not valid yet, and the workaround was to call `npx next build`, `npx vitest run`, `npx tsc --noEmit`, and `npx eslint .` directly. That period is over — the note survives only so a reader of the earlier task text knows why it says what it says.
+
+A correction worth keeping: the plan asserted `deterministic-ai-photo-pipeline` "contains no numbers". It does — its Results section carries a mean-luminance and SSIM figure. Verify a claim like that against the file before acting on it.
+
+Recovery tags `pre-task-3` through `pre-task-8` mark the commit before each of those tasks.
 
 **Goal:** Replace the Once UI `magic-portfolio` template with a site Josh owns end to end — a typed content pipeline that fails the build on bad frontmatter, a three-token colour scale, and a homepage that gives a hiring manager the name, positioning, four attributed metrics, and visible case-study evidence inside 20 seconds on a phone or a laptop.
 
