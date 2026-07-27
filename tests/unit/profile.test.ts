@@ -92,4 +92,40 @@ describe("profile.headlineOutcomes", () => {
       expect(o.period).toBeTruthy();
     }
   });
+
+  // The four metrics are the homepage's whole credibility argument, and nothing
+  // else pins them — the schema only checks that the strings are non-empty.
+  // They have drifted before: commit 01227ab replaced an Upstart figure with
+  // Evernest's 9% time-to-lease. A golden record here means a future edit is a
+  // deliberate act rather than a silent one, the same job the RESUME constant
+  // does for the roles.
+  it("matches the four headline metrics exactly", () => {
+    expect(profile.headlineOutcomes).toEqual([
+      { metric: "2.8×", label: "Monetized users", org: "Azibo", period: "2023—2025" },
+      { metric: "$300M+", label: "Annual payment volume", org: "Azibo", period: "2023—2025" },
+      {
+        metric: "1→7",
+        label: "Products in the suite",
+        org: "Azibo",
+        period: "2023—2025",
+        slug: "all-in-one-rental-platform",
+      },
+      {
+        metric: "9%",
+        label: "Faster time to lease",
+        org: "Evernest",
+        period: "2025—2026",
+        slug: "cutting-six-of-seven-steps",
+      },
+    ]);
+  });
+
+  // formatRoleDates renders the Track record a few hundred pixels below the
+  // metric strip on the same page, and it emits four-digit end years. A
+  // hand-written two-digit period here would read as drift rather than intent.
+  it("writes every period with a four-digit end year, matching formatRoleDates", () => {
+    for (const o of profile.headlineOutcomes) {
+      expect(o.period, `${o.metric} (${o.label})`).toMatch(/^\d{4}—\d{4}$/);
+    }
+  });
 });
