@@ -41,3 +41,10 @@ next-env.d.ts
 
 # fixture scratch space for the schema tests
 /tests/.tmp
+
+# lighthouse ci and playwright write these at the repo root
+/.lighthouseci
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache

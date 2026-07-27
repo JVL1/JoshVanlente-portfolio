@@ -1,1 +1,8 @@
-@import "tailwindcss";
+/* source(none) turns off Tailwind's automatic source detection, which otherwise
+   scans the whole non-gitignored tree. That swept the class names quoted in
+   docs/plans/, so utilities the site never uses were compiled into the shipped
+   stylesheet and deleting a class from a component left it in the bundle. The
+   two @source lines below are the only places real markup lives. */
+@import "tailwindcss" source(none);
+@source "../../src";
+@source "../../content";

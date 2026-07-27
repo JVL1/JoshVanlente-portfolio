@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
+import vitestConfig from "../../../vitest.config";
 
 describe("scaffold", () => {
   it("pins Node 24 in .nvmrc and package.json engines", () => {
@@ -25,5 +26,22 @@ describe("scaffold", () => {
     ]) {
       expect(all, `${banned} must not be a dependency`).not.toHaveProperty(banned);
     }
+  });
+
+  // Vitest does not read tsconfig paths. When the two lists drift, every test
+  // importing the missing alias fails at module resolution, so the failure names
+  // the importer rather than the alias and reads as a bug in the module.
+  it("declares the same aliases in tsconfig.json and vitest.config.ts", () => {
+    const tsconfig = JSON.parse(
+      readFileSync(new URL("../../../tsconfig.json", import.meta.url), "utf8"),
+    );
+    const tsAliases = Object.keys(tsconfig.compilerOptions.paths)
+      .map((key) => key.replace(/\/\*$/, ""))
+      .sort();
+    const viteAliases = Object.keys(
+      (vitestConfig as { resolve: { alias: Record<string, string> } }).resolve.alias,
+    ).sort();
+
+    expect(viteAliases).toEqual(tsAliases);
   });
 });
