@@ -34,3 +34,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# velite — generated at build time, never committed
+/.velite
+/public/static
+
+# fixture scratch space for the schema tests
+/tests/.tmp

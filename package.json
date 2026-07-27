@@ -1,50 +1,46 @@
 {
-	"name": "magic-portfolio",
-	"version": "0.1.0",
-	"private": true,
-	"scripts": {
-		"dev": "next dev",
-		"build": "next build",
-		"start": "next start",
-		"lint": "next lint"
-	},
-	"dependencies": {
-		"@floating-ui/react-dom": "^2.0.4",
-		"@mdx-js/loader": "^3.0.0",
-		"@mdx-js/react": "^3.0.0",
-		"@next/mdx": "^14.2.20",
-		"@types/cookie": "^0.6.0",
-		"@types/mdx": "^2.0.10",
-		"@types/prismjs": "^1.26.3",
-		"classnames": "^2.5.1",
-		"cookie": "^0.6.0",
-		"gray-matter": "^4.0.3",
-		"next": "^14.2.20",
-		"next-intl": "^3.4.1",
-		"next-mdx-remote": "^4.4.1",
-		"next-themes": "^0.2.1",
-		"prismjs": "^1.29.0",
-		"react": "^18",
-		"react-dom": "^18",
-		"react-icons": "^4.12.0",
-		"react-masonry-css": "^1.0.16",
-		"remixicon": "^4.0.1",
-		"sharp": "^0.33.2"
-	},
-	"devDependencies": {
-		"@csstools/postcss-global-data": "^2.1.1",
-		"@types/node": "^20",
-		"@types/react": "^18",
-		"@types/react-dom": "^18",
-		"autoprefixer": "^10.0.1",
-		"eslint": "^8",
-		"eslint-config-next": "14.2.20",
-		"postcss": "^8",
-		"postcss-custom-media": "^10.0.2",
-		"postcss-flexbugs-fixes": "^5.0.2",
-		"postcss-preset-env": "^9.3.0",
-		"sass": "^1.69.7",
-		"tailwindcss": "^3.3.0",
-		"typescript": "^5"
-	}
+  "name": "joshvanlente-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
+  "scripts": {
+    "dev": "velite --watch & next dev",
+    "build": "velite build --clean --strict && next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "velite build --strict && vitest run",
+    "test:watch": "vitest",
+    "lighthouse": "lhci autorun",
+    "e2e": "playwright test"
+  },
+  "dependencies": {
+    "next": "16.2.11",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "@lhci/cli": "^0.15",
+    "@playwright/test": "^1.56",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "^24",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.11",
+    "tailwindcss": "4.3.3",
+    "typescript": "^5",
+    "unist-util-visit": "^5",
+    "velite": "0.4.0",
+    "vitest": "^3",
+    "zod": "^4"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.1": true,
+    "sharp@0.34.5": true
+  }
 }
