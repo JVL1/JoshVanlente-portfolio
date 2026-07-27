@@ -1,4 +1,5 @@
 import { defineConfig, s } from "velite";
+import rehypeImageDimensions from "./src/lib/mdx/rehype-image-dimensions";
 
 /**
  * Read a path override, refusing a defined-but-empty value.
@@ -69,7 +70,12 @@ export default defineConfig({
           outcomes: s.array(outcome).min(1),
           cover: s.image(),
           draft: s.boolean().default(false),
-          code: s.mdx(),
+          // Body images are absolute /images/... paths, which s.image() never
+          // sees. The plugin resolves each against public/ and stamps intrinsic
+          // dimensions so next/image can reserve space for it.
+          code: s.mdx({
+            rehypePlugins: [[rehypeImageDimensions, { dir: "public" }]],
+          }),
           // The loader compares this path with the authored slug per entry.
           sourcePath: s.path(),
         })
