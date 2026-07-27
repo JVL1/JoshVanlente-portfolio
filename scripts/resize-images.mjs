@@ -1,8 +1,24 @@
-// scripts/resize-images.mjs — run once; kept in the repo so it can run again.
+// scripts/resize-images.mjs — the one-time conversion that moved this repo's
+// images to WebP, kept so the settings behind every shipped image stay readable.
+//
+// It cannot be re-run as it stands. Each source is deleted once it converts, and
+// all ten are already gone from the working tree, so running it today fails on
+// the first job with "Input file is missing". Restore the sources first:
+//
+//   git checkout 7a8489b -- public/images content/work
+//   node scripts/resize-images.mjs
+//
+// A run that fails partway is not resumable either, because the retry dies on
+// the first already-converted job rather than on the one that failed. To convert
+// a newly added image, replace JOBS with just that image.
 import { unlink } from "node:fs/promises";
 import sharp from "sharp";
 
-// [source, width, quality]. The output path is derived, so it cannot drift from the source.
+// Every job is [source, width]. The output path is derived from the source, so
+// it cannot drift, and quality is a single constant for the same reason: a
+// per-job quality override is the exact affordance that produced the bug below.
+const QUALITY = 82;
+
 //
 // The two photo45 frames are the before and after of a comparison slider, and
 // they are deliberately encoded identically. Hitting the 300KB budget by
@@ -24,14 +40,14 @@ const JOBS = [
   ["public/images/projects/ai-re-photos/photo45-enhnaced.png", 1280],
 ];
 
-for (const [src, width, quality = 82] of JOBS) {
+for (const [src, width] of JOBS) {
   // photo45-enhnaced.png is a committed typo; fix the name on the way out.
   const out = src
     .replace(/\.(png|jpe?g)$/i, ".webp")
     .replace("enhnaced", "enhanced");
   await sharp(src)
     .resize({ width, withoutEnlargement: true })
-    .webp({ quality })
+    .webp({ quality: QUALITY })
     .toFile(out);
   await unlink(src);
   console.log(`${src} -> ${out}`);

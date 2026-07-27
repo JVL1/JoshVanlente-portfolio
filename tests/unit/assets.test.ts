@@ -1,39 +1,75 @@
 import { describe, expect, it } from "vitest";
 import { execFileSync } from "node:child_process";
-import { globSync, statSync } from "node:fs"; // fs.globSync requires Node 22+
+import { globSync, readFileSync, statSync } from "node:fs"; // fs.globSync requires Node 22+
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import sharp from "sharp";
+import { webpBaseQIndex } from "./helpers/webp-quantizer";
+
+// Every path below is resolved against the repository root rather than the
+// process working directory. Vitest does not set a worker's cwd, so running the
+// suite from anywhere but the package root used to leave the grep and both
+// budget checks scanning nothing and passing on empty result sets.
+const ROOT = fileURLToPath(new URL("../../", import.meta.url));
+
+const BUDGET_BYTES = 300 * 1024;
+const RASTER_EXTENSIONS = "{png,jpg,jpeg,webp,avif,svg}";
+
+const find = (pattern: string) => globSync(pattern, { cwd: ROOT });
+const sizeOf = (relativePath: string) => statSync(join(ROOT, relativePath)).size;
+
+/**
+ * List files matching a pattern, distinguishing "found nothing" from "grep
+ * broke". The earlier form piped through `|| true`, so a grep that failed
+ * outright still exited 0 with empty stdout and read as a clean tree.
+ */
+function grepList(pattern: string, paths: string[]): string[] {
+  try {
+    const out = execFileSync("grep", ["-rl", pattern, ...paths], {
+      cwd: ROOT,
+      encoding: "utf8",
+    });
+    return out.trim() ? out.trim().split("\n") : [];
+  } catch (error) {
+    const { status, stderr } = error as { status?: number; stderr?: string };
+    if (status === 1) return []; // grep's documented "no matches" exit
+    throw new Error(`grep failed with status ${status}: ${stderr ?? ""}`);
+  }
+}
 
 describe("image assets", () => {
   it("references no .gif from content/ or src/", () => {
-    const hits = execFileSync(
-      "bash",
-      ["-c", "grep -rl '\\.gif' content/ src/ || true"],
-      { encoding: "utf8" },
-    ).trim();
-    expect(hits).toBe("");
+    expect(grepList("\\.gif", ["content/", "src/"])).toEqual([]);
   });
 
   it("ships no .gif under public/", () => {
-    expect(globSync("public/**/*.gif")).toEqual([]);
+    expect(find("public/**/*.gif")).toEqual([]);
   });
 
   it("keeps every cover under 300KB", () => {
-    const covers = globSync("content/work/*/cover.*");
+    const covers = find("content/work/*/cover.*");
     expect(covers.length).toBe(6); // five published write-ups plus the draft fixture
     for (const c of covers) {
-      expect(
-        statSync(c).size,
-        `${c} is ${Math.round(statSync(c).size / 1024)}KB`,
-      ).toBeLessThan(300 * 1024);
+      expect(sizeOf(c), `${c} is ${Math.round(sizeOf(c) / 1024)}KB`).toBeLessThan(
+        BUDGET_BYTES,
+      );
     }
   });
 
+  // Scoped to all of public/, matching the .gif check above, because the assets
+  // most likely to arrive oversized are the ones that do not live under
+  // public/images/ — an OG card or a favicon export lands at the top of
+  // public/. SVG is included because an SVG carrying an embedded base64 raster
+  // is unbounded in size while looking like a vector file.
   it("keeps every body image under 300KB", () => {
-    for (const f of globSync("public/images/**/*.{png,jpg,jpeg,webp,avif}")) {
-      expect(
-        statSync(f).size,
-        `${f} is ${Math.round(statSync(f).size / 1024)}KB`,
-      ).toBeLessThan(300 * 1024);
+    const images = find(`public/**/*.${RASTER_EXTENSIONS}`);
+    // Without this the loop below passes on an empty match, which is how a
+    // mistyped pattern would silently retire the budget.
+    expect(images.length).toBeGreaterThan(0);
+    for (const f of images) {
+      expect(sizeOf(f), `${f} is ${Math.round(sizeOf(f) / 1024)}KB`).toBeLessThan(
+        BUDGET_BYTES,
+      );
     }
   });
 
@@ -42,16 +78,35 @@ describe("image assets", () => {
   // under the budget independently once put them at quality 59 and 78, which
   // degraded the unenhanced frame more than the enhanced one — invisible in a
   // size check, and a thumb on the scale in the one widget that is supposed to
-  // be evidence. Equal width is the content-independent half of that invariant;
-  // equal quality lives in resize-images.mjs, where neither frame may carry a
-  // per-file override. Byte size is deliberately NOT compared: the unenhanced
-  // frame is genuinely noisier, so equal bytes would be the wrong assertion.
-  it("presents both slider frames at the same width", async () => {
+  // be evidence.
+  //
+  // Both halves of "equal terms" are asserted against the shipped files rather
+  // than against the settings in resize-images.mjs, so a hand-encoded
+  // replacement frame is covered too. Byte size is deliberately NOT compared:
+  // the unenhanced frame is genuinely noisier, so equal bytes would be the
+  // wrong assertion.
+  //
+  // Height is not asserted, and that is a known gap rather than an oversight:
+  // the two frames are 1280×960 and 1280×937 because the source photographs
+  // were framed differently before this pipeline ever saw them. Reconciling
+  // that needs a crop decision on the originals, so it is tracked as open work
+  // rather than papered over with an assertion that would fail today.
+  describe("the comparison slider's two frames", () => {
     const dir = "public/images/projects/ai-re-photos";
-    const [before, after] = await Promise.all([
-      sharp(`${dir}/photo45-original.webp`).metadata(),
-      sharp(`${dir}/photo45-enhanced.webp`).metadata(),
-    ]);
-    expect(before.width).toBe(after.width);
+    const before = `${dir}/photo45-original.webp`;
+    const after = `${dir}/photo45-enhanced.webp`;
+
+    it("are the same width", async () => {
+      const [b, a] = await Promise.all([
+        sharp(join(ROOT, before)).metadata(),
+        sharp(join(ROOT, after)).metadata(),
+      ]);
+      expect(b.width).toBe(a.width);
+    });
+
+    it("are encoded at the same quality", () => {
+      const q = (p: string) => webpBaseQIndex(readFileSync(join(ROOT, p)));
+      expect(q(before)).toBe(q(after));
+    });
   });
 });

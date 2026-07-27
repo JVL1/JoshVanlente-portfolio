@@ -40,12 +40,38 @@ describe("the real content tree", () => {
       expect(i.outcomes.length, i.slug).toBeGreaterThan(0);
   });
 
-  it("resolves every headline outcome that declares a slug", async () => {
+  // The expected slugs are written out rather than read back off the outcome
+  // being checked. Deriving them from the data under test made this pass with
+  // every slug deleted: each entry took the `else` branch, and a test named for
+  // resolving declared slugs resolved none. Naming them means dropping a slug
+  // from profile.ts fails here instead of silently emptying the homepage metric
+  // strip's links.
+  const LINKED_HEADLINE_SLUGS = [
+    "all-in-one-rental-platform",
+    "cutting-six-of-seven-steps",
+  ];
+
+  it("links exactly the headline outcomes that name a write-up", async () => {
     const resolved = await getHeadlineOutcomes();
-    expect(resolved).toHaveLength(profile.headlineOutcomes.length);
-    for (const o of resolved) {
-      if (o.slug) expect(o.href).toBe(`/work/${o.slug}`);
-      else expect(o.href).toBeNull();
+    expect(resolved.map((o) => o.slug).filter(Boolean)).toEqual(
+      LINKED_HEADLINE_SLUGS,
+    );
+    expect(resolved.filter((o) => o.href !== null).map((o) => o.href)).toEqual(
+      LINKED_HEADLINE_SLUGS.map((s) => `/work/${s}`),
+    );
+  });
+
+  it("points every linked headline outcome at a published write-up", async () => {
+    const published = (await getWorkItems()).map((i) => i.slug);
+    for (const slug of LINKED_HEADLINE_SLUGS) {
+      expect(published, `${slug} must resolve to a published write-up`).toContain(
+        slug,
+      );
     }
+  });
+
+  it("keeps the metric strip's four columns filled", async () => {
+    expect(await getHeadlineOutcomes()).toHaveLength(4);
+    expect(profile.headlineOutcomes).toHaveLength(4);
   });
 });

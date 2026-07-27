@@ -141,6 +141,14 @@ single source of role metadata. The token file is read by its own contrast test.
 Frontmatter references a `roleId` rather than an org string. If you find yourself
 fighting one of these, the fight is the feature — do not route around it.
 
+**An unreferenced file is not automatically a dead file.** A hand-authored or
+higher-resolution source stays in the tree even when nothing imports it, because
+it is the only editable version of something the site ships. The two chart SVGs
+under `public/images/blog/pipeline-drift/` are the example: their PNG exports are
+embedded in a write-up, so deleting the SVGs as "unreferenced" threw away the
+only way to edit a diagram that is on the site. Before deleting an unreferenced
+asset, check whether it is the source of one that is referenced.
+
 ## Conventions
 
 - **Colour and type come from tokens only.** Use `var(--color-text)`,
