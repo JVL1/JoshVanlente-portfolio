@@ -4,6 +4,49 @@
 
 **Design doc:** `docs/plans/2026-07-24-portfolio-rebuild-design.md` (approved; read it before Task 1)
 
+---
+
+## Execution status — last updated 2026-07-27
+
+**Tasks 0 through 5 are complete and reviewed. Task 6 is next.**
+
+Work happens in the worktree at `/Users/joshvanlente/Development/JoshVanlente-portfolio-impl` on `feat/portfolio-rebuild-impl`, 12 commits ahead of `feat/portfolio-rebuild`. The original checkout at `/Users/joshvanlente/Development/JoshVanlente-portfolio` stays on `feat/portfolio-rebuild` as a deliberate untouched copy of the old MDX tree — **do not modify it**; Task 7 may need to read from it, and Task 9 recovers `BeforeAfterSlider.tsx` from that branch's history.
+
+| Task | State | Review |
+|---|---|---|
+| 0. Worktree and branch | done | exempt |
+| 1. Velite spike | done | exempt — 8/8 conditions passed |
+| 2. Scaffold Next 16 | done | 3 models, quorum 3/3, 9 fixes applied |
+| 3. Design tokens and fonts | done | 3 models, quorum 3/3, 20 fixes across the 3–4 group |
+| 4. `src/data/profile.ts` | done | reviewed with Task 3 |
+| 5. `velite.config.ts` + fixtures | done | 3 models, quorum 3/3, **2 criticals** found and fixed |
+| 6 onward | not started | — |
+
+Suite is 43 tests green. `npx next build` exits 0.
+
+### Decisions taken during execution, in addition to the three at the top of this file
+
+1. **Node re-pinned from 22 to 24 LTS** (Josh's call). Node 22 is out of active LTS, and neither it nor a version manager was installed. Every pin in this plan reads 24. Homebrew's `node@24` is now the machine's default `node`; `brew unlink node@24 && brew link --overwrite node` reverts it.
+2. **`AGENTS.md` was written at the repo root** before Task 2, because the executing-plans safety gate stops every Codex dispatch without one — 18 of the 24 tasks route to Codex. It carries the conventions, the two-Zod rule, and the `npm run dev` watcher hazard. **Read it before any task.**
+3. **Task 2 was re-routed from Codex to a Claude subagent** (Josh's call) because its deletion list included `src/pages/api/{authenticate,check-auth}.ts` and the safety gate stops on auth-adjacent reach. Later tasks route as annotated.
+4. **`typecheck` now regenerates Velite output first** — `velite build --strict && tsc --noEmit`. See the note under Task 2 Step 4.
+5. **Task 21's dependency criterion was amended**, with `cookie` via `@lhci/cli` recorded as an accepted exception. See the Acceptance Criteria section.
+6. **The `dev` script keeps the `&` form**, with its watcher-orphaning hazard documented in `AGENTS.md` rather than fixed with a new dependency.
+7. **`@theme static`** in `globals.css` — without `static`, Tailwind 4 tree-shook 11 of 16 tokens out of the shipped CSS, and Tasks 9 and 13 reference tokens through raw `var()`, which Tailwind cannot see.
+
+### Blockers and open questions
+
+- **Task 7 needs four things from Josh** and stops without the first three: a quantified outcome for `deterministic-ai-photo-pipeline`, one for `product-led-growth-strategy`, a static replacement cover for Smarter Payouts, and the About narrative (Task 15). Do not invent any of them.
+- **Vercel preview deployments sit behind SSO**, which breaks Tasks 22 and 23 as written — Playwright and the manual checklist would both test the auth wall, and LinkedIn's crawler cannot authenticate. Three options are written up in the spike result doc. **Raise it with Josh at Task 20**, so the answer exists before Task 22 needs it.
+- **`README.md` still sells the Once UI template**, including a Deploy button pointing at `once-ui-system/magic-portfolio`. No task owns it, and Task 21's hygiene grep is scoped to `src/` so it reports green regardless. Rewriting it needs Josh's voice.
+- A hard-killed test run leaks a fixture directory under `tests/.tmp/`. Gitignored and inert, but they accumulate; a `globalSetup` that clears the directory would sweep them.
+
+### Verification, until Task 7
+
+`npm run build`, `npm run test`, and `npm run typecheck` all invoke Velite against the real content tree, which is invalid until Task 7 authors frontmatter. **All three fail by design.** Verify with `npx next build`, `npx vitest run`, `npx tsc --noEmit`, and `npx eslint .` directly, and do not weaken any of the three scripts to make them run early.
+
+Recovery tags `pre-task-3`, `pre-task-4`, and `pre-task-5` mark the commit before each of those tasks.
+
 **Goal:** Replace the Once UI `magic-portfolio` template with a site Josh owns end to end — a typed content pipeline that fails the build on bad frontmatter, a three-token colour scale, and a homepage that gives a hiring manager the name, positioning, four attributed metrics, and visible case-study evidence inside 20 seconds on a phone or a laptop.
 
 **Non-Goals** *(verbatim from the design doc — this is the scope contract)*:
