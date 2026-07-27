@@ -26,7 +26,12 @@ const prose = [
   // image would be capped at the reading measure while the slider — JSX, and
   // therefore not wrapped — ran the full column. Both are figures; both get the
   // column, which is also the width the registry's `sizes` attribute declares.
-  "[&_p:has(>img)]:max-w-none",
+  //
+  // `:only-child` is load-bearing. Without it the rule also matches a paragraph
+  // of prose that merely contains an inline image, and that paragraph's text
+  // loses the 68ch measure the rule above exists to protect. Only a paragraph
+  // that is nothing but an image is a figure.
+  "[&_p:has(>img:only-child)]:max-w-none",
 
   "[&_ul]:my-5 [&_ul]:max-w-[68ch] [&_ul]:list-disc [&_ul]:pl-5",
   "[&_ol]:my-5 [&_ol]:max-w-[68ch] [&_ol]:list-decimal [&_ol]:pl-5",

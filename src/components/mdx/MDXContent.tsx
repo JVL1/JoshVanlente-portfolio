@@ -10,7 +10,23 @@ type CompiledMdx = (props: { components: typeof components }) => React.ReactNode
  * bundle — only the widgets in the registry cross a client boundary.
  */
 function evaluate(code: string): CompiledMdx {
-  return new Function(code)({ ...runtime }).default;
+  // The contract is narrow and entirely Velite's: the compiled body reads a JSX
+  // runtime off `arguments[0]` and returns `{ default: MDXContent }`. Asserting
+  // that shape here is what turns a contract change — or a `code` that never
+  // made it through the pipeline — into a message naming this file, instead of
+  // a bare "Cannot read properties of undefined (reading 'default')" thrown
+  // from inside a server render.
+  const compiled: unknown = new Function(code)({ ...runtime });
+  const component = (compiled as { default?: unknown } | undefined)?.default;
+
+  if (typeof component !== "function") {
+    throw new Error(
+      "MDXContent: compiled MDX did not return { default: Component }. " +
+        "Either this is not Velite's compiled output, or Velite's " +
+        "function-body contract changed.",
+    );
+  }
+  return component as CompiledMdx;
 }
 
 export function MDXContent({ code }: { code: string }) {

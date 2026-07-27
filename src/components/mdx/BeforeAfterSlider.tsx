@@ -67,6 +67,12 @@ export function BeforeAfterSlider({
     (e.currentTarget as HTMLDivElement).releasePointerCapture?.(e.pointerId);
   };
 
+  // A gesture can end without a pointerup: the OS takes the pointer for a
+  // system gesture, or something else claims the capture. Without these the
+  // component stays stuck in `dragging`, and the next stray mouse move over the
+  // slider drags it with no button held down.
+  const endDrag = () => setDragging(false);
+
   const onKeyDown: React.KeyboardEventHandler<HTMLButtonElement> = (e) => {
     let next = inset;
     const step = e.shiftKey ? 10 : 1;
@@ -158,10 +164,13 @@ export function BeforeAfterSlider({
     left: `${inset}%`,
     width: showDivider ? 2 : 0,
     transform: "translateX(-1px)",
-    // The accent, on the site's only draggable control. --color-border-strong
-    // is #262a27, which over a photograph is a near-black line that disappears
-    // on any dark interior — and this divider is the whole drag affordance.
-    background: "var(--color-accent)",
+    // --color-border-strong is #262a27, a near-black line that disappears over
+    // any dark interior, and this divider is the whole drag affordance. The
+    // accent is not the answer: its budget is four places — the headline
+    // italic, hover and focus, the primary CTA, the payoff figure in a chart —
+    // and a divider that is always on is none of them. --color-text is the
+    // light neutral, so it reads over a photograph without spending a fifth.
+    background: "var(--color-text)",
     zIndex: 3,
     pointerEvents: "none",
   }), [inset, showDivider]);
@@ -214,13 +223,19 @@ export function BeforeAfterSlider({
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
+      onPointerCancel={endDrag}
+      onLostPointerCapture={endDrag}
     >
       <div style={frameStyle}>
         {/* Base image (before/original) */}
+        {/* draggable={false}: a native image drag starts on pointerdown and
+            takes the pointer with it, which cancels the capture and strands the
+            comparison mid-drag. */}
         <Image
           src={beforeSrc}
           alt={altBefore}
           fill
+          draggable={false}
           sizes="(max-width: 900px) 100vw, 760px"
           loading="lazy"
           style={{ objectFit: "cover", zIndex: 1 }}
@@ -231,6 +246,7 @@ export function BeforeAfterSlider({
           src={afterSrc}
           alt={altAfter}
           fill
+          draggable={false}
           sizes="(max-width: 900px) 100vw, 760px"
           loading="lazy"
           style={{
