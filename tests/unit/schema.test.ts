@@ -6,15 +6,18 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 const REPO = process.cwd();
 const VELITE = join(REPO, "node_modules", ".bin", "velite");
 
-// Environment failures must never be mistaken for schema failures.
-const ENV_ERROR =
-  /Cannot find module|command not found|ENOENT|MODULE_NOT_FOUND|is not recognized/i;
+// There is deliberately no ENV_ERROR regex here. The previous version matched
+// against the child's stdout and stderr, which a spawn failure leaves undefined
+// — so the string it inspected was always "" and the guard could never fire on
+// the failure it was written for. buildWith now throws with the real reason
+// from `err.message` instead, and expectSchemaFailure proves a schema run
+// happened rather than trying to enumerate the ways one might not have.
 
 const VALID = `---
 slug: "valid-item"
@@ -73,6 +76,11 @@ function buildWith(files: Record<string, string>) {
   dirs.push(root);
   mkdirSync(join(root, "work"), { recursive: true });
 
+  // Velite reports paths relative to cwd for a fixture inside the repo, so the
+  // absolute root never appears in the output. The basename does, and its
+  // random suffix is unique per call — which is what makes it unforgeable.
+  const fixtureId = basename(root);
+
   for (const [name, body] of Object.entries(files)) {
     writeFileSync(join(root, "work", name), body);
   }
@@ -98,32 +106,78 @@ function buildWith(files: Record<string, string>) {
       stdio: "pipe",
       env,
     });
-    return { status: 0, stderr: "" };
+    return { status: 0, stderr: "", fixtureId };
   } catch (error: unknown) {
     const result = error as {
-      status?: number;
+      status?: number | null;
+      signal?: string | null;
+      code?: string;
+      message?: string;
       stderr?: string | Buffer;
       stdout?: string | Buffer;
     };
+
+    // When execFileSync fails to spawn at all, Node leaves stdout and stderr
+    // undefined and puts the reason on `message` alone. Returning a result here
+    // would hand every assertion an empty string, which passes the "not an
+    // environment error" check and then fails on the field regex — sending the
+    // reader hunting through the schema for a missing binary.
+    if (result.stdout === undefined && result.stderr === undefined) {
+      throw new Error(
+        `could not run ${VELITE} (${result.code}): ${result.message}`,
+      );
+    }
+
+    // A signal kill leaves `status` null, which `?? 1` would disguise as an
+    // ordinary rejection. Velite prints the file and field before its final
+    // line, so a kill in that window leaves output satisfying every assertion.
+    if (result.signal) {
+      throw new Error(
+        `velite was killed by ${result.signal}; partial output:\n` +
+          `${result.stderr ?? ""}${result.stdout ?? ""}`,
+      );
+    }
+
     return {
       status: result.status ?? 1,
       stderr: `${result.stderr ?? ""}${result.stdout ?? ""}`,
+      fixtureId,
     };
   }
 }
 
 /** Assert a real schema rejection, including its field and runtime health. */
 function expectSchemaFailure(
-  result: { status: number; stderr: string },
+  result: { status: number; stderr: string; fixtureId: string },
   ...expected: RegExp[]
 ) {
   expect(result.status, "expected a non-zero exit").not.toBe(0);
+
+  // Proof that velite got past config load, flag parsing, and MDX compilation.
+  // Verified against velite 0.4.0: every genuine rejection ends with this line,
+  // and no config-load failure, unknown-flag error, or YAML parse error does.
   expect(
     result.stderr,
-    `environment error masquerading as a schema failure:\n${result.stderr}`,
-  ).not.toMatch(ENV_ERROR);
+    `velite failed before schema validation:\n${result.stderr}`,
+  ).toContain("Schema validation failed");
+
+  // Proof the report is about THIS fixture tree. The mkdtemp suffix is unique
+  // per call and nothing in the config can echo it. Velite prints the path
+  // relative to cwd for a fixture inside the repo, so match the basename.
+  expect(
+    result.stderr,
+    `velite never read fixture ${result.fixtureId}:\n${result.stderr}`,
+  ).toContain(result.fixtureId);
+
+  // Field names are matched only inside the issue report. A config syntax error
+  // makes esbuild echo the offending source line, and velite.config.ts contains
+  // the literal words slug, outcomes, and roleId — so an unscoped match lets a
+  // broken config forge the exact tokens these tests look for. Verified: before
+  // this change, turning `s.slug("work")` into `s.slug("work"]` left both slug
+  // tests green while nothing was validated.
+  const issues = result.stderr.slice(result.stderr.indexOf(result.fixtureId));
   for (const pattern of expected) {
-    expect(result.stderr).toMatch(pattern);
+    expect(issues).toMatch(pattern);
   }
 }
 
@@ -183,6 +237,61 @@ describe("content schema, under --strict", () => {
   it("rejects neither roleId nor an org/role pair", () => {
     expectSchemaFailure(
       buildWith({ "valid-item.mdx": withoutField("roleId") }),
+      /roleId/,
+    );
+  });
+
+  // The attribution rule has eight input combinations and the original suite
+  // covered two: all three fields, and none. The four below cover the rest that
+  // matter, including the one the rule got wrong.
+
+  it("accepts independent work, which supplies org and role and no roleId", () => {
+    // The whole point of the org/role branch, and it had no test at all — a
+    // regression that broke independent work would have shipped silently.
+    const result = buildWith({
+      "valid-item.mdx": withoutField("roleId").replace(
+        'timeframe: "2026"',
+        'org: "Self"\nrole: "Consultant"\ntimeframe: "2026"',
+      ),
+    });
+    expect(result.status, result.stderr).toBe(0);
+  });
+
+  it("rejects roleId alongside a stray 'org' with no 'role'", () => {
+    // Boolean(org && role) reads a half-pair as "no literal pair", so this used
+    // to be accepted and the orphaned org landed in work.json — contradicting
+    // the org the loader derives from profile.ts for the same entry.
+    expectSchemaFailure(
+      buildWith({
+        "valid-item.mdx": VALID.replace(
+          'roleId: "evernest-staff-pm"\n',
+          'roleId: "evernest-staff-pm"\norg: "Somewhere Else Entirely"\n',
+        ),
+      }),
+      /org/,
+    );
+  });
+
+  it("rejects roleId alongside a stray 'role' with no 'org'", () => {
+    expectSchemaFailure(
+      buildWith({
+        "valid-item.mdx": VALID.replace(
+          'roleId: "evernest-staff-pm"\n',
+          'roleId: "evernest-staff-pm"\nrole: "Consultant"\n',
+        ),
+      }),
+      /role/,
+    );
+  });
+
+  it("rejects a half-pair on its own, with no roleId", () => {
+    expectSchemaFailure(
+      buildWith({
+        "valid-item.mdx": withoutField("roleId").replace(
+          'timeframe: "2026"',
+          'org: "Self"\ntimeframe: "2026"',
+        ),
+      }),
       /roleId/,
     );
   });
