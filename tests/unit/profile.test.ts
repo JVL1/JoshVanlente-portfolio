@@ -65,6 +65,15 @@ describe("profile.roles", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
+  it("keeps the two ids that content frontmatter references", () => {
+    // Task 7 writes these two into MDX frontmatter as `roleId`, and Task 6's
+    // loader resolves them here. Renaming one orphans a write-up, so pin them
+    // rather than trusting that whoever renames also greps content/.
+    const ids = profile.roles.map((r) => r.id);
+    expect(ids).toContain("azibo-senior-manager");
+    expect(ids).toContain("azibo-senior-pm");
+  });
+
   it("gives every role at least one achievement", () => {
     for (const r of profile.roles) {
       expect(r.achievements.length).toBeGreaterThan(0);

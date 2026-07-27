@@ -15,7 +15,7 @@
   --color-text-muted:    #adb1ac;  /*  9.07 — lede, nav, metric labels, summaries */
   --color-text-subtle:   #8a8e89;  /*  5.92 — attribution, years, tags, achievements */
   --color-accent:        #c8ff2e;  /* 16.70 — headline italic, hover/focus, primary CTA */
-  --color-accent-hover:  #d8ff63;
+  --color-accent-hover:  #d8ff63;  /* 17.27 — CTA hover */
   --color-border:        #1d1f1e;
   --color-border-strong: #262a27;
   --color-border-cta:    #2c302d;
@@ -28,9 +28,13 @@
   --text-lg:   1rem;       /* 16px */
   --text-xl:   1.125rem;   /* 18px */
 
-  --font-sans:  var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-instrument-serif), Georgia, serif;
-  --font-mono:  var(--font-jetbrains-mono), ui-monospace, monospace;
+  /* Each var() carries an inline fallback. Without one an undefined --font-* makes
+     the whole declaration invalid at computed-value time, so the stack after the
+     comma is never reached and the text renders in Times. That is reachable today:
+     global-error replaces the root layout, so its <html> carries no font classes. */
+  --font-sans:  var(--font-inter, ui-sans-serif), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif, Georgia), Georgia, serif;
+  --font-mono:  var(--font-jetbrains-mono, ui-monospace), ui-monospace, monospace;
 }
 
 @layer base {
@@ -56,19 +60,33 @@
     max-width: 100%;
   }
 
-  /* Every focusable element gets a visible ring distinct from the browser default. */
+  /* Every focusable element gets a visible ring distinct from the browser default.
+     Browsers already draw the outline following the element's own border-radius,
+     so this rule sets no radius of its own — doing that snapped square elements
+     to 2px corners on focus while rounded ones kept their utility radius. */
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 3px;
-    border-radius: 2px;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
+/* Inside @layer base on purpose. For important declarations the cascade reverses
+   the layer order, which makes unlayered !important the weakest kind — a Tailwind
+   `duration-500!` compiles to an !important inside @layer utilities and would beat
+   an unlayered reset. Declared here it still beats every normal declaration and
+   also beats important declarations in components and utilities. */
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      /* animate-pulse and animate-spin loop forever, so a 0.01ms duration alone
+         still spins; capping the count is what actually stops them. */
+      animation-iteration-count: 1 !important;
+      /* scroll-behavior is motion too, and duration resets do not touch it. */
+      scroll-behavior: auto !important;
+    }
   }
 }

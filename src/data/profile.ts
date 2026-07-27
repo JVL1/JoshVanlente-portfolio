@@ -1,11 +1,34 @@
 import { z } from "zod";
 
+// Months are range-checked, not just shape-checked: "2025-13" and "2025-00" used
+// to parse, and since only the year reaches the rendered output nothing
+// downstream would have noticed. This file may import nothing but zod, so the
+// pattern is duplicated in src/lib/dates.ts rather than shared — change both.
 const dateish = z
   .string()
-  .regex(/^\d{4}(-\d{2})?$/, "expected YYYY or YYYY-MM");
+  .regex(/^\d{4}(-(0[1-9]|1[0-2]))?$/, "expected YYYY or YYYY-MM");
 
-const roleSchema = z.object({
-  id: z.string().min(1),
+/**
+ * The published role ids. Task 7 writes these into content frontmatter as
+ * `roleId`, and Task 6's loader resolves them against `profile.roles[].id`, so a
+ * rename here silently orphans a write-up. Listing them makes `Role["id"]` a
+ * literal union rather than `string`: renaming one now breaks the build at every
+ * consumer, and adding a role forces a deliberate edit here.
+ */
+export const ROLE_IDS = [
+  "evernest-staff-pm",
+  "built-principal-pm",
+  "azibo-senior-manager",
+  "azibo-senior-pm",
+  "upstart-pm",
+  "twitter-pm",
+  "ampush-senior-pm",
+] as const;
+
+export type RoleId = (typeof ROLE_IDS)[number];
+
+const roleSchema = z.strictObject({
+  id: z.enum(ROLE_IDS),
   org: z.string().min(1),
   title: z.string().min(1),
   start: dateish,
@@ -13,7 +36,7 @@ const roleSchema = z.object({
   achievements: z.array(z.string().min(1)).min(1),
 });
 
-const headlineOutcomeSchema = z.object({
+const headlineOutcomeSchema = z.strictObject({
   metric: z.string().min(1),
   label: z.string().min(1),
   org: z.string().min(1),
@@ -21,14 +44,14 @@ const headlineOutcomeSchema = z.object({
   slug: z.string().min(1).optional(),
 });
 
-const profileSchema = z.object({
+const profileSchema = z.strictObject({
   name: z.string().min(1),
   role: z.string().min(1),
   disciplines: z.string().min(1),
   // Zod 4: the top-level z.email()/z.url() replace the deprecated
   // z.string().email() / z.string().url() method forms.
   email: z.email(),
-  links: z.object({ linkedin: z.url(), github: z.url() }),
+  links: z.strictObject({ linkedin: z.url(), github: z.url() }),
   roles: z
     .array(roleSchema)
     .min(1)
