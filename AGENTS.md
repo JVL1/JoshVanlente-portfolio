@@ -60,14 +60,36 @@ tsconfig paths on its own. If you add an alias, add it in both places.
 npm run dev         # velite --watch alongside next dev
 npm run build       # velite build --clean --strict && next build
 npm run test        # velite build --strict && vitest run
-npm run typecheck   # tsc --noEmit
+npm run typecheck   # velite build --strict && tsc --noEmit
 npm run lint        # eslint .   (NOT `next lint` — removed in Next 16)
 npm run e2e         # playwright test, needs PREVIEW_URL
 npm run lighthouse  # lhci autorun
 ```
 
-`.velite/` is generated and gitignored, so `npm run test` regenerates it first.
-On a clean checkout, `#content` resolves to nothing until Velite has run.
+`.velite/` is generated and gitignored, so `test`, `build`, and `typecheck` all
+regenerate it first. On a clean checkout, `#content` resolves to nothing until
+Velite has run, and a bare `tsc --noEmit` fails with `TS2307: Cannot find module
+'#content'` rather than with anything pointing at the missing build step.
+
+Until Task 5 writes `velite.config.ts`, all three of those scripts fail by
+design. Verify with `npx next build`, `npx vitest run`, and `npx tsc --noEmit`
+directly, and do not weaken the scripts to make them run early.
+
+**`npm run dev` can orphan the Velite watcher.** The script is
+`velite --watch & next dev`. Ctrl-C kills both, because Node installs its own
+SIGINT handler. But when `next dev` exits on its own — port already in use, a
+crash, a config error — nothing signals the watcher; it reparents to init and
+keeps running. Retry a failed start a few times and several watchers end up
+rewriting `.velite/` and `public/static/` at once, which races the schema
+fixture tests. If a dev start fails, check before retrying:
+
+```bash
+pgrep -f 'velite --watch'    # kill any survivors first
+```
+
+This is a known, accepted trade. The `&` form is what the Velite spike verified,
+and fixing the process lifetime properly would mean adding `concurrently` as a
+dependency for a hazard that only appears after a failed start.
 
 ## Rules
 

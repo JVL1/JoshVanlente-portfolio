@@ -10,7 +10,7 @@
     "build": "velite build --clean --strict && next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "velite build --strict && tsc --noEmit",
     "test": "velite build --strict && vitest run",
     "test:watch": "vitest",
     "lighthouse": "lhci autorun",

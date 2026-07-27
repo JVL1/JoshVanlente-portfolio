@@ -61,7 +61,9 @@ Carried from the design doc. Two adjustments are marked.
 **Removal and hygiene**
 
 - [ ] `grep -r once-ui src/` returns nothing, and `src/once-ui/` is deleted.
-- [ ] `npm ci` succeeds, and none of `next-intl`, `yahoo-fantasy`, `sass`, `@types/cookie`, `cookie`, `react-masonry-css`, `next-themes`, `prismjs`, `@types/prismjs`, `remixicon`, `@floating-ui/react-dom`, `classnames`, `@csstools/postcss-global-data`, `postcss-custom-media`, `postcss-flexbugs-fixes`, `postcss-preset-env`, or `autoprefixer` appears in `package.json` or `package-lock.json`.
+- [ ] `npm ci` succeeds, and none of `next-intl`, `yahoo-fantasy`, `sass`, `@types/cookie`, `cookie`, `react-masonry-css`, `next-themes`, `prismjs`, `@types/prismjs`, `remixicon`, `@floating-ui/react-dom`, `classnames`, `@csstools/postcss-global-data`, `postcss-custom-media`, `postcss-flexbugs-fixes`, `postcss-preset-env`, or `autoprefixer` appears as a **direct dependency in `package.json`**, or in `package-lock.json` other than inside a pinned build tool's own dependency tree.
+
+  *(Amended 2026-07-27 during Task 2's review, on Josh's call. The original banned these from `package-lock.json` outright, and that criterion fails the moment Task 2 lands: `@lhci/cli@0.15.1 → express@4.22.2 → cookie@0.7.2` puts `cookie` in the lockfile. Pinning `@lhci/cli` instead of fetching it with `npx` was a deliberate choice recorded in Task 2 Step 4, and Task 21's own guidance already says not to force-remove a framework's transitive dependency. The criterion's intent is that no Once UI template leftover survives, not that npm's graph is policed. **`cookie` via `@lhci/cli` is a recorded, accepted exception.** Any other lockfile hit is still a failure, and must be traced with `npm ls <package>` before anyone accepts it.)*
 - [ ] `next.config.*` is a single file.
 
 **Content pipeline**
@@ -460,7 +462,7 @@ Notes on three of these:
     "build": "velite build --clean --strict && next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "velite build --strict && tsc --noEmit",
     "test": "velite build --strict && vitest run",
     "test:watch": "vitest",
     "lighthouse": "lhci autorun",
@@ -494,7 +496,7 @@ Notes on three of these:
 Three of these are answers to specific traps:
 
 - **`"lint": "eslint ."`, not `"next lint"`.** Next removed `next lint` in 16 (deprecated in 15.5). The scaffold would ship a lint script that errors on first use, and Task 21's sweep would report a failure unrelated to any acceptance criterion. `eslint-config-next` still ships and supports the flat config this task writes.
-- **`"test"` regenerates Velite output first.** `.velite/` is gitignored, so on a clean checkout `#content` resolves to nothing and every suite importing the loader fails at module load. Regenerating first makes `npm run test` work from a fresh clone.
+- **`"test"` and `"typecheck"` both regenerate Velite output first.** `.velite/` is gitignored, so on a clean checkout `#content` resolves to nothing and every suite importing the loader fails at module load. `typecheck` needs the same treatment for the same reason: once Task 6's `src/lib/content.ts` imports `#content`, a bare `tsc --noEmit` on a fresh clone or a cold CI job dies with `TS2307: Cannot find module '#content'`. *(Corrected 2026-07-27 during Task 2's review. The original wrote `"typecheck": "tsc --noEmit"`, which only appeared to work because Task 21 Step 2 happens to run `npm run test` on the line above it — reorder those two lines and it fails.)*
 - **`@playwright/test` and `@lhci/cli` are pinned here, not fetched by `npx` in Tasks 20 and 22.** Both tasks run these tools; leaving them undeclared means an executor invents the install mid-task and gets an unpinned version.
 
 `velite` is a devDependency: it runs at build time, generating `.velite/` — which the app imports and which Step 7 gitignores, so it is regenerated rather than committed. `sharp` stays a runtime dependency for `next/image` optimization.
@@ -628,7 +630,7 @@ Append:
 rm -rf node_modules package-lock.json
 npm install
 npx vitest run
-npm run typecheck
+npx tsc --noEmit
 npm run lint
 npx next build
 grep -r once-ui src/ ; echo "grep exit=$?"
@@ -3202,6 +3204,8 @@ npm ls <package>   # no --depth, so the full path to the root is visible
 
 A package pulled in by `next` or `tailwindcss` is a different fact from Josh's code depending on it. Report which one it is, and do not force-remove a framework's transitive dependency — the criterion is about the template's leftovers, not about npm's graph.
 
+**One hit is already known and accepted:** `cookie@0.7.2`, via `@lhci/cli@0.15.1 → express@4.22.2`. Confirmed with `npm ls cookie` during Task 2's review. Report it as the recorded exception rather than as a failure, and do not try to remove it — dropping `@lhci/cli` would mean Task 20 fetches an unpinned Lighthouse CI at run time, which is the problem pinning it was meant to avoid. Every *other* lockfile hit is still a real failure.
+
 **Step 2: Content pipeline**
 
 ```bash
@@ -3611,7 +3615,7 @@ Task 0, Task 1, Task 18, the Manual Test Checklist, Task 22, and Task 23 sit out
 
 ## Notes for whoever executes this
 
-**The build is green at the end of every task from Task 2 onward, and no task ships a knowingly-red test.** The one accommodation is stated in the task itself: Tasks 2 through 6 verify with `npx next build` and `npx vitest run` rather than `npm run build` and `npm run test`, because both npm scripts invoke Velite against real content that is not valid until Task 7. That is a sequencing fact, not a license to leave failing tests behind.
+**The build is green at the end of every task from Task 2 onward, and no task ships a knowingly-red test.** The one accommodation is stated in the task itself: Tasks 2 through 6 verify with `npx next build`, `npx vitest run`, and `npx tsc --noEmit` rather than `npm run build`, `npm run test`, and `npm run typecheck`, because all three npm scripts invoke Velite against real content that is not valid until Task 7. That is a sequencing fact, not a license to leave failing tests behind. *(`typecheck` joined that list on 2026-07-27 — see the note under Task 2 Step 4.)*
 
 **Three checks are deliberately placed later than the code they verify**, because earlier they would fail for the wrong reason and train an executor to weaken them: the module-scope build-failure proof (Task 10 Step 5, the first point where Velite output is valid *and* a page imports the loader), the widget chunk isolation on real pages (Task 9 Step 5), and the whole e2e suite (Task 22, post-deploy). Each says at its own site where its proof lives.
 

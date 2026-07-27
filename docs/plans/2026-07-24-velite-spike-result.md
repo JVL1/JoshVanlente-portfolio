@@ -119,7 +119,9 @@ npm warn allow-scripts   sharp@0.34.5 (install: node install/check.js || npm run
 npm warn allow-scripts   esbuild@0.25.12 (postinstall: node install.js)
 ```
 
-and **leaves both native binaries unbuilt**. Velite bundles its config with esbuild, so without this the content pipeline does not run at all — and the failure arrives as a confusing missing-binary error rather than anything pointing at the allowlist.
+and does not run either install script.
+
+**Correction, added during Task 2's review:** the sentence that stood here claimed this "leaves both native binaries unbuilt" and that "without this the content pipeline does not run at all." That overstated it. npm 11 only *warns* — blocking requires opting in with `--strict-allow-scripts`. And neither package actually needs its script on this platform: `sharp`'s `install/check.js` exits 0 whenever prebuilt libvips is used, and esbuild's JS API resolves its platform package directly. So the allowlist buys **warning suppression and determinism**, not a working build. It is still worth carrying, because a platform without a prebuilt binary would need the script to run, and a warning nobody reads is how that failure would arrive.
 
 `npm approve-scripts sharp esbuild` writes the allowlist into `package.json`:
 
