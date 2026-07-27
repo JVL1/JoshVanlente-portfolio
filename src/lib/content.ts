@@ -3,8 +3,7 @@ import { profile, type HeadlineOutcome, type Role } from "@/data/profile";
 import {
   assertFilenamesMatchSlugs,
   assertHeadlineSlugs,
-  filterPublished,
-  resolveRole,
+  resolveAndFilter,
 } from "@/lib/content-rules";
 
 type RawWork = (typeof work)[number];
@@ -24,18 +23,25 @@ assertFilenamesMatchSlugs(work);
 
 // Resolve roles across EVERY item, drafts included, BEFORE filtering. A bad
 // roleId in a draft is still a bad reference; validating only what is published
-// would let it sit until someone flips the flag and shipped a broken page.
-const resolved: WorkItem[] = work.map((item) => ({
-  ...item,
-  ...resolveRole(item),
-}));
+// would let it sit until someone flips the flag and shipped a broken page. The
+// sequence lives in content-rules.ts so a test can prove that ordering without
+// importing #content.
+const published: WorkItem[] = resolveAndFilter(work);
 
-const published: WorkItem[] = filterPublished(resolved);
+// `work` is passed as well so a headline slug pointing at a real-but-draft
+// write-up says so, rather than reading identically to a misspelling.
+assertHeadlineSlugs(profile.headlineOutcomes, published, work);
 
-assertHeadlineSlugs(profile.headlineOutcomes, published);
-
+// The getters below hand out copies of the module-level arrays. `published` is
+// computed once per worker process and shared by every consumer, so returning it
+// directly would let one page's `.sort()`, `.reverse()`, or `.splice()` reorder
+// or truncate what the sitemap and generateStaticParams read afterwards. Next
+// shards pages across workers, so that corruption would hit some pages and not
+// others. The entries themselves are still shared by reference; nothing mutates
+// them today, and cloning compiled MDX on every call would cost more than the
+// hazard is worth.
 export async function getWorkItems(): Promise<WorkItem[]> {
-  return published;
+  return published.slice();
 }
 
 export async function getWorkItem(slug: string): Promise<WorkItem | null> {
@@ -56,5 +62,5 @@ export async function getHeadlineOutcomes(): Promise<
 }
 
 export async function getRoles(): Promise<Role[]> {
-  return profile.roles;
+  return profile.roles.slice();
 }
