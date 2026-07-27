@@ -14,19 +14,29 @@
 import { unlink } from "node:fs/promises";
 import sharp from "sharp";
 
-// Every job is [source, width]. The output path is derived from the source, so
-// it cannot drift, and quality is a single constant for the same reason: a
-// per-job quality override is the exact affordance that produced the bug below.
+// Every job is [source, width] or [source, width, height]. Supplying a height
+// centre-crops to that exact box; supplying only a width scales and keeps the
+// source's own shape. The output path is derived from the source, so it cannot
+// drift, and quality is a single constant for the same reason: a per-job quality
+// override is the exact affordance that produced the bug below.
 const QUALITY = 82;
 
 //
 // The two photo45 frames are the before and after of a comparison slider, and
-// they are deliberately encoded identically. Hitting the 300KB budget by
-// lowering quality per file put them at 59 and 78, which quietly degraded the
-// unenhanced frame more than the enhanced one — a thumb on the scale in the one
-// widget whose whole job is letting a reader judge the enhancement. Narrowing
-// both to 1280px instead holds quality at 82 and lands at 293KB and 223KB. They
-// render inside a slider at well under 760px, so the lost width costs nothing.
+// they are deliberately processed identically — same box, same quality.
+//
+// Two separate bugs came out of treating them as ordinary images. Hitting the
+// 300KB budget by lowering quality per file put them at 59 and 78, which
+// degraded the unenhanced frame more than the enhanced one — a thumb on the
+// scale in the one widget whose whole job is letting a reader judge the
+// enhancement. And the sources were 4032×3024 and 2120×1552, because the
+// enhancement pass reframed slightly, so scaling to a common width still left
+// them different heights; against the MDX's aspectRatio="16 / 9" they would
+// have been cropped by different amounts and the wipe would not have lined up.
+//
+// Both are fixed by cropping to a shared 1280×720 at quality 82, which lands at
+// 229KB and 177KB. They render inside a slider at well under 760px, so the lost
+// width costs nothing.
 const JOBS = [
   ["content/work/deterministic-ai-photo-pipeline/cover.png", 1200],
   ["content/work/cutting-six-of-seven-steps/cover.jpg", 1200],
@@ -39,19 +49,22 @@ const JOBS = [
   // they moved to scripts/export-charts.mjs — which is re-runnable and deletes
   // nothing. Running a vector source through this script would unlink the only
   // editable copy, which is how those two files were lost once already.
-  ["public/images/projects/ai-re-photos/photo45-original.png", 1280],
-  ["public/images/projects/ai-re-photos/photo45-enhnaced.png", 1280],
+  ["public/images/projects/ai-re-photos/photo45-original.png", 1280, 720],
+  ["public/images/projects/ai-re-photos/photo45-enhnaced.png", 1280, 720],
 ];
 
-for (const [src, width] of JOBS) {
+for (const [src, width, height] of JOBS) {
   // photo45-enhnaced.png is a committed typo; fix the name on the way out.
   const out = src
     .replace(/\.(png|jpe?g)$/i, ".webp")
     .replace("enhnaced", "enhanced");
-  await sharp(src)
-    .resize({ width, withoutEnlargement: true })
-    .webp({ quality: QUALITY })
-    .toFile(out);
+  // withoutEnlargement only applies to the scale-to-width case. A job that
+  // names a height is asking for an exact box, and `cover` fills it by
+  // centre-cropping the longer axis.
+  const resize = height
+    ? { width, height, fit: "cover", position: "centre" }
+    : { width, withoutEnlargement: true };
+  await sharp(src).resize(resize).webp({ quality: QUALITY }).toFile(out);
   await unlink(src);
   console.log(`${src} -> ${out}`);
 }

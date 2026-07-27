@@ -86,22 +86,32 @@ describe("image assets", () => {
   // the unenhanced frame is genuinely noisier, so equal bytes would be the
   // wrong assertion.
   //
-  // Height is not asserted, and that is a known gap rather than an oversight:
-  // the two frames are 1280×960 and 1280×937 because the source photographs
-  // were framed differently before this pipeline ever saw them. Reconciling
-  // that needs a crop decision on the originals, so it is tracked as open work
-  // rather than papered over with an assertion that would fail today.
+  // Both dimensions are asserted, and the exact 16:9 is asserted too. The MDX
+  // passes aspectRatio="16 / 9" to the slider, so a frame of any other shape
+  // gets letterboxed or cropped by CSS at render time — and because the two
+  // frames are cropped independently, they would be cropped by different
+  // amounts and the wipe would not line up. The sources were 4032×3024 and
+  // 2120×1552 (the enhancement pass reframed slightly), so both are centre-
+  // cropped to 1280×720 on the way in. Asserting the ratio here rather than
+  // only equality means a future replacement frame cannot quietly reintroduce
+  // the mismatch by being consistently wrong in both files.
   describe("the comparison slider's two frames", () => {
     const dir = "public/images/projects/ai-re-photos";
     const before = `${dir}/photo45-original.webp`;
     const after = `${dir}/photo45-enhanced.webp`;
+    const dimensions = async (p: string) => {
+      const { width, height } = await sharp(join(ROOT, p)).metadata();
+      return { width, height };
+    };
 
-    it("are the same width", async () => {
-      const [b, a] = await Promise.all([
-        sharp(join(ROOT, before)).metadata(),
-        sharp(join(ROOT, after)).metadata(),
-      ]);
-      expect(b.width).toBe(a.width);
+    it("are the same size", async () => {
+      expect(await dimensions(before)).toEqual(await dimensions(after));
+    });
+
+    it("match the 16:9 the slider declares", async () => {
+      for (const p of [before, after]) {
+        expect(await dimensions(p), p).toEqual({ width: 1280, height: 720 });
+      }
     });
 
     it("are encoded at the same quality", () => {
