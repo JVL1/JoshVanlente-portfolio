@@ -13,7 +13,7 @@ outcomes:
     label: "Generative passes per photo"
   - metric: "9%"
     label: "Faster time to lease"
-cover: "./cutting-six-of-seven-steps/cover.jpg"
+cover: "./cutting-six-of-seven-steps/cover.webp"
 draft: false
 ---
 
@@ -31,13 +31,13 @@ Newer models could accurately apply multiple corrections in a single pass. I con
 
 The benchmark runs as a loop rather than a one-off. Each iteration changes one prompt, re-runs the twelve photos, scores every output, and keeps the change only if the mean score improves; if it doesn't, the loop resets itself and tries something else. Pointing that loop at a newer model is what surfaced the result above.
 
-![Before and after: the analysis stays the same, the generation collapses from up to seven chained passes into one](/images/blog/pipeline-drift/generative-passes.png)
+![Before and after: the analysis stays the same, the generation collapses from up to seven chained passes into one](/images/blog/pipeline-drift/generative-passes.webp)
 
 ## What the headroom bought
 
 Step count matters here because an image model repaints the photo rather than editing it. Every step is another full re-render, and **every re-render drifts**, meaning small unrequested changes to the room. Enhancement already averaged 3.5 generative passes per photo, and we couldn't risk adding more.
 
-![Passes per photo: up to nine under the old design, three today](/images/blog/pipeline-drift/drift-budget.png)
+![Passes per photo: up to nine under the old design, three today](/images/blog/pipeline-drift/drift-budget.webp)
 
 Stacking item removal and staging onto the old chain meant up to nine re-renders of one photo, which would certainly invent a new window or ceiling fan.
 
@@ -45,13 +45,13 @@ Stacking item removal and staging onto the old chain meant up to nine re-renders
 
 We wanted to list a unit sooner by using the photos already taken at the move-out inspection, tenant furniture and all, instead of waiting for the tenant to leave and sending a photographer back.
 
-![An occupied living room before and after one item-removal pass](/images/blog/pipeline-drift/declutter-comparison.jpg)
+![An occupied living room before and after one item-removal pass](/images/blog/pipeline-drift/declutter-comparison.webp)
 
 ### Virtual staging
 
 We didn't stage at all before this. A digital staging service runs upward of $25 a photo. The bigger problem was the vendor: human editors are slow, and AI editors would reintroduce the drift we had just eliminated. Staging inside our own pipeline costs cents and adds no step to the process.
 
-![An empty living room before and after one virtual-staging pass](/images/blog/pipeline-drift/staging-comparison.jpg)
+![An empty living room before and after one virtual-staging pass](/images/blog/pipeline-drift/staging-comparison.webp)
 
 ## Two things I didn't expect
 

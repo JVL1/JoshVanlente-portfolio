@@ -6,15 +6,14 @@
 // figure below is quoted verbatim from the write-up's own Outcomes section, so
 // the cover asserts nothing the body does not already support.
 //
-// It is a script rather than a checked-in binary because the palette is going to
-// move at least once more, and a regenerable asset moves with it.
+// The committed asset stays reproducible when the palette changes.
 //
 //   node scripts/make-smarter-payouts-cover.mjs
 
 import { writeFile } from "node:fs/promises";
 import sharp from "sharp";
 
-const OUT = "public/images/projects/smarter-payouts/cover.png";
+const OUT = "content/work/smarter-payouts-predictive-model/cover.webp";
 
 // Straight from src/styles/globals.css. Duplicated rather than parsed because
 // this runs outside the bundler and the file is a generator, not shipped code.
@@ -51,5 +50,5 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" 
 </svg>`;
 
 await writeFile("/tmp/smarter-payouts-cover.svg", svg);
-await sharp(Buffer.from(svg)).png().toFile(OUT);
+await sharp(Buffer.from(svg)).webp({ quality: 82 }).toFile(OUT);
 console.log(`wrote ${OUT}`);
