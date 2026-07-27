@@ -1424,7 +1424,12 @@ If the `--strict` failure message names the file but not the field, the spike's 
 ```bash
 npx velite build --clean --strict; echo "exit=$?"
 ```
-Expected: non-zero. The five files in `content/work/` still carry template frontmatter, so this *should* fail — and the failure output is Task 7's worklist. Capture it.
+Expected: non-zero. The five files in `content/work/` still carry template frontmatter, so this *should* fail — and the failure output is Task 7's starting point. Capture it.
+
+**Two things about that output, both established during this task's review. Task 7 needs them or it will chase phantoms.**
+
+- **It is a starting point, not a complete worklist.** Zod skips `.superRefine` whenever the base object aborts, so the exactly-one-of `roleId` rule is invisible on any file that is also missing a required field — which is all five today. None of them has a `roleId`, `org`, or `role`, yet no `roleId` error appears. A second wave arrives once the first is fixed. Re-run until it is clean rather than treating one pass as the whole job.
+- **`slug` is listed twice per file, and that is one problem, not two.** Velite's `s.slug()` is `.and(unique(...))`, an intersection of two string schemas parsed against one shared context, so a missing value fails both branches and prints twice. The headline count is inflated: 29 rows, 24 distinct problems.
 
 **Step 7: Commit**
 
@@ -1515,14 +1520,17 @@ describe("resolveRole", () => {
   });
 });
 
+// sourcePath values here are extension-LESS, because that is what s.path()
+// emits. Writing "work/a.mdx" in a fixture would make these tests green against
+// a shape the build never produces.
 describe("assertFilenamesMatchSlugs", () => {
   it("accepts a matching pair", () => {
-    expect(() => assertFilenamesMatchSlugs([item({ slug: "a", sourcePath: "work/a.mdx" })]))
+    expect(() => assertFilenamesMatchSlugs([item({ slug: "a", sourcePath: "work/a" })]))
       .not.toThrow();
   });
 
   it("throws naming both the file and the slug when they differ", () => {
-    expect(() => assertFilenamesMatchSlugs([item({ slug: "a", sourcePath: "work/wrong-name.mdx" })]))
+    expect(() => assertFilenamesMatchSlugs([item({ slug: "a", sourcePath: "work/wrong-name" })]))
       .toThrow(/wrong-name\.mdx.*"a"/s);
   });
 
@@ -1530,8 +1538,8 @@ describe("assertFilenamesMatchSlugs", () => {
     // a.mdx declares "b" and b.mdx declares "a". The two SETS are equal, so a
     // set-to-set check passes while both URLs are wrong. Per-entry catches it.
     expect(() => assertFilenamesMatchSlugs([
-      item({ slug: "b", sourcePath: "work/a.mdx" }),
-      item({ slug: "a", sourcePath: "work/b.mdx" }),
+      item({ slug: "b", sourcePath: "work/a" }),
+      item({ slug: "a", sourcePath: "work/b" }),
     ])).toThrow(/a\.mdx.*"b"/s);
   });
 });
@@ -1618,11 +1626,16 @@ export function assertFilenamesMatchSlugs(items: { slug: string; sourcePath: str
   // declaring slug "b" while b.mdx declares slug "a" — the two sets are equal
   // and both URLs are silently wrong. sourcePath comes from s.path() in the
   // schema, so each entry carries the file it was actually parsed from.
+  // s.path() STRIPS the extension: a file at content/work/a.mdx arrives as
+  // "work/a", not "work/a.mdx". Verified against velite 0.4.0 during Task 5's
+  // review. So the stem needs no .replace(), and the error message has to append
+  // the extension itself — otherwise it names content/work/a, a path that does
+  // not exist, which is the exact failure this rule was written to prevent.
   for (const { slug, sourcePath } of items) {
-    const stem = sourcePath.split("/").pop()!.replace(/\.mdx$/, "");
+    const stem = sourcePath.split("/").pop()!;
     if (stem !== slug) {
       throw new Error(
-        `content/${sourcePath}: filename does not match its declared slug "${slug}". ` +
+        `content/${sourcePath}.mdx: filename does not match its declared slug "${slug}". ` +
           `Rename the file to ${slug}.mdx, or change the slug to "${stem}".`,
       );
     }

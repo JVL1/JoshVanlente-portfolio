@@ -28,6 +28,7 @@ holds the old template: `src/app/[locale]/`, `src/once-ui/`, SCSS modules, and
 | React | 19.2.8 | Server Components by default |
 | Tailwind CSS | 4.3.3 | `@theme` tokens in `src/styles/globals.css`, no `tailwind.config.js` |
 | Velite | 0.4.0 | pinned exactly, no caret — pre-1.0 with a parallel 1.0-alpha line |
+| Zod | 4.4.3 (app) / **3 (Velite)** | two versions, deliberately — see below |
 | Vitest | ^3 | unit tests |
 | Playwright | ^1.56 | e2e, runs against a deployed preview |
 | Lighthouse CI | ^0.15 | accessibility and performance gates |
@@ -53,6 +54,22 @@ Content lives in `content/work/*.mdx`, decoupled from routing.
 Path aliases: `@/*` → `./src/*`, `#content` → `./.velite`. Both are declared in
 `tsconfig.json` **and** mirrored in `vitest.config.ts` — Vitest does not read
 tsconfig paths on its own. If you add an alias, add it in both places.
+
+**There are two Zods in this repo and they are not interchangeable.**
+`velite.config.ts` uses `s.*`, which is Velite's own bundled **zod 3** — Velite
+declares no `zod` dependency and ships its own inside the bundle. Everything
+under `src/` uses the repo's **zod 4**. Consequences:
+
+- In `velite.config.ts`, zod 4 API does not exist. No `.check()`, no
+  `z.looseObject`, no `z.strictObject`. Use `.strict()`, `.superRefine()`, and
+  the other zod 3 idioms.
+- In `src/`, use zod 4: top-level `z.email()` and `z.url()`, not the deprecated
+  `z.string().email()` method forms.
+- **Never hand a schema built with the repo's `zod` to Velite.** Velite calls
+  zod 3 internals directly (`schema._parse({ data, path, meta, parent })`), which
+  a zod 4 object does not implement. `src/lib/content-rules.ts` may import zod
+  freely because it validates plain objects itself and never passes a schema to
+  Velite.
 
 ## Commands
 

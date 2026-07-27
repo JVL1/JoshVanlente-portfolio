@@ -1,5 +1,31 @@
 import { defineConfig, s } from "velite";
 
+/**
+ * Read a path override, refusing a defined-but-empty value.
+ *
+ * `process.env.X ?? fallback` returns "" for a variable that is set but empty,
+ * because "" is not nullish. Velite then computes `resolve(cwd, "")`, which is
+ * the repo root — and `velite build --clean` runs a recursive force-delete of
+ * that directory and exits 0. An exported blank shell variable, a CI `env:`
+ * block with an empty value, or a `.env` line reading `VELITE_ASSETS_DIR=` is
+ * enough to erase the checkout.
+ *
+ * Falling back on empty would be safe but silent. An empty override is always a
+ * mistake, so it throws and names itself.
+ */
+function pathFromEnv(name: string, fallback: string): string {
+  const value = process.env[name];
+  if (value === undefined) return fallback;
+  if (value.trim() === "") {
+    throw new Error(
+      `${name} is set but empty. Unset it to use the default ("${fallback}"), ` +
+        `or give it a real path — an empty value resolves to the repository ` +
+        `root, which --clean would then delete.`,
+    );
+  }
+  return value;
+}
+
 const outcome = s.object({
   metric: s.string().min(1),
   label: s.string().min(1),
@@ -7,14 +33,18 @@ const outcome = s.object({
 
 export default defineConfig({
   // The fixture suite points the real config at a throwaway content tree.
-  root: process.env.VELITE_CONTENT_ROOT ?? "content",
+  root: pathFromEnv("VELITE_CONTENT_ROOT", "content"),
   output: {
-    data: process.env.VELITE_OUTPUT_DIR ?? ".velite",
-    // Redirecting assets keeps fixture cleanup away from the site's output.
-    assets: process.env.VELITE_ASSETS_DIR ?? "public/static",
+    data: pathFromEnv("VELITE_OUTPUT_DIR", ".velite"),
+    // Redirecting assets is what keeps a fixture build's --clean away from the
+    // site's generated output. It is the only guard; see the note on `clean`.
+    assets: pathFromEnv("VELITE_ASSETS_DIR", "public/static"),
     base: "/static/",
-    // Build scripts opt into cleaning. Tests can regenerate data without
-    // deleting assets or racing the watcher used by `npm run dev`.
+    // Programmatic default only — the CLI always overrides it. velite's cli
+    // declares `clean` with `default: false`, so options.clean is always a
+    // boolean and this value never survives the merge. `velite build --clean`
+    // therefore cleans regardless of what is written here, which is why the
+    // env redirection above carries the whole burden of protecting real output.
     clean: false,
   },
   collections: {
@@ -29,7 +59,7 @@ export default defineConfig({
           publishedAt: s.isodate(),
           updatedAt: s.isodate().optional(),
 
-          // Each entry uses roleId or a literal org and role pair.
+          // Exactly one of: roleId, or the org/role pair. Refined below.
           roleId: s.string().min(1).optional(),
           org: s.string().min(1).optional(),
           role: s.string().min(1).optional(),
@@ -68,7 +98,7 @@ export default defineConfig({
           // in work.json, where it contradicts the org the loader derives from
           // profile.ts. Two sources of truth for one field is the exact drift
           // roleId exists to prevent.
-          if (hasRoleId && (data.org ?? data.role)) {
+          if (hasRoleId && (data.org || data.role)) {
             context.addIssue({
               fatal: true,
               code: "custom",

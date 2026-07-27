@@ -1,16 +1,24 @@
 import { execFileSync } from "node:child_process";
 import {
   copyFileSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
 import { basename, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 
-const REPO = process.cwd();
+// Resolved from this file, not the launching shell's cwd. With process.cwd()
+// a run started from a subdirectory failed 7/7 with ENOENT on the fixture PNG
+// and created fixture trees at <repo>/src/tests/.tmp/, inside the tracked
+// source tree and outside .gitignore's reach. Vitest forks inherit that cwd.
+const REPO = fileURLToPath(new URL("../../", import.meta.url));
 const VELITE = join(REPO, "node_modules", ".bin", "velite");
+const FIXTURE_COVER = join(REPO, "tests", "fixtures", "schema", "cover.png");
 
 // There is deliberately no ENV_ERROR regex here. The previous version matched
 // against the child's stdout and stderr, which a spawn failure leaves undefined
@@ -86,16 +94,15 @@ function buildWith(files: Record<string, string>) {
   }
 
   // s.image() needs a real file to parse, so fixtures reuse this committed PNG.
-  copyFileSync(
-    "tests/fixtures/schema/cover.png",
-    join(root, "work", "cover.png"),
-  );
+  copyFileSync(FIXTURE_COVER, join(root, "work", "cover.png"));
 
   const env = {
     ...process.env,
     VELITE_CONTENT_ROOT: root,
     VELITE_OUTPUT_DIR: join(root, ".velite-out"),
     // Redirect assets too so a fixture build cannot clean public/static.
+    // Removing this line deletes real output on every test run; the "fixture
+    // isolation" test above is the only thing that notices. Verified.
     VELITE_ASSETS_DIR: join(root, ".assets-out"),
   };
 
@@ -181,6 +188,39 @@ function expectSchemaFailure(
   }
 }
 
+describe("fixture isolation", () => {
+  // The single highest-value assertion in this file. Every fixture build runs
+  // `velite build --clean`, and velite resolves output.assets against the repo
+  // root — so if the VELITE_ASSETS_DIR redirection is ever dropped, or receives
+  // an empty string, --clean deletes real output and the run still exits 0. The
+  // schema tests would stay green throughout, because they only read stderr.
+  //
+  // A sentinel is the only thing that notices. This also covers the empty-string
+  // case: with assets resolving to the repo root, this file would be deleted.
+  it("cannot touch the site's generated output", () => {
+    const sentinelDir = join(REPO, "public", "static");
+    const sentinel = join(sentinelDir, "__isolation_sentinel.txt");
+    const contents = `written by ${basename(import.meta.url)}`;
+
+    mkdirSync(sentinelDir, { recursive: true });
+    writeFileSync(sentinel, contents);
+
+    try {
+      // A rejection, so the build reaches --clean and then fails. Either
+      // outcome is fine; what matters is what survives.
+      buildWith({ "valid-item.mdx": withoutField("outcomes") });
+
+      expect(
+        existsSync(sentinel),
+        "a fixture build deleted public/static — the assets redirection is not holding",
+      ).toBe(true);
+      expect(readFileSync(sentinel, "utf8")).toBe(contents);
+    } finally {
+      rmSync(sentinel, { force: true });
+    }
+  });
+});
+
 describe("content schema, under --strict", () => {
   it("accepts a valid write-up", () => {
     const result = buildWith({ "valid-item.mdx": VALID });
@@ -216,9 +256,12 @@ describe("content schema, under --strict", () => {
 
   it("rejects two write-ups sharing a slug", () => {
     // Both files declare slug "valid-item"; one filename must differ to exist.
+    // The pattern deliberately excludes the bare word "slug": an ordinary
+    // `Required  slug` message contains it, so matching on it would prove only
+    // that the field was mentioned, not that the uniqueness check ran.
     expectSchemaFailure(
       buildWith({ "valid-item.mdx": VALID, "other.mdx": VALID }),
-      /slug|duplicate|unique/i,
+      /duplicate|unique|conflicts/i,
     );
   });
 
