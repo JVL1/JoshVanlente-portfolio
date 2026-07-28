@@ -74,7 +74,7 @@ under `src/` uses the repo's **zod 4**. Consequences:
 ## Commands
 
 ```bash
-npm run dev         # velite --watch alongside next dev
+npm run dev         # velite --watch --strict alongside next dev
 npm run build       # velite build --clean --strict && next build
 npm run test        # velite build --strict && vitest run
 npm run typecheck   # velite build --strict && tsc --noEmit
@@ -92,8 +92,16 @@ Until Task 5 writes `velite.config.ts`, all three of those scripts fail by
 design. Verify with `npx next build`, `npx vitest run`, and `npx tsc --noEmit`
 directly, and do not weaken the scripts to make them run early.
 
+`--strict` in the `dev` script is what makes the MDX guards bite in the dev loop.
+Without it Velite reports a rejected body, exits 0, and writes a `work.json` with
+that entry dropped, so the write-up disappears from the dev site and nothing
+fails. With it the initial build exits 1 and prints the rejection, and a rebuild
+that fails during watch leaves the last good `work.json` in place rather than
+overwriting it. `tests/unit/dev-loop.test.ts` runs the flags out of the script
+itself and asserts both.
+
 **`npm run dev` can orphan the Velite watcher.** The script is
-`velite --watch & next dev`. Ctrl-C kills both, because Node installs its own
+`velite --watch --strict & next dev`. Ctrl-C kills both, because Node installs its own
 SIGINT handler. But when `next dev` exits on its own — port already in use, a
 crash, a config error — nothing signals the watcher; it reparents to init and
 keeps running. Retry a failed start a few times and several watchers end up

@@ -6,7 +6,7 @@
     "node": ">=24.0.0 <25"
   },
   "scripts": {
-    "dev": "velite --watch & next dev",
+    "dev": "velite --watch --strict & next dev",
     "build": "velite build --clean --strict && next build",
     "start": "next start",
     "lint": "eslint .",

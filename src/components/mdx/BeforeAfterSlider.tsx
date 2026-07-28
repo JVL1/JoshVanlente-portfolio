@@ -33,11 +33,25 @@ export function BeforeAfterSlider({
   const containerRef = useRef<HTMLDivElement>(null);
   const leftLabelRef = useRef<HTMLSpanElement>(null);
   const rightLabelRef = useRef<HTMLSpanElement>(null);
-  const [dragging, setDragging] = useState(false);
   const [inset, setInset] = useState(() => Math.min(100, Math.max(0, initial)));
-  // Where the divider sat when the gesture started, so a cancelled gesture can
-  // put it back. See onPointerCancel for why a cancel is now routine.
-  const insetAtPointerDown = useRef<number | null>(null);
+  // Which pointer owns the drag, or null when nothing is dragging.
+  //
+  // This was a `dragging` boolean, and a boolean cannot tell two fingers apart.
+  // A second touch anywhere on the widget ran the whole pointerdown path: it
+  // jumped the divider to the second finger, and then that finger's lift — or
+  // the capture change its own setPointerCapture provoked — ended the first
+  // finger's drag mid-gesture. An id makes the second finger a no-op and leaves
+  // the drag to end on the lift of the pointer that started it.
+  //
+  // A ref rather than state: nothing renders from it, so state would only add a
+  // re-render per gesture and give the handlers a value one render stale.
+  const activePointerId = useRef<number | null>(null);
+  // Where the divider sat when the gesture started, and which pointer started
+  // it, so a cancelled gesture can put it back. See onPointerCancel for why a
+  // cancel is routine. The pointer id rides along because this outlives
+  // `activePointerId`: a lost capture clears the drag, and the cancel that
+  // explains it arrives afterwards and still needs the snapshot.
+  const gestureStart = useRef<{ pointerId: number; inset: number } | null>(null);
   const [leftThreshold, setLeftThreshold] = useState(0);    // percent from left
   const [rightThreshold, setRightThreshold] = useState(100); // percent from left
 
@@ -55,20 +69,28 @@ export function BeforeAfterSlider({
   const onPointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
     // Only left button or primary pointer
     if (e.pointerType === "mouse" && e.button !== 0) return;
-    setDragging(true);
-    insetAtPointerDown.current = inset;
+    // A drag already belongs to another pointer, so this one is a second finger
+    // resting on the widget. Ignoring it is the whole fix: it neither moves the
+    // divider nor takes a capture whose loss would end the drag in progress.
+    if (activePointerId.current !== null) return;
+
+    activePointerId.current = e.pointerId;
+    gestureStart.current = { pointerId: e.pointerId, inset };
     (e.currentTarget as HTMLDivElement).setPointerCapture?.(e.pointerId);
     updateFromClientX(e.clientX);
   };
 
   const onPointerMove: React.PointerEventHandler<HTMLDivElement> = (e) => {
-    if (!dragging) return;
+    if (e.pointerId !== activePointerId.current) return;
     updateFromClientX(e.clientX);
   };
 
   const onPointerUp: React.PointerEventHandler<HTMLDivElement> = (e) => {
-    setDragging(false);
-    insetAtPointerDown.current = null;
+    if (e.pointerId !== activePointerId.current) return;
+    activePointerId.current = null;
+    // The drag finished where the reader left it, so there is nothing to
+    // restore and a later stray cancel must not put the divider back.
+    gestureStart.current = null;
     (e.currentTarget as HTMLDivElement).releasePointerCapture?.(e.pointerId);
   };
 
@@ -79,20 +101,27 @@ export function BeforeAfterSlider({
   // applied means a reader who merely scrolled past the comparison leaves it
   // moved to wherever their thumb travelled, permanently. Putting the divider
   // back where it started is the only way a scroll can be a scroll.
-  const onPointerCancel = () => {
-    setDragging(false);
-    if (insetAtPointerDown.current !== null) setInset(insetAtPointerDown.current);
-    insetAtPointerDown.current = null;
+  //
+  // Matched against the snapshot rather than the active pointer, because
+  // `onLostPointerCapture` may already have cleared the active pointer for the
+  // same gesture. The Pointer Events spec fires lostpointercapture after the
+  // cancel, but nothing here depends on that order holding.
+  const onPointerCancel: React.PointerEventHandler<HTMLDivElement> = (e) => {
+    if (gestureStart.current?.pointerId !== e.pointerId) return;
+    activePointerId.current = null;
+    setInset(gestureStart.current.inset);
+    gestureStart.current = null;
   };
 
   // A gesture can also end with the capture taken by something else and no
   // pointerup or pointercancel at all. That is not the browser rejecting the
   // gesture, so the divider keeps where the reader dragged it; only the stuck
-  // `dragging` flag needs clearing, which otherwise lets the next stray mouse
-  // move drag the slider with no button held down.
-  const endDrag = () => {
-    setDragging(false);
-    insetAtPointerDown.current = null;
+  // drag needs clearing, which otherwise lets the next stray mouse move drag
+  // the slider with no button held down. The snapshot is deliberately left in
+  // place for the cancel that may still be coming.
+  const onLostPointerCapture: React.PointerEventHandler<HTMLDivElement> = (e) => {
+    if (e.pointerId !== activePointerId.current) return;
+    activePointerId.current = null;
   };
 
   const onKeyDown: React.KeyboardEventHandler<HTMLButtonElement> = (e) => {
@@ -152,6 +181,28 @@ export function BeforeAfterSlider({
     const obs = new ResizeObserver(() => recalcThresholds());
     obs.observe(el);
     return () => obs.disconnect();
+  }, [recalcThresholds]);
+
+  // The observer above watches the container, and the container is what never
+  // changes here. Inter arrives through next/font/google after first paint, so
+  // "Before" and "After" are measured in the fallback font and then resize when
+  // the swap lands — a change no container resize accompanies, which leaves the
+  // thresholds describing label boxes that no longer exist. Recalculating when
+  // the fonts settle is the only signal for it.
+  //
+  // `document.fonts` is optional: the FontFaceSet API is absent in older
+  // browsers, and `ready` is what actually gets read, so both are checked.
+  useEffect(() => {
+    const fonts = document.fonts;
+    if (!fonts?.ready) return;
+
+    let cancelled = false;
+    void fonts.ready.then(() => {
+      if (!cancelled) recalcThresholds();
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [recalcThresholds]);
 
   const containerStyle: React.CSSProperties = useMemo(() => ({
@@ -266,7 +317,7 @@ export function BeforeAfterSlider({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerCancel}
-      onLostPointerCapture={endDrag}
+      onLostPointerCapture={onLostPointerCapture}
     >
       <div style={frameStyle}>
         {/* Base image (before/original) */}

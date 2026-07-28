@@ -1,4 +1,5 @@
 import { defineConfig, s } from "velite";
+import rehypeFigureParagraph from "./src/lib/mdx/rehype-figure-paragraph";
 import rehypeImageDimensions from "./src/lib/mdx/rehype-image-dimensions";
 import remarkNoEsm from "./src/lib/mdx/remark-no-esm";
 
@@ -80,7 +81,14 @@ export default defineConfig({
             // Rejecting it here turns a render-time crash into a build failure
             // that names the file.
             remarkPlugins: [remarkNoEsm],
-            rehypePlugins: [[rehypeImageDimensions, { dir: "public" }]],
+            // A paragraph holding nothing but an image is marked here rather
+            // than matched in CSS, because deciding it needs the text nodes
+            // beside the image and `:only-child` cannot see them. Prose selects
+            // the marker.
+            rehypePlugins: [
+              [rehypeImageDimensions, { dir: "public" }],
+              rehypeFigureParagraph,
+            ],
           }),
           // The loader compares this path with the authored slug per entry.
           sourcePath: s.path(),

@@ -27,16 +27,13 @@ const prose = [
   // therefore not wrapped — ran the full column. Both are figures; both get the
   // column, which is also the width the registry's `sizes` attribute declares.
   //
-  // `:only-child` is load-bearing. Without it the rule also matches a paragraph
-  // of prose that merely contains an inline image, and that paragraph's text
-  // loses the 68ch measure the rule above exists to protect. Only a paragraph
-  // that is nothing but an image is a figure.
-  "[&_p:has(>img:only-child)]:max-w-none",
-  // A linked image — `[![alt](x)](/href)` — compiles to `p > a > img`, so the
-  // rule above never matches it and the figure stayed squeezed inside the
-  // measure. Both `:only-child`s keep the exception narrow: the paragraph holds
-  // nothing but the link, and the link holds nothing but the image.
-  "[&_p:has(>a:only-child>img:only-child)]:max-w-none",
+  // `data-figure` is stamped by src/lib/mdx/rehype-figure-paragraph.ts, which
+  // marks a paragraph whose entire content is one image. The rule this replaced
+  // asked CSS the same question with `:has(> img:only-child)`, and CSS cannot
+  // answer it: `:only-child` counts element siblings and ignores text nodes, so
+  // a paragraph of prose written as `text ![alt](x) text` had the image as its
+  // only element and lost the measure. The transform can see the text nodes.
+  "[&_p[data-figure]]:max-w-none",
 
   "[&_ul]:my-5 [&_ul]:max-w-[68ch] [&_ul]:list-disc [&_ul]:pl-5",
   "[&_ol]:my-5 [&_ol]:max-w-[68ch] [&_ol]:list-decimal [&_ol]:pl-5",
