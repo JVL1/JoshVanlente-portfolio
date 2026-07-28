@@ -1,5 +1,6 @@
 import { defineConfig, s } from "velite";
 import rehypeImageDimensions from "./src/lib/mdx/rehype-image-dimensions";
+import remarkNoEsm from "./src/lib/mdx/remark-no-esm";
 
 /**
  * Read a path override, refusing a defined-but-empty value.
@@ -74,6 +75,11 @@ export default defineConfig({
           // sees. The plugin resolves each against public/ and stamps intrinsic
           // dimensions so next/image can reserve space for it.
           code: s.mdx({
+            // The body is evaluated synchronously in a Server Component, and an
+            // import compiles to a top-level await that evaluator cannot run.
+            // Rejecting it here turns a render-time crash into a build failure
+            // that names the file.
+            remarkPlugins: [remarkNoEsm],
             rehypePlugins: [[rehypeImageDimensions, { dir: "public" }]],
           }),
           // The loader compares this path with the authored slug per entry.

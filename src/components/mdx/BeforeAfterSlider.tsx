@@ -140,7 +140,14 @@ export function BeforeAfterSlider({
     aspectRatio: height ? undefined : aspectRatio,
     height: height,
     userSelect: "none",
-    touchAction: "none",
+    // `pan-y` rather than `none`. The widget is 219px tall on a 390px phone, and
+    // `none` made that a dead zone in the middle of a scrolling article: a
+    // vertical swipe that started on it moved nothing. `pan-y` leaves the
+    // horizontal gesture to the drag and gives vertical scrolling back to the
+    // browser. The browser then cancels the pointer when it takes over a
+    // vertical swipe, which is what onPointerCancel and onLostPointerCapture
+    // below are for.
+    touchAction: "pan-y",
     background: "var(--color-surface)",
   }), [rounded, aspectRatio, height]);
 
@@ -201,8 +208,12 @@ export function BeforeAfterSlider({
     borderRadius: 1,
   }), []);
 
+  // The labels are hidden with `visibility`, so their display mode is set once
+  // here rather than toggled — a hidden label keeps the box recalcThresholds
+  // measures.
   const labelStyle: React.CSSProperties = useMemo(() => ({
     position: "absolute",
+    display: "inline-flex",
     top: 8,
     zIndex: 5,
     fontSize: "var(--text-xs)",
@@ -264,7 +275,12 @@ export function BeforeAfterSlider({
         style={{
           ...labelStyle,
           left: 8,
-          display: inset > leftThreshold ? "inline-flex" : "none",
+          // `visibility` rather than `display`. A `display: none` label has no
+          // box, so offsetWidth reads 0 and recalcThresholds latches the
+          // threshold to roughly 1% — which puts the divider inside the band and
+          // flips the label on and off every frame. Hidden this way the box
+          // stays measurable.
+          visibility: inset > leftThreshold ? "visible" : "hidden",
         }}
       >
         Before
@@ -275,7 +291,7 @@ export function BeforeAfterSlider({
         style={{
           ...labelStyle,
           right: 8,
-          display: inset < rightThreshold ? "inline-flex" : "none",
+          visibility: inset < rightThreshold ? "visible" : "hidden",
         }}
       >
         After

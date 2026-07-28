@@ -133,6 +133,26 @@ describe("type scale", () => {
       expect(px, `${name} is ${px}px`).toBeGreaterThanOrEqual(12);
     }
   });
+
+  // Tailwind 4 does not clear the sibling --text-*--line-height key when you
+  // override --text-*, so its own default survives and every utility using that
+  // size renders at leading derived from a font size the site does not use:
+  // text-xl shipped 18px text at calc(1.75 / 1.25), the leading Tailwind
+  // computed for its 20px original. Pairing each size with a line-height is the
+  // only way to own both halves of the utility.
+  it("pairs every type size with an explicit line-height", () => {
+    const t = theme();
+    const sizes = Object.keys(t).filter(
+      (name) => name.startsWith("--text-") && !name.slice(2).includes("--"),
+    );
+    expect(sizes.length, "no --text-* tokens found").toBeGreaterThan(0);
+
+    const unpaired = sizes.filter((name) => t[`${name}--line-height`] === undefined);
+    expect(
+      unpaired,
+      "an unpaired size inherits Tailwind's default leading for its own original size",
+    ).toEqual([]);
+  });
 });
 
 describe("stylesheet guards", () => {

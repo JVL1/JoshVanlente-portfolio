@@ -15,17 +15,42 @@ async function run(html: string, dir = FIXTURES) {
   return String(await rehype().use(rehypeImageDimensions, { dir }).process(html));
 }
 
+// The fixture is 64 wide and 40 tall. Asserting the literals rather than /\d+/
+// is what catches the two being swapped, which a digit match cannot see.
 describe("rehypeImageDimensions", () => {
   it("stamps intrinsic width and height on an absolute image src", async () => {
     const out = await run('<img src="/cover.png" alt="x">');
-    expect(out).toMatch(/width="\d+"/);
-    expect(out).toMatch(/height="\d+"/);
+    expect(out).toContain('width="64"');
+    expect(out).toContain('height="40"');
   });
 
   it("leaves an existing width and height alone", async () => {
     const out = await run('<img src="/cover.png" alt="x" width="10" height="20">');
     expect(out).toContain('width="10"');
     expect(out).toContain('height="20"');
+  });
+
+  // An author who sets one dimension has made a choice about the other, because
+  // next/image derives it from the aspect ratio. Stamping the intrinsic size
+  // over half of that pair produces a size the author never asked for.
+  it("leaves an authored width alone when height is absent", async () => {
+    const out = await run('<img src="/cover.png" alt="x" width="10">');
+    expect(out).toContain('width="10"');
+    expect(out).not.toMatch(/height=/);
+  });
+
+  it("leaves an authored height alone when width is absent", async () => {
+    const out = await run('<img src="/cover.png" alt="x" height="20">');
+    expect(out).toContain('height="20"');
+    expect(out).not.toMatch(/width=/);
+  });
+
+  // width="0" is falsy, so a truthiness test reads it as absent and overwrites
+  // it. Zero is a strange thing to author, but it is authored.
+  it("treats a zero dimension as authored", async () => {
+    const out = await run('<img src="/cover.png" alt="x" width="0">');
+    expect(out).toContain('width="0"');
+    expect(out).not.toMatch(/height=/);
   });
 
   it("leaves a remote src alone rather than throwing", async () => {
@@ -62,9 +87,38 @@ describe("rehypeImageDimensions", () => {
     "contains a traversal in %s inside the image directory",
     async (src) => {
       const out = await run(`<img src="${src}" alt="x">`);
-      expect(out).toMatch(/width="\d+"/);
+      expect(out).toContain('width="64"');
     },
   );
+
+  // The throws live inside the visitor, but the sharp jobs are awaited after the
+  // walk. Throwing straight out of the visitor skips that await, so a job that
+  // is already running rejects with nobody listening — and Node kills the build
+  // on the unhandled rejection, printing sharp's anonymous format error instead
+  // of the message that names the file the author actually got wrong.
+  it("settles in-flight image jobs before throwing the authored error", async () => {
+    const unhandled: unknown[] = [];
+    const record = (reason: unknown) => unhandled.push(reason);
+    process.on("unhandledRejection", record);
+
+    try {
+      await expect(
+        run('<img src="/not-an-image.png" alt="a"><img src="/nope.png" alt="b">'),
+      ).rejects.toThrow(/nope\.png/);
+      // Give the orphaned sharp promise time to reject and Node time to notice.
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    } finally {
+      process.off("unhandledRejection", record);
+    }
+
+    expect(unhandled, "a sharp job rejected with no handler attached").toEqual([]);
+  });
+
+  it("reports a file sharp cannot read, naming the src", async () => {
+    await expect(run('<img src="/not-an-image.png" alt="a">')).rejects.toThrow(
+      /not-an-image\.png/,
+    );
+  });
 });
 
 /**

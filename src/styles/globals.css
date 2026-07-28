@@ -27,13 +27,27 @@
   --color-border-strong: #262a27;
   --color-border-cta:    #2c302d;
 
-  /* Type — 12px floor. The prototype's 10px and 11px mono both become --text-xs. */
+  /* Type — 12px floor. The prototype's 10px and 11px mono both become --text-xs.
+
+     Each size carries its own line-height because overriding --text-* does not
+     clear Tailwind's sibling --text-*--line-height. Left unpaired, --text-xl
+     rendered its 18px at calc(1.75 / 1.25) — the leading Tailwind computed for
+     the 20px size this scale replaced — and --text-md, which Tailwind has no
+     default for, inherited whatever the ancestor set. The comment on each line
+     is the resulting leading in pixels. */
   --text-xs:   0.75rem;    /* 12px */
+  --text-xs--line-height:   1.3333;  /* 16px */
   --text-sm:   0.8125rem;  /* 13px */
+  --text-sm--line-height:   1.3846;  /* 18px */
   --text-base: 0.875rem;   /* 14px */
+  --text-base--line-height: 1.5;     /* 21px */
   --text-md:   0.9375rem;  /* 15px */
+  --text-md--line-height:   1.6;     /* 24px */
   --text-lg:   1rem;       /* 16px */
+  --text-lg--line-height:   1.5;     /* 24px */
+  /* Headings only, so it is the one tight step in the scale. */
   --text-xl:   1.125rem;   /* 18px */
+  --text-xl--line-height:   1.3333;  /* 24px */
 
   /* Each var() carries an inline fallback. Without one an undefined --font-* makes
      the whole declaration invalid at computed-value time, so the stack after the

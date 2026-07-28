@@ -327,6 +327,20 @@ describe("content schema, under --strict", () => {
     );
   });
 
+  // MDXContent evaluates each compiled body with `new Function`, which is
+  // synchronous. An `import` makes MDX emit a top-level `await import(...)`, so
+  // the body compiles clean, ships, and then throws "await is only valid in
+  // async functions" during a server render — naming neither MDX nor the file it
+  // came from. The build has to be where that stops.
+  it("rejects an MDX body containing an import, naming the file", () => {
+    const result = buildWith({
+      "valid-item.mdx": `${VALID}\nimport Chart from "./chart";\n`,
+    });
+    expect(result.status, result.stderr).not.toBe(0);
+    expect(result.stderr).toMatch(/valid-item\.mdx/);
+    expect(result.stderr).toMatch(/import Chart from/);
+  });
+
   it("rejects a half-pair on its own, with no roleId", () => {
     expectSchemaFailure(
       buildWith({

@@ -71,10 +71,18 @@ function resolveUnderRoot(dir: string, src: string): string {
  *
  * A missing file throws rather than passing through, so a typo'd image path
  * fails the build instead of shipping a broken image.
+ *
+ * Every error found during the walk is collected rather than thrown from inside
+ * the visitor. A throw out of the visitor skips the `await` below, so a sharp
+ * job already running rejects with nobody listening, and Node kills the build on
+ * the unhandled rejection — printing sharp's anonymous "unsupported image
+ * format" instead of the message naming the file the author got wrong. Two bad
+ * images in one body was enough to hit it.
  */
 export default function rehypeImageDimensions({ dir = "public" }: Options = {}) {
   return async (tree: unknown) => {
     const jobs: Promise<void>[] = [];
+    const errors: Error[] = [];
 
     visit(tree as never, (node: unknown) => {
       const candidate = node as HastElement | MdxJsxElement;
@@ -91,11 +99,14 @@ export default function rehypeImageDimensions({ dir = "public" }: Options = {}) 
           candidate.type === "mdxJsxTextElement") &&
         candidate.name === "img"
       ) {
-        throw new Error(
-          "rehype-image-dimensions: write body images as markdown " +
-            "(![alt](/images/…)), not as a raw <img /> — a raw tag skips both " +
-            "the missing-file check and next/image",
+        errors.push(
+          new Error(
+            "rehype-image-dimensions: write body images as markdown " +
+              "(![alt](/images/…)), not as a raw <img /> — a raw tag skips both " +
+              "the missing-file check and next/image",
+          ),
         );
+        return;
       }
 
       if (candidate.type !== "element") return;
@@ -108,13 +119,30 @@ export default function rehypeImageDimensions({ dir = "public" }: Options = {}) 
       const src = properties.src;
       // A protocol-relative "//cdn/a.png" also starts with "/" and is remote.
       if (typeof src !== "string" || !src.startsWith("/") || src.startsWith("//")) return;
-      if (properties.width && properties.height) return;
 
-      const file = resolveUnderRoot(dir, src);
+      // Either dimension on its own is still an authored choice, because
+      // next/image derives the other from the aspect ratio. Stamping the
+      // intrinsic size over half the pair gives the author a size nobody asked
+      // for. The comparison is against undefined and null rather than
+      // truthiness, so an authored width="0" counts as authored.
+      const authored = (value: unknown) => value !== undefined && value !== null;
+      if (authored(properties.width) || authored(properties.height)) return;
+
+      let file: string;
+      try {
+        file = resolveUnderRoot(dir, src);
+      } catch (error) {
+        errors.push(error as Error);
+        return;
+      }
+
       if (!existsSync(file)) {
-        throw new Error(
-          `rehype-image-dimensions: no such image "${src}" (looked in ${file})`,
+        errors.push(
+          new Error(
+            `rehype-image-dimensions: no such image "${src}" (looked in ${file})`,
+          ),
         );
+        return;
       }
 
       jobs.push(
@@ -126,10 +154,24 @@ export default function rehypeImageDimensions({ dir = "public" }: Options = {}) 
             }
             properties.width = width;
             properties.height = height;
+          })
+          // sharp names the format it could not read but never the file, so its
+          // bare error sends the author looking through every image in the body.
+          .catch((cause: Error) => {
+            throw new Error(
+              `rehype-image-dimensions: cannot read image "${src}": ${cause.message}`,
+              { cause },
+            );
           }),
       );
     });
 
-    await Promise.all(jobs);
+    // Every job is settled before anything throws, so none is left rejecting
+    // unattached. The walk's own errors come first: they name what the author
+    // wrote, while a job error is usually a consequence of it.
+    for (const settled of await Promise.allSettled(jobs)) {
+      if (settled.status === "rejected") errors.push(settled.reason as Error);
+    }
+    if (errors.length > 0) throw errors[0];
   };
 }
