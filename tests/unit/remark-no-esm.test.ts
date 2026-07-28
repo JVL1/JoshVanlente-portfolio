@@ -65,6 +65,10 @@ describe("remarkNoEsm", () => {
     children: [{ type, value, ...(estree ? { data: { estree } } : {}) }],
   });
 
+  // `meta` and `property` carry the two halves of a meta-property, and acorn
+  // fills both: `import.meta` is meta "import", `new.target` is meta "new". The
+  // names are what separates them, so a fixture that omits `meta` would let a
+  // check on the node type alone look like a check on `import.meta`.
   const importMetaEstree = {
     type: "Program",
     body: [
@@ -72,7 +76,11 @@ describe("remarkNoEsm", () => {
         type: "ExpressionStatement",
         expression: {
           type: "MemberExpression",
-          object: { type: "MetaProperty" },
+          object: {
+            type: "MetaProperty",
+            meta: { type: "Identifier", name: "import" },
+            property: { type: "Identifier", name: "meta" },
+          },
           property: { type: "Identifier", name: "url" },
         },
       },
@@ -133,6 +141,79 @@ describe("remarkNoEsm", () => {
         ],
       }),
     ).toThrow(/import\.meta\.url/);
+  });
+
+  /**
+   * A spread attribute — `<span {...{title: import.meta.url}}>` — parses to
+   * `mdxJsxExpressionAttribute`, whose `value` is the source string rather than
+   * a node, so the check that reads `value.type` skips it in silence. Its
+   * ESTree hangs off `attribute.data.estree` instead. Velite compiles the body
+   * with exit 0 and writes the record; the compiled output still carries the
+   * `_importMetaUrl` guard, which throws `Unexpected missing options.baseUrl`
+   * inside `new Function(code)({ ...runtime })` in MDXContent.
+   */
+  const spreadAttributeTree = (elementType: string, value: string, estree: unknown) => ({
+    type: "root",
+    children: [
+      {
+        type: elementType,
+        name: "span",
+        attributes: [{ type: "mdxJsxExpressionAttribute", value, data: { estree } }],
+        children: [],
+      },
+    ],
+  });
+
+  it.each(["mdxJsxFlowElement", "mdxJsxTextElement"])(
+    "rejects import.meta spread into the attributes of a %s",
+    (elementType) => {
+      expect(() =>
+        transform(
+          spreadAttributeTree(
+            elementType,
+            "...{title: import.meta.url}",
+            importMetaEstree,
+          ),
+        ),
+      ).toThrow(/import\.meta\.url/);
+    },
+  );
+
+  it("rejects a dynamic import spread into a JSX attribute", () => {
+    expect(() =>
+      transform(
+        spreadAttributeTree(
+          "mdxJsxTextElement",
+          '...{t: import("./x")}',
+          dynamicImportEstree,
+        ),
+      ),
+    ).toThrow(/import\("\.\/x"\)/);
+  });
+
+  /**
+   * `new.target` is a meta-property too, so rejecting the node type alone
+   * refused an expression that compiles and renders exactly as written. The
+   * guard is about reaching outside the body, and `new.target` reaches nowhere.
+   */
+  it("leaves new.target alone, which is a meta-property that stays inside the body", () => {
+    expect(() =>
+      transform(
+        expressionTree("mdxFlowExpression", "(function(){ return String(new.target) })()", {
+          type: "Program",
+          body: [
+            {
+              type: "ExpressionStatement",
+              expression: {
+                type: "MetaProperty",
+                meta: { type: "Identifier", name: "new" },
+                property: { type: "Identifier", name: "target" },
+              },
+            },
+          ],
+        }),
+      ),
+    ).not.toThrow();
   });
 
   // The estree is what the check reads, so an expression that merely writes the

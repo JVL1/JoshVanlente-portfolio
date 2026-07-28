@@ -55,6 +55,15 @@ Path aliases: `@/*` → `./src/*`, `#content` → `./.velite`. Both are declared
 `tsconfig.json` **and** mirrored in `vitest.config.ts` — Vitest does not read
 tsconfig paths on its own. If you add an alias, add it in both places.
 
+**Unit tests run in two Vitest projects**, declared in `vitest.config.ts`. The
+`node` project covers `tests/unit/**/*.test.ts` and anything under `src/`; those
+suites spawn Velite and read the tree off disk, and a DOM would only slow them
+down. The `dom` project covers `tests/component/**/*.test.tsx` on jsdom, with
+`tests/component/setup.ts` supplying the two APIs jsdom omits that the widgets
+read: the `PointerEvent` constructor and the pointer-capture methods on
+`Element`. Put a test for a component in `tests/component`, and give it a `.tsx`
+extension or the `dom` project will not collect it.
+
 **There are two Zods in this repo and they are not interchangeable.**
 `velite.config.ts` uses `s.*`, which is Velite's own bundled **zod 3** — Velite
 declares no `zod` dependency and ships its own inside the bundle. Everything
@@ -74,7 +83,7 @@ under `src/` uses the repo's **zod 4**. Consequences:
 ## Commands
 
 ```bash
-npm run dev         # velite --watch --strict alongside next dev
+npm run dev         # velite build --strict, then a velite watcher alongside next dev
 npm run build       # velite build --clean --strict && next build
 npm run test        # velite build --strict && vitest run
 npm run typecheck   # velite build --strict && tsc --noEmit
@@ -92,29 +101,42 @@ Until Task 5 writes `velite.config.ts`, all three of those scripts fail by
 design. Verify with `npx next build`, `npx vitest run`, and `npx tsc --noEmit`
 directly, and do not weaken the scripts to make them run early.
 
-`--strict` in the `dev` script is what makes the MDX guards bite in the dev loop.
-Without it Velite reports a rejected body, exits 0, and writes a `work.json` with
-that entry dropped, so the write-up disappears from the dev site and nothing
-fails. With it the initial build exits 1 and prints the rejection, and a rebuild
-that fails during watch leaves the last good `work.json` in place rather than
-overwriting it. `tests/unit/dev-loop.test.ts` runs the flags out of the script
-itself and asserts both.
+The `dev` script is `velite build --strict && (velite --watch --strict & next dev)`,
+and every piece of that earns its place.
 
-**`npm run dev` can orphan the Velite watcher.** The script is
-`velite --watch --strict & next dev`. Ctrl-C kills both, because Node installs its own
-SIGINT handler. But when `next dev` exits on its own — port already in use, a
-crash, a config error — nothing signals the watcher; it reparents to init and
-keeps running. Retry a failed start a few times and several watchers end up
-rewriting `.velite/` and `public/static/` at once, which races the schema
-fixture tests. If a dev start fails, check before retrying:
+`--strict` is what makes the MDX guards bite in the dev loop. Without it Velite
+reports a rejected body, exits 0, and writes a `work.json` with that entry
+dropped, so the write-up disappears from the dev site and nothing fails. With it
+the initial build exits 1 and prints the rejection, and a rebuild that fails
+during watch leaves the last good `work.json` in place rather than overwriting
+it — the watcher catches the error and logs it, so it survives the failed edit.
+
+The separate `velite build --strict` in front is what lets the failure reach the
+author. `&` yields the status of the command after it, so in `velite --watch
+--strict & next dev` a Velite exit of 1 was discarded: the watcher was gone, the
+script reported success, and `next dev` served the last good content forever
+with nothing rebuilding. `sh -c 'false & sleep 0.2'` exits 0, which is the whole
+of it. Running the build first costs about half a second on a dev start and
+turns a rejected body into a non-zero `npm run dev` that never reaches
+`next dev`. `tests/unit/dev-loop.test.ts` runs the script whole, with a stub in
+place of `next dev`, and asserts both halves.
+
+**`npm run dev` can orphan the Velite watcher.** Ctrl-C kills both, because Node
+installs its own SIGINT handler. But when `next dev` exits on its own — port
+already in use, a crash, a config error — nothing signals the watcher; it
+reparents to init and keeps running. The subshell does not change this: it exits
+with `next dev` and leaves its background job behind. Retry a failed start a few
+times and several watchers end up rewriting `.velite/` and `public/static/` at
+once, which races the schema fixture tests. If a dev start fails, check before
+retrying:
 
 ```bash
 pgrep -f 'velite --watch'    # kill any survivors first
 ```
 
-This is a known, accepted trade. The `&` form is what the Velite spike verified,
-and fixing the process lifetime properly would mean adding `concurrently` as a
-dependency for a hazard that only appears after a failed start.
+This is a known, accepted trade. Fixing the process lifetime properly would mean
+adding `concurrently` as a dependency for a hazard that only appears after a
+failed start.
 
 ## Rules
 

@@ -98,9 +98,12 @@ export default defineConfig({
           const hasLiteral = Boolean(data.org && data.role);
 
           // `fatal` is what makes this an error rather than an info. Without it
-          // velite reports the issue but still writes the record to work.json,
-          // and `npm run dev` runs `velite --watch` with no --strict — so a
-          // broken pairing would render in the dev loop and only fail at build.
+          // velite prints the pairing as info and still writes the record to
+          // work.json, so anything reading that file gets a write-up carrying
+          // both a roleId and a contradicting org — the two sources of truth
+          // roleId exists to collapse. Every script here passes --strict, which
+          // fails the build on an info as readily as on an error, so `fatal` is
+          // about what lands in work.json rather than about the exit code.
           if (hasRoleId === hasLiteral) {
             context.addIssue({
               fatal: true,

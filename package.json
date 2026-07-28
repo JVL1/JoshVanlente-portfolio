@@ -6,7 +6,7 @@
     "node": ">=24.0.0 <25"
   },
   "scripts": {
-    "dev": "velite --watch --strict & next dev",
+    "dev": "velite build --strict && (velite --watch --strict & next dev)",
     "build": "velite build --clean --strict && next build",
     "start": "next start",
     "lint": "eslint .",
@@ -27,11 +27,13 @@
     "@lhci/cli": "^0.15",
     "@playwright/test": "^1.56",
     "@tailwindcss/postcss": "4.3.3",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.11",
+    "jsdom": "^30.0.0",
     "rehype": "^13.0.2",
     "tailwindcss": "4.3.3",
     "typescript": "^5",

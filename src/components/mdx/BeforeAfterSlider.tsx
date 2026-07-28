@@ -152,6 +152,13 @@ export function BeforeAfterSlider({
         return;
     }
     e.preventDefault();
+    // A keypress is the reader deciding where the divider goes, which ends any
+    // gesture the snapshot still describes. Leaving it in place lets a cancel
+    // that arrives afterwards undo the keyboard: Chrome hands the mouse
+    // pointerId 1 for the whole session, so the cancel of some later gesture
+    // matches a snapshot taken before these keypresses and restores the divider
+    // to where it sat before them.
+    gestureStart.current = null;
     setInset(clamp(next));
   };
 

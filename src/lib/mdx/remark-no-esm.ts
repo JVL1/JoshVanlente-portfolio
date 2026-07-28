@@ -31,8 +31,13 @@ function reachesOutward(estree: unknown): boolean {
 
     if (Array.isArray(node)) return node.some(walk);
 
-    const { type } = node as { type?: string };
-    if (type === "ImportExpression" || type === "MetaProperty") return true;
+    const { type, meta } = node as { type?: string; meta?: { name?: string } };
+    if (type === "ImportExpression") return true;
+    // A meta-property is `x.y` where `x` is a keyword, and `new.target` is one
+    // as much as `import.meta` is. Only the import form reaches outside the
+    // body; `new.target` compiles and renders as written, so the name of the
+    // keyword is what the check has to read.
+    if (type === "MetaProperty" && meta?.name === "import") return true;
 
     return Object.values(node as Record<string, unknown>).some(walk);
   };
@@ -99,13 +104,24 @@ export default function remarkNoEsm() {
       }
 
       // An attribute hangs off its element rather than sitting in `children`,
-      // so the walk never reaches one on its own: `<span title={import.meta.url}>`
-      // is invisible to every visitor except this branch.
+      // so `visit` never reaches one: neither `<span title={import.meta.url}>`
+      // nor `<span {...{title: import.meta.url}}>` is checked anywhere but here.
+      //
+      // The two forms hold their expression in different places. A named
+      // attribute is `mdxJsxAttribute`, whose `value` is a node carrying the
+      // ESTree. A spread is `mdxJsxExpressionAttribute`, whose `value` is the
+      // source string and whose ESTree sits on the attribute itself — so a
+      // check on `value.type` skips every spread without a word.
       if (
         candidate.type === "mdxJsxFlowElement" ||
         candidate.type === "mdxJsxTextElement"
       ) {
         for (const attribute of candidate.attributes ?? []) {
+          const node = attribute as MdastNode;
+          if (node.type === "mdxJsxExpressionAttribute") {
+            checkExpression(node);
+            continue;
+          }
           const value = (attribute as { value?: unknown }).value as
             | MdastNode
             | undefined;
