@@ -39,4 +39,134 @@ describe("remarkNoEsm", () => {
   it("still names the syntax when the file has no path", () => {
     expect(() => remarkNoEsm()(esmTree('import "./a";'), {})).toThrow(/import "\.\/a";/);
   });
+
+  it("names every offence in one message rather than one per build", () => {
+    const tree = {
+      type: "root",
+      children: [
+        { type: "mdxjsEsm", value: 'import A from "./a";' },
+        { type: "mdxjsEsm", value: 'import B from "./b";' },
+      ],
+    };
+    expect(() => transform(tree)).toThrow(/\.\/a/);
+    expect(() => transform(tree)).toThrow(/\.\/b/);
+  });
+
+  /**
+   * `import.meta` and a dynamic `import()` inside an MDX expression never
+   * produce an `mdxjsEsm` node, and they compile with no top-level await, so
+   * `new Function` accepts them. MDX emits a `_importMetaUrl` guard instead,
+   * which throws during the server render with a message naming neither MDX nor
+   * the file — the same crash the plugin exists to stop, reached by a different
+   * road. These are the node types remark hands the plugin for them.
+   */
+  const expressionTree = (type: string, value: string, estree?: unknown) => ({
+    type: "root",
+    children: [{ type, value, ...(estree ? { data: { estree } } : {}) }],
+  });
+
+  const importMetaEstree = {
+    type: "Program",
+    body: [
+      {
+        type: "ExpressionStatement",
+        expression: {
+          type: "MemberExpression",
+          object: { type: "MetaProperty" },
+          property: { type: "Identifier", name: "url" },
+        },
+      },
+    ],
+  };
+
+  const dynamicImportEstree = {
+    type: "Program",
+    body: [
+      {
+        type: "ExpressionStatement",
+        expression: {
+          type: "ImportExpression",
+          source: { type: "Literal", value: "./x" },
+        },
+      },
+    ],
+  };
+
+  it.each(["mdxFlowExpression", "mdxTextExpression"])(
+    "rejects import.meta in %s",
+    (type) => {
+      expect(() =>
+        transform(expressionTree(type, "import.meta.url", importMetaEstree)),
+      ).toThrow(/import\.meta\.url/);
+    },
+  );
+
+  it("rejects a dynamic import written as an expression", () => {
+    expect(() =>
+      transform(
+        expressionTree("mdxFlowExpression", 'import("./x")', dynamicImportEstree),
+      ),
+    ).toThrow(/import\("\.\/x"\)/);
+  });
+
+  it("rejects import.meta in a JSX attribute, which no walk reaches on its own", () => {
+    expect(() =>
+      transform({
+        type: "root",
+        children: [
+          {
+            type: "mdxJsxFlowElement",
+            name: "span",
+            attributes: [
+              {
+                type: "mdxJsxAttribute",
+                name: "title",
+                value: {
+                  type: "mdxJsxAttributeValueExpression",
+                  value: "import.meta.url",
+                  data: { estree: importMetaEstree },
+                },
+              },
+            ],
+            children: [],
+          },
+        ],
+      }),
+    ).toThrow(/import\.meta\.url/);
+  });
+
+  // The estree is what the check reads, so an expression that merely writes the
+  // word in a string is left alone. Matching the source text instead would fail
+  // the build on a write-up that quotes its own error message.
+  it("leaves an expression that only mentions import in a string alone", () => {
+    expect(() =>
+      transform(
+        expressionTree("mdxFlowExpression", '"import(\'./x\') is rejected"', {
+          type: "Program",
+          body: [
+            {
+              type: "ExpressionStatement",
+              expression: { type: "Literal", value: "import('./x') is rejected" },
+            },
+          ],
+        }),
+      ),
+    ).not.toThrow();
+  });
+
+  it("leaves an ordinary expression alone", () => {
+    expect(() =>
+      transform(
+        expressionTree("mdxTextExpression", "1 + 1", {
+          type: "Program",
+          body: [
+            {
+              type: "ExpressionStatement",
+              expression: { type: "BinaryExpression", operator: "+" },
+            },
+          ],
+        }),
+      ),
+    ).not.toThrow();
+  });
 });

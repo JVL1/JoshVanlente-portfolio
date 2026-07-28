@@ -35,6 +35,9 @@ export function BeforeAfterSlider({
   const rightLabelRef = useRef<HTMLSpanElement>(null);
   const [dragging, setDragging] = useState(false);
   const [inset, setInset] = useState(() => Math.min(100, Math.max(0, initial)));
+  // Where the divider sat when the gesture started, so a cancelled gesture can
+  // put it back. See onPointerCancel for why a cancel is now routine.
+  const insetAtPointerDown = useRef<number | null>(null);
   const [leftThreshold, setLeftThreshold] = useState(0);    // percent from left
   const [rightThreshold, setRightThreshold] = useState(100); // percent from left
 
@@ -53,6 +56,7 @@ export function BeforeAfterSlider({
     // Only left button or primary pointer
     if (e.pointerType === "mouse" && e.button !== 0) return;
     setDragging(true);
+    insetAtPointerDown.current = inset;
     (e.currentTarget as HTMLDivElement).setPointerCapture?.(e.pointerId);
     updateFromClientX(e.clientX);
   };
@@ -64,14 +68,32 @@ export function BeforeAfterSlider({
 
   const onPointerUp: React.PointerEventHandler<HTMLDivElement> = (e) => {
     setDragging(false);
+    insetAtPointerDown.current = null;
     (e.currentTarget as HTMLDivElement).releasePointerCapture?.(e.pointerId);
   };
 
-  // A gesture can end without a pointerup: the OS takes the pointer for a
-  // system gesture, or something else claims the capture. Without these the
-  // component stays stuck in `dragging`, and the next stray mouse move over the
-  // slider drags it with no button held down.
-  const endDrag = () => setDragging(false);
+  // A cancel is the browser saying "this gesture was never yours". Under
+  // `touch-action: pan-y` that is the ordinary end of a vertical scroll that
+  // began on the widget, and Chromium delivers two pointermove events before
+  // the cancel — both of which onPointerMove has already applied. Leaving them
+  // applied means a reader who merely scrolled past the comparison leaves it
+  // moved to wherever their thumb travelled, permanently. Putting the divider
+  // back where it started is the only way a scroll can be a scroll.
+  const onPointerCancel = () => {
+    setDragging(false);
+    if (insetAtPointerDown.current !== null) setInset(insetAtPointerDown.current);
+    insetAtPointerDown.current = null;
+  };
+
+  // A gesture can also end with the capture taken by something else and no
+  // pointerup or pointercancel at all. That is not the browser rejecting the
+  // gesture, so the divider keeps where the reader dragged it; only the stuck
+  // `dragging` flag needs clearing, which otherwise lets the next stray mouse
+  // move drag the slider with no button held down.
+  const endDrag = () => {
+    setDragging(false);
+    insetAtPointerDown.current = null;
+  };
 
   const onKeyDown: React.KeyboardEventHandler<HTMLButtonElement> = (e) => {
     let next = inset;
@@ -147,6 +169,13 @@ export function BeforeAfterSlider({
     // browser. The browser then cancels the pointer when it takes over a
     // vertical swipe, which is what onPointerCancel and onLostPointerCapture
     // below are for.
+    //
+    // This is a trade rather than a free win. Chrome on Android locks direction
+    // once it reads a gesture as horizontal, so a drag that wanders vertically
+    // still belongs to the slider. Safari does not lock: with `pan-y` on a
+    // scrolling page it cancels a drag that strays far from straight, so a
+    // careless drag there ends early. A fragile drag is the better half of the
+    // trade against a scroll that does nothing.
     touchAction: "pan-y",
     background: "var(--color-surface)",
   }), [rounded, aspectRatio, height]);
@@ -217,7 +246,9 @@ export function BeforeAfterSlider({
     top: 8,
     zIndex: 5,
     fontSize: "var(--text-xs)",
-    lineHeight: "16px",
+    // Paired with the size rather than repeating its 16px result, so an edit to
+    // the token moves both halves at once.
+    lineHeight: "var(--text-xs--line-height)",
     padding: "2px 8px",
     borderRadius: 8,
     background: "var(--color-surface)",
@@ -234,7 +265,7 @@ export function BeforeAfterSlider({
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      onPointerCancel={endDrag}
+      onPointerCancel={onPointerCancel}
       onLostPointerCapture={endDrag}
     >
       <div style={frameStyle}>
@@ -271,6 +302,7 @@ export function BeforeAfterSlider({
       {/* Corner labels */}
       <span
         aria-hidden
+        data-testid="slider-label-before"
         ref={leftLabelRef}
         style={{
           ...labelStyle,
@@ -287,6 +319,7 @@ export function BeforeAfterSlider({
       </span>
       <span
         aria-hidden
+        data-testid="slider-label-after"
         ref={rightLabelRef}
         style={{
           ...labelStyle,

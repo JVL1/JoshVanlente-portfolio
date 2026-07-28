@@ -84,7 +84,7 @@ export default function rehypeImageDimensions({ dir = "public" }: Options = {}) 
     const jobs: Promise<void>[] = [];
     const errors: Error[] = [];
 
-    visit(tree as never, (node: unknown) => {
+    const visitNode = (node: unknown) => {
       const candidate = node as HastElement | MdxJsxElement;
 
       // A raw `<img />` in an MDX body is an mdxJsxFlowElement or
@@ -120,14 +120,11 @@ export default function rehypeImageDimensions({ dir = "public" }: Options = {}) 
       // A protocol-relative "//cdn/a.png" also starts with "/" and is remote.
       if (typeof src !== "string" || !src.startsWith("/") || src.startsWith("//")) return;
 
-      // Either dimension on its own is still an authored choice, because
-      // next/image derives the other from the aspect ratio. Stamping the
-      // intrinsic size over half the pair gives the author a size nobody asked
-      // for. The comparison is against undefined and null rather than
-      // truthiness, so an authored width="0" counts as authored.
-      const authored = (value: unknown) => value !== undefined && value !== null;
-      if (authored(properties.width) || authored(properties.height)) return;
-
+      // The file is resolved and checked before any dimension is considered, so
+      // a typo'd path fails the build whatever the author wrote alongside it.
+      // Checking after the dimension guard let `<img src="/tpyo.png" width="300">`
+      // skip the check entirely, and that check is the guarantee this plugin
+      // exists to give.
       let file: string;
       try {
         file = resolveUnderRoot(dir, src);
@@ -145,6 +142,21 @@ export default function rehypeImageDimensions({ dir = "public" }: Options = {}) 
         return;
       }
 
+      // Usable, not merely present. registry.tsx hands next/image
+      // `Number(width)`, and next/image needs a positive finite number in both
+      // slots — it derives neither from the other. Anything else arrives as NaN
+      // and next/image throws `invalid "width" property`. Presence was the wrong
+      // test twice over: hast turns both `width=""` and a valueless `width` into
+      // the empty string, and `width="0"` is a number next/image rejects, yet
+      // all three suppressed the stamp and shipped an image that cannot render.
+      const usable = (value: unknown) => {
+        const n = Number(value);
+        return Number.isFinite(n) && n > 0;
+      };
+      const hasWidth = usable(properties.width);
+      const hasHeight = usable(properties.height);
+      if (hasWidth && hasHeight) return;
+
       jobs.push(
         sharp(file)
           .metadata()
@@ -152,8 +164,18 @@ export default function rehypeImageDimensions({ dir = "public" }: Options = {}) 
             if (!width || !height) {
               throw new Error(`rehype-image-dimensions: no dimensions in "${src}"`);
             }
-            properties.width = width;
-            properties.height = height;
+            // A single usable dimension is still an authored choice, so it is
+            // kept and its partner is derived from the intrinsic aspect ratio.
+            // That derivation is the work next/image does not do, and it is why
+            // stamping the intrinsic size over the author's half was wrong.
+            if (hasWidth) {
+              properties.height = Math.round((Number(properties.width) * height) / width);
+            } else if (hasHeight) {
+              properties.width = Math.round((Number(properties.height) * width) / height);
+            } else {
+              properties.width = width;
+              properties.height = height;
+            }
           })
           // sharp names the format it could not read but never the file, so its
           // bare error sends the author looking through every image in the body.
@@ -164,7 +186,18 @@ export default function rehypeImageDimensions({ dir = "public" }: Options = {}) 
             );
           }),
       );
-    });
+    };
+
+    // The walk is wrapped because the settle loop below is what keeps an
+    // in-flight sharp job from rejecting unattached. Every throw the visitor
+    // raises on purpose is already a push onto `errors`, so this catch is for
+    // the ones nobody planned — a malformed tree, or a later edit that puts a
+    // throw back. Either way the jobs still get settled.
+    try {
+      visit(tree as never, visitNode);
+    } catch (error) {
+      errors.push(error as Error);
+    }
 
     // Every job is settled before anything throws, so none is left rejecting
     // unattached. The walk's own errors come first: they name what the author
@@ -172,6 +205,12 @@ export default function rehypeImageDimensions({ dir = "public" }: Options = {}) 
     for (const settled of await Promise.allSettled(jobs)) {
       if (settled.status === "rejected") errors.push(settled.reason as Error);
     }
-    if (errors.length > 0) throw errors[0];
+
+    // Every bad image is named at once. Throwing only the first made three
+    // typos cost three build cycles, each revealing the next.
+    if (errors.length === 1) throw errors[0];
+    if (errors.length > 1) {
+      throw new AggregateError(errors, errors.map((error) => error.message).join("\n"));
+    }
   };
 }

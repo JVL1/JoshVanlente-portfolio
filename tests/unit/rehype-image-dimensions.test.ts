@@ -30,27 +30,42 @@ describe("rehypeImageDimensions", () => {
     expect(out).toContain('height="20"');
   });
 
-  // An author who sets one dimension has made a choice about the other, because
-  // next/image derives it from the aspect ratio. Stamping the intrinsic size
-  // over half of that pair produces a size the author never asked for.
-  it("leaves an authored width alone when height is absent", async () => {
+  // An author who sets one dimension has made a choice, so it is kept — but
+  // next/image derives nothing: registry.tsx hands it Number(height), and a
+  // missing half arrives as NaN and throws `invalid "height" property`. The
+  // missing half is derived here instead. 10 wide on a 64x40 source is 6 tall.
+  it("keeps an authored width and derives the missing height", async () => {
     const out = await run('<img src="/cover.png" alt="x" width="10">');
     expect(out).toContain('width="10"');
-    expect(out).not.toMatch(/height=/);
+    expect(out).toContain('height="6"');
   });
 
-  it("leaves an authored height alone when width is absent", async () => {
+  // 20 tall on a 64x40 source is 32 wide.
+  it("keeps an authored height and derives the missing width", async () => {
     const out = await run('<img src="/cover.png" alt="x" height="20">');
     expect(out).toContain('height="20"');
-    expect(out).not.toMatch(/width=/);
+    expect(out).toContain('width="32"');
   });
 
-  // width="0" is falsy, so a truthiness test reads it as absent and overwrites
-  // it. Zero is a strange thing to author, but it is authored.
-  it("treats a zero dimension as authored", async () => {
-    const out = await run('<img src="/cover.png" alt="x" width="0">');
-    expect(out).toContain('width="0"');
-    expect(out).not.toMatch(/height=/);
+  // Zero is a number next/image rejects, and hast turns both `width=""` and a
+  // valueless `width` into the empty string. Treating any of the three as an
+  // authored choice shipped an image that cannot render, so the test is for a
+  // usable value rather than a present one.
+  it.each(['width="0"', 'width=""', "width", 'width="auto"'])(
+    "stamps both dimensions over an unusable %s",
+    async (attribute) => {
+      const out = await run(`<img src="/cover.png" alt="x" ${attribute}>`);
+      expect(out).toContain('width="64"');
+      expect(out).toContain('height="40"');
+    },
+  );
+
+  // The missing-file check is the guarantee this plugin exists to give, and an
+  // authored dimension used to skip straight past it.
+  it("still fails on a missing file when a dimension is authored", async () => {
+    await expect(run('<img src="/nope.png" alt="x" width="10">')).rejects.toThrow(
+      /nope\.png/,
+    );
   });
 
   it("leaves a remote src alone rather than throwing", async () => {
@@ -112,6 +127,17 @@ describe("rehypeImageDimensions", () => {
     }
 
     expect(unhandled, "a sharp job rejected with no handler attached").toEqual([]);
+  });
+
+  // Throwing only the first error made three typos cost three build cycles,
+  // each one revealing the next.
+  it("names every bad image at once rather than one per build", async () => {
+    const failure = await run(
+      '<img src="/nope.png" alt="a"><img src="/also-nope.png" alt="b">',
+    ).catch((error: Error) => error);
+
+    expect((failure as Error).message).toMatch(/nope\.png/);
+    expect((failure as Error).message).toMatch(/also-nope\.png/);
   });
 
   it("reports a file sharp cannot read, naming the src", async () => {
