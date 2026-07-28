@@ -126,10 +126,32 @@ function startDev(body: string): Dev {
 
   const out = join(root, ".velite-out");
 
+  // Velite compiles the config it loads to one fixed path beside that config —
+  // `node_modules/.velite.config.compiled.mjs` — and imports it back from
+  // there. Two velite processes started at once write and read that one file,
+  // and a reader that imports it mid-write gets a module with no `collections`,
+  // which velite reports as `'collections' is required in 'velite.config.ts'`:
+  // a config error with nothing wrong with the config. Measured on this
+  // machine, against separate content roots and separate outputs: 0 failures in
+  // 30 builds two at a time, 2 in 32 at four. The dev script alone runs two
+  // velite processes, and tests/unit/schema.test.ts runs more from another
+  // Vitest worker.
+  //
+  // Giving the fixture a config of its own — one line, re-exporting the real
+  // one — puts that compiled file under the fixture root, where nothing else
+  // writes it. The schema, the plugins, and the dev script under test are all
+  // still the real ones; only the path velite compiles to moves.
+  writeFileSync(
+    join(root, "velite.config.ts"),
+    `export { default } from ${JSON.stringify(join(REPO, "velite.config.ts"))};\n`,
+  );
+
   // detached so the script and its background watcher share a process group
-  // this test can kill as one.
+  // this test can kill as one. cwd is the fixture root because that is how
+  // velite finds the config above, which is what keeps its compiled output off
+  // the shared path.
   const child = spawn("sh", ["-c", devScript()], {
-    cwd: REPO,
+    cwd: root,
     detached: true,
     stdio: ["ignore", "pipe", "pipe"],
     env: {
@@ -167,6 +189,42 @@ async function waitFor(predicate: () => boolean, timeoutMs = 60_000): Promise<bo
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
   return predicate();
+}
+
+/**
+ * Wait until the watcher is armed, and prove it by making it fire.
+ *
+ * Velite prints `watching for changes` before it constructs its chokidar
+ * watcher, and chokidar ignores everything it finds during its own initial scan
+ * (`ignoreInitial: true`). A write that lands in that window is absorbed into
+ * the scan's baseline: no event is ever emitted for it, so the rebuild does not
+ * arrive late — it never arrives at all. Waiting longer cannot fix that, which
+ * is why nothing here is a retry of the assertion.
+ *
+ * Neither of the signals the dev loop otherwise offers marks the end of that
+ * window. `velite build --strict` writes work.json and `next dev` starts before
+ * the watcher process is even up, so on a loaded machine both are true while
+ * the watcher has yet to print a line. The only honest readiness signal left is
+ * an event actually firing. Touching the source until velite reports a rebuild
+ * is what waits for it; delivery is reliable from then on, so the edit under
+ * test can be a single write.
+ *
+ * The touches deliberately leave the title alone. Only the edit under test
+ * changes it, so only the edit under test can satisfy the assertion.
+ */
+async function waitUntilWatcherArmed(dev: Dev): Promise<boolean> {
+  let touches = 0;
+  let lastTouch = 0;
+  return waitFor(() => {
+    if (/rebuild finished/.test(dev.output())) return true;
+    // Slower than the poll interval: each touch costs velite a rebuild, and
+    // one every half-second is plenty to catch the window closing.
+    if (Date.now() - lastTouch < 500) return false;
+    lastTouch = Date.now();
+    touches += 1;
+    writeFileSync(dev.source, `${VALID}\nTouched ${touches} times.\n`);
+    return false;
+  });
 }
 
 function readWork(path: string): Array<{ title: string }> | null {
@@ -229,11 +287,24 @@ describe("`npm run dev`", () => {
     ).toBe(true);
 
     // The watcher is the point of the dev loop, and it is the half the `&`
-    // operators put at risk: an edit has to reach work.json, or the author
-    // changes a write-up and the dev site keeps serving the old one forever.
+    // operators put at risk. Two things have to hold: it has to arm, and an
+    // edit has to reach work.json — or the author changes a write-up and the
+    // dev site keeps serving the old one forever.
+    expect(
+      await waitUntilWatcherArmed(dev),
+      `the watcher never armed:\n${dev.output()}`,
+    ).toBe(true);
+
     writeFileSync(dev.source, frontmatter("An edited write-up"));
     expect(
-      await waitFor(() => readWork(dev.workJson)?.[0]?.title === "An edited write-up"),
+      await waitFor(
+        () => readWork(dev.workJson)?.[0]?.title === "An edited write-up",
+        // Generous next to the ~10ms a rebuild takes, and tight enough that a
+        // watcher which stopped delivering fails the run rather than stalling
+        // it. Arming is already proven by this point, so nothing here is
+        // waiting on a race.
+        20_000,
+      ),
       `the watcher never rebuilt after an edit:\n${dev.output()}`,
     ).toBe(true);
 

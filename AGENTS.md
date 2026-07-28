@@ -121,6 +121,29 @@ turns a rejected body into a non-zero `npm run dev` that never reaches
 `next dev`. `tests/unit/dev-loop.test.ts` runs the script whole, with a stub in
 place of `next dev`, and asserts both halves.
 
+**An edit made in the first second of `npm run dev` can be missed.** Velite
+prints `watching for changes` before it builds its Chokidar watcher, and
+Chokidar ignores everything it finds during its own initial scan. A save that
+lands inside that window is absorbed into the scan's baseline, so no rebuild
+event is ever emitted for it — the rebuild does not arrive late, it never
+arrives. Save again and the dev loop behaves normally. This is why
+`tests/unit/dev-loop.test.ts` touches the fixture until Velite reports a rebuild
+before it makes the edit it actually asserts on.
+
+**Two Velite processes must not share a config.** Velite compiles whichever
+`velite.config.ts` it finds to a single fixed path beside it,
+`node_modules/.velite.config.compiled.mjs`, and imports it back from there.
+Start two at once and they write and read that one file: the reader can import
+it mid-write and get a module with no `collections`, which Velite reports as
+`'collections' is required in 'velite.config.ts'` — a config error with nothing
+wrong with the config. Measured here against separate content roots and
+outputs, it is 0 failures in 30 builds two at a time and 2 in 32 at four. A test
+that spawns Velite concurrently with another one needs a config of its own; the
+dev-loop fixture writes a one-line re-export of the real config into its
+throwaway root and runs there, which moves the compiled file with it.
+`tests/unit/schema.test.ts` is safe for a different reason — `execFileSync` runs
+its builds one at a time — so keep it that way.
+
 **`npm run dev` can orphan the Velite watcher.** Ctrl-C kills both, because Node
 installs its own SIGINT handler. But when `next dev` exits on its own — port
 already in use, a crash, a config error — nothing signals the watcher; it
