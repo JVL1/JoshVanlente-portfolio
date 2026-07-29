@@ -17,6 +17,17 @@ import { site } from "@/lib/site";
  * This module imports no `next/og`, so Vitest loads it with no Next machinery in
  * the way. The route keeps `ImageResponse` and the font file read, because the
  * font bytes are a build-time disk read and have no place in a plain module.
+ * `tests/unit/og-route.test.ts` asserts that what the route hands `ImageResponse`
+ * is this exact `ogCard` and not a tree of its own, which is the only thing
+ * joining the assertions here to the image that ships.
+ *
+ * What those assertions can see is bounded by what the readers in
+ * `tests/unit/helpers/element-tree.ts` can walk, and they refuse rather than
+ * skip: a component-typed child, a prop other than `style` and `children`, an
+ * `<img>`, and a `url()` in a style value each throw. That refusal is what makes
+ * "no third colour in the tree" a guarantee rather than a filter, and it is also
+ * the constraint on this file. Keep the card a plain nest of styled divs, or
+ * teach those readers the new construct in the same commit.
  */
 
 /**
@@ -44,8 +55,8 @@ export const ogCard: ReactElement = (
       // has nothing to resolve against and `var(--color-bg)` comes back empty.
       // These two literals mirror --color-bg and --color-text in
       // src/styles/globals.css. tests/unit/tokens.test.ts reads them out of this
-      // tree and fails if either stops matching what ships, or if a third
-      // colour appears anywhere in it. AGENTS.md records the exception.
+      // tree and fails if either stops matching what ships, or if a third colour
+      // appears in any style object in it. AGENTS.md records the exception.
       background: "#0a0b0b",
       color: "#eceeec",
       display: "flex",

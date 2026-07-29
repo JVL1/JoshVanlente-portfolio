@@ -183,10 +183,23 @@ describe("the OG card's sanctioned raw hex", () => {
   // Tokens a colour-capable shorthand may legitimately carry. Any other bare word
   // on such a property is reported as a named colour, so `background: "red"`
   // fails rather than passing for want of a 148-entry lookup table.
+  //
+  // `transparent` and `currentColor` spend no part of the exception: one adds no
+  // ink, and the other repeats the `color` this file already checks. They matter
+  // because both are routine on the properties `fill` and `stroke`, and
+  // `border: "1px solid transparent"` would otherwise fail as a third colour.
   const NOT_A_COLOUR = new Set([
     "none", "hidden", "solid", "dashed", "dotted", "double", "groove", "ridge",
     "inset", "outset", "inherit", "initial", "revert", "unset", "auto",
+    "transparent", "currentcolor",
   ]);
+
+  // A gradient is not one of the notations above, so stripping COLOUR_NOTATION
+  // out of `linear-gradient(#0a0b0b, #eceeec)` leaves `linear-gradient(  ,  )`
+  // behind, and both the function name and the stray paren were reported as
+  // colours. Dropping the call syntax keeps the arguments, so a named colour
+  // inside a gradient is still caught.
+  const CALL_SYNTAX = /[\w-]+\(|\)/g;
 
   /** Every colour named by one style object, however it is written. */
   function coloursIn(style: Record<string, unknown>): string[] {
@@ -198,6 +211,7 @@ describe("the OG card's sanctioned raw hex", () => {
       if (!COLOUR_PROP.test(prop)) continue;
       for (const token of value
         .replace(COLOUR_NOTATION, " ")
+        .replace(CALL_SYNTAX, " ")
         .split(/[\s,/]+/)
         .filter(Boolean)) {
         if (/^[-+.\d]/.test(token)) continue; // a length, a number, or a ratio
@@ -207,6 +221,38 @@ describe("the OG card's sanctioned raw hex", () => {
     }
     return found;
   }
+
+  // coloursIn is the whole basis of the assertion below, so its edges get their
+  // own cases. Both of the first two were live false positives: they reported a
+  // colour where the style named none, which would have failed the assertion
+  // with a value that is not a colour at all.
+  describe("coloursIn", () => {
+    it("reads no colour from transparent or currentColor", () => {
+      expect(coloursIn({ border: "1px solid transparent" })).toEqual([]);
+      expect(coloursIn({ fill: "currentColor", stroke: "none" })).toEqual([]);
+    });
+
+    it("reads a gradient's arguments rather than its syntax", () => {
+      expect(
+        coloursIn({ backgroundImage: "linear-gradient(#0a0b0b, #eceeec)" }),
+      ).toEqual(["#0a0b0b", "#eceeec"]);
+    });
+
+    it("still catches a named colour, inside a gradient as well as alone", () => {
+      expect(coloursIn({ background: "red" })).toEqual(["red"]);
+      expect(coloursIn({ background: "linear-gradient(red, blue)" })).toEqual([
+        "red",
+        "blue",
+      ]);
+    });
+
+    it("still catches a functional notation on any property", () => {
+      expect(coloursIn({ color: "rgb(255, 0, 0)" })).toEqual(["rgb(255, 0, 0)"]);
+      expect(coloursIn({ boxShadow: "0 0 4px oklch(0.5 0 0)" })).toEqual([
+        "oklch(0.5 0 0)",
+      ]);
+    });
+  });
 
   it("mirrors --color-bg and --color-text exactly", () => {
     const t = theme();
@@ -236,6 +282,44 @@ describe("the OG card's sanctioned raw hex", () => {
       [...named].sort(),
       "a third colour in the OG card is outside the sanctioned exception",
     ).toEqual([t["--color-bg"], t["--color-text"]].sort());
+  });
+
+  it("is the only raw colour anywhere in src/", () => {
+    // The two assertions above see only the style objects inside ogCard. Inside
+    // that surface they are far stronger than the source match they replaced,
+    // which required the hexes in src/app/og/route.tsx to equal the two token
+    // values; outside it they see nothing at all, so AGENTS.md's "adding a raw
+    // hex anywhere else in src/ is still out" needs a scan of its own. Written
+    // in the shape of the two `outline` guards below, which AGENTS.md sanctions
+    // as the second exception to its ban on asserting against source text: a
+    // prohibition has no value form to export.
+    const EXEMPT = new Set([
+      join(SRC_DIR, "lib/og-card.tsx"), // the exception itself, pinned above
+      CSS_PATH, // the token file is where the values are declared
+    ]);
+
+    const offenders = readdirRecursive(SRC_DIR)
+      .filter((f) => /\.(tsx?|css|mdx)$/.test(f))
+      .filter((f) => !EXEMPT.has(f))
+      .flatMap((f) =>
+        readFileSync(f, "utf8")
+          .split("\n")
+          // A line that opens as a comment carries nothing that renders, and
+          // src/components/mdx/BeforeAfterSlider.tsx explains its choice of
+          // token by naming the hex the other one resolves to. Skipping
+          // comment-opening lines keeps that explanation legal. Stripping
+          // inline comments instead would have to decide whether a `//` inside
+          // a string ends the code, and guessing wrong there hides a real
+          // colour rather than allowing a comment.
+          .filter((line) => !/^\s*(\/\/|\/\*|\*)/.test(line))
+          .flatMap((line) => line.match(COLOUR_NOTATION) ?? [])
+          .map((hit) => `${f}: ${hit}`),
+      );
+
+    expect(
+      offenders,
+      "colour in src/ comes from a token; Satori is the one reason to write a value",
+    ).toEqual([]);
   });
 });
 

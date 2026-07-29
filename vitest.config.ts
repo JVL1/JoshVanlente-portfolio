@@ -14,6 +14,16 @@ export default defineConfig({
         test: {
           name: "node",
           environment: "node",
+          // Stated rather than left to the default, because two suites here
+          // depend on it. tests/unit/robots.test.ts registers a `#content` mock
+          // and tests/unit/og-route.test.ts a `next/og` one, both with
+          // `vi.doMock`, and both undo it in an `afterEach`. Without isolation a
+          // mock that outlives its file would answer for another file's imports,
+          // and the failure would name a content path that does not exist rather
+          // than anything to do with mocking. Vitest defaults this to true today;
+          // writing it down means a change of default does not quietly remove
+          // the guarantee.
+          isolate: true,
           include: [
             "src/**/*.test.ts",
             "src/**/__tests__/**/*.test.ts",

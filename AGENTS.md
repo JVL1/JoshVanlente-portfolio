@@ -219,8 +219,21 @@ green against a card whose background was set to the text colour, which renders
 it invisible, because the right hex was still sitting in a comment two lines
 above. Export the thing being judged and assert on its value:
 `src/lib/og-card.tsx` exists so the tests can read an element tree and an options
-object instead of `src/app/og/route.tsx`'s text. `globals.css` is the exception
-that stays, because a stylesheet has no value form to export.
+object instead of `src/app/og/route.tsx`'s text.
+
+Two kinds of assertion are exceptions and stay, both because there is no value
+to export.
+
+`globals.css` is read as text because a stylesheet has no value form at all.
+
+A **prohibition** is read as text because absence has none either. Three scans in
+`tokens.test.ts` walk every `.ts`, `.tsx`, `.css`, and `.mdx` file under `src/`
+looking for `outline-none`, the `outline: none` longhand, and a raw colour value,
+and each one asserts that something is not there. Their failure mode also runs the
+safe way round: a comment mentioning the banned thing fails a test the code
+satisfies, which is a cheap failure that explains itself in its own message. The
+hazard the rule above exists for is the opposite one, where a comment makes a real
+violation pass.
 
 **TDD.** Write the failing test first, run it, capture the RED output, then
 implement. Report the RED output — it is how the orchestrator knows the test was
@@ -269,13 +282,33 @@ asset, check whether it is the source of one that is referenced.
   appears; it does not license one in `src/`.
 
   **`src/lib/og-card.tsx` is the second sanctioned place, and the only one in
-  `src/`.** Satori rasterizes the Open Graph card outside a browser for the same
-  reason, so `var(--color-bg)` resolves to nothing and the card has to name the
-  values. It hard-codes `--color-bg` and `--color-text` and no other colour.
+  `src/` besides the token file itself.** Satori rasterizes the Open Graph card
+  outside a browser for the same reason, so `var(--color-bg)` resolves to nothing
+  and the card has to name the values. It hard-codes `--color-bg` and
+  `--color-text` and no other colour.
+
   `tests/unit/tokens.test.ts` imports the card's exported element tree, reads the
   colours out of its style objects, and fails if either stops matching
-  `globals.css` or if a third colour appears anywhere in the tree. Adding a raw
-  hex anywhere else in `src/` is still out.
+  `globals.css` or if a third colour appears anywhere in the tree. "Anywhere"
+  holds only because the readers in `tests/unit/helpers/element-tree.ts` refuse a
+  tree they cannot fully walk rather than returning the part they managed to see:
+  a component-typed child, a prop other than `style` and `children`, an `<img>`,
+  and a `url()` in a style value each throw `UnreadableTree`. An earlier version
+  returned `[]` instead, and four separate constructs shipped a visibly wrong card
+  with the whole suite green, the plainest being a `<Tagline/>` that printed
+  `AVAILABLE FOR HIRE` in red. Growing the card past a plain nest of styled divs
+  means teaching those readers the construct in the same commit.
+
+  What joins those assertions to the image that ships is a single identity check
+  in `tests/unit/og-route.test.ts`: it mocks `next/og`, captures the constructor
+  arguments, and requires the first one to be the exported `ogCard` itself rather
+  than a tree of equal shape. Without it an inline tree in the route draws
+  whatever it likes while every assertion above stays green, which is what
+  happened.
+
+  Adding a raw hex anywhere else in `src/` is still out, and a third scan in
+  `tokens.test.ts` reads every file under `src/` to enforce it, exempting only the
+  card and `globals.css`.
 - **No rendered text below 12px** (`--text-xs`). This is an acceptance criterion,
   asserted by both a unit test and a Playwright sweep.
 - **Every interactive element needs a `:focus-visible` style** distinct from the
