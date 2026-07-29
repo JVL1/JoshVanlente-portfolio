@@ -29,9 +29,11 @@ Work happens in the worktree at `/Users/joshvanlente/Development/JoshVanlente-po
 | 12. `Rail` and the skip link | done | reviewed with Tasks 13–14 |
 | 13. `MetricStrip`, `TrackRecord` | done | reviewed with Tasks 12–14 |
 | 14. Homepage | done | 3 models, quorum 3/3, 26 findings (0 critical, 5 major), 11 fixed in `6790a48`, 2 more in `54a43fa` |
-| 15 onward | not started | — |
+| 15. About page | done | reviewed with Task 16 |
+| 16. Metadata | done | 3 models, quorum 3/3, 20 findings (0 critical, 6 major), 11 fixed in `64a0687`, 5 more in `af150ee` |
+| 17 onward | not started | — |
 
-Suite is **171 tests green across 22 files** (77 at the start of Task 9). `npm run build`, `npm run test`, `npm run typecheck`, and `npm run lint` are all green.
+Suite is **195 tests green across 25 files** (77 at the start of Task 9). `npm run build`, `npm run test`, `npm run typecheck`, and `npm run lint` are all green.
 
 **The Tasks 12–14 review found three majors that a green build hid, and all three are the same shape: a thing that looks implemented and reaches nothing.** The rail hardcoded its navigation, so the section labels and the `work`/`track` anchor ids each lived in two files and a rename would have silently orphaned the anchor. `--color-accent-hover` was pinned by two `tokens.test.ts` rows under "CTA hover" while no element used it — a green contrast test vouching for a colour that never shipped. And the two linked metric cells were pixel-identical to the two plain ones, so the homepage's only route into the write-ups was invisible. The review also established that the obvious fix for the third is a no-op: `hover:text-accent` on the `<Link>` compiles and does nothing, because each child span sets its own colour and wins on specificity. **Check the built CSS, not the class list.**
 
@@ -59,9 +61,17 @@ Suite is **171 tests green across 22 files** (77 at the start of Task 9). `npm r
 21. **The fold criterion missed at 0.4605 and was fixed by trimming the hero, not by the recorded fallback.** The design doc's declared variable was moving the metric strip below the work list; Josh chose the hero trim instead (2026-07-29). The gap was **3.66px**, not the ~40px first estimated from the ratio — at 92.5px thumbnail height, 0.5 needs `top ≤ 753.75` against a measured 757.41. 24px came out of the container and the hero's bottom padding, and the ratio is now **0.7416**. The review and the QA pass measured 0.4605 independently and agreed to four decimal places, which is why the number was trusted. **Type sizes and the 12px floor stay fixed; vertical space is the only variable.**
 22. **`src/app/layout.tsx` has no automated coverage, and that is a knowing gap.** It imports `@/lib/fonts`, which uses `next/font/google` and needs the Next SWC transform, so a jsdom test fails at import with `TypeError: (0, Inter) is not a function`. Covering it means mocking an internal module, which no test in this repo does. The file carries `<main id="main" tabIndex={-1}>` — the single attribute making the skip link work — and **Tasks 16 and 19 both edit it**. Task 22's Playwright suite is the right home for the assertion, since it runs against a real browser: add "Tab, Enter on the skip link, `document.activeElement.id === 'main'`" there.
 
+**Task 17 must handle a bare `/og` with no query parameter, and the plan's own text does not cover it.** `src/lib/site.ts` points every cover-less page's `og:image` at `/og`, with no `?title=`. Task 17's spec says the route "takes the title from a query parameter" — so it will receive `null`. A raw `null` interpolated into JSX renders nothing and a raw `undefined` renders the literal word, and either ships on a card nobody looks at until the link is shared. Three additions to that task:
+
+- A missing or empty `title` falls back to a real string — `${profile.name} — ${profile.role}` is the obvious one.
+- Its Step 5 verification runs the **no-parameter** case, `curl -sI "localhost:3000/og"`, alongside the existing `?title=Test`.
+- Cap the title length. The route is public and its input is user-supplied, so a pasted 300-character title overflows the 1920×1080 canvas. Satori renders it, not HTML, so overflow is the risk rather than injection.
+
+Until Task 17 lands, `/og` is a 404 and the homepage, `/work`, and `/about` all advertise it. **Do not deploy to a public origin before Task 17.**
+
 ### Blockers and open questions
 
-- **All content inputs for Tasks 7 and 8 are answered and shipped** — see "Content inputs, as answered" below. **Task 15's About inputs arrived on 2026-07-29** — see "About page inputs" below. The narrative still needs Josh's sign-off on the exact wording before it is written to `src/data/about.ts`.
+- **All content inputs for Tasks 7 and 8 are answered and shipped** — see "Content inputs, as answered" below. **Task 15's About inputs arrived on 2026-07-29** — see "About page inputs" below. **Josh signed the narrative off on 2026-07-29** with one change — em dashes replaced by a comma and a colon — and it shipped in `36fb7a4`. `tests/unit/about.test.ts` now holds it as a golden record, transcribed longhand, so a later edit is a deliberate act.
 
 ### About page inputs, as answered on 2026-07-29
 
@@ -82,9 +92,15 @@ Josh's answers to the three open questions. Task 15 writes these; it does not im
 - **`/work` and `/about` appear in no metadata task.** Task 16 names the write-up route and the homepage, so those two will inherit the root default rather than the `"%s — Josh Van Lente"` template. A plan gap, not a diff defect — fix it when Task 16 runs.
 - **`tsconfig.json` has no `noUncheckedIndexedAccess`.** `CaseRow` carries a runtime guard on `outcomes[0]` because the schema's `.min(1)` does not reach the type system — Zod 4's `.min()` returns `this`, so `WorkItem` infers `Outcome[]` rather than a non-empty tuple. Turning the flag on would surface the same class of bug repo-wide, at the cost of a sweep well outside any current task.
 
+**Tasks 15 and 16 both shipped beyond their stated file lists, deliberately.** Task 16's list named `layout.tsx`, `work/[slug]/page.tsx`, and `site.ts`; it also touched `work/page.tsx` and `about/page.tsx` to close the recorded gap where those two routes had no metadata. The follow-up fix in `af150ee` additionally touched `profile.ts`, `page.tsx`, and `SectionHeader.tsx`. Every one is recorded in a commit body.
+
+Two findings from the Tasks 15–16 review remain open and are assigned:
+
+- **The page-shell class string `mx-auto w-full max-w-[75rem] px-4 py-16 sm:px-8 sm:py-24` is identical in three routes.** The homepage deliberately differs (documented, fold criterion) and `not-found` differs again, so a shared shell would cover three of five call sites. Marginal now; revisit if a fourth route lands. **Task 21 at the earliest.**
+
 Findings from the Tasks 12–14 review that its own scope could not fix. Each names where it belongs:
 
-- **`/work` is unreachable from every page.** The rail's three nav links are `/#work`, `/#track`, and `/about`; "Selected work" points at the homepage section, not the work index. The route exists, is in the sitemap, and no page links to it. **Task 16 or Task 19 should decide** whether the rail gains a fourth link or the homepage's "Selected work" header links through. This is a plan gap — no task ever assigned the link.
+- **`/work` is unreachable from every page.** The rail's three nav links are `/#work`, `/#track`, and `/about`; "Selected work" points at the homepage section, not the work index. The route exists and no page links to it. **Assigned to Task 19**, which owns the rail's responsive treatment and is the natural place to decide whether it gains a fourth link or the homepage's "Selected work" header links through. Sharper after Task 16: `/work` now carries its own metadata and canonical, and Task 17 will list it in the sitemap, so it will be indexable and still unreachable by a human. This is a plan gap — no task ever assigned the link.
 - **`/about` is a live 404 on every route until Task 15 lands**, because the rail links it from every page. Expected, and the reason Task 15 cannot be deferred.
 - **The `↗` in "LinkedIn ↗" is inside the accessible name**, pinned by `home-page.test.tsx`, so a screen reader says "LinkedIn up-right arrow". The glyph also conventionally signals a new tab, which the link does not open. **Task 16's accessibility pass** should either `aria-hidden` the glyph or add `target="_blank"` with `rel="noopener"` — both change a pinned test, so it needs a deliberate call.
 - **Two component tests assert facts about their own fixtures.** `MetricStrip.test.tsx` re-implements `getHeadlineOutcomes`' href contract in its fixture, so it would keep passing against a contract the app no longer uses; `TrackRecord.test.tsx` duplicates `dates.test.ts` with the component barely involved. **Task 21's sweep** is the place to tighten them.
