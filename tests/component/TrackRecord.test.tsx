@@ -18,7 +18,7 @@ describe("TrackRecord", () => {
     const expectedDates = profile.roles.map(formatRoleDates);
     const renderedDates = screen
       .getAllByRole("listitem")
-      .map((row) => row.querySelector("time")?.textContent);
+      .map((row) => row.querySelector("[data-testid='role-dates']")?.textContent);
 
     expect(renderedDates).toEqual(expectedDates);
     expect(renderedDates).toHaveLength(7);

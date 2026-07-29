@@ -36,6 +36,18 @@ const roleSchema = z.strictObject({
   achievements: z.array(z.string().min(1)).min(1),
 });
 
+/**
+ * A rail navigation entry. The rail renders on `/work`, `/about`, and every
+ * write-up page, where the homepage's `#work` and `#track` anchors do not
+ * exist, so an entry that targets one is written rooted as `/#work` — a bare
+ * fragment would resolve against whatever page the reader is already on and go
+ * nowhere.
+ */
+const navigationSchema = z.strictObject({
+  href: z.string().min(1),
+  label: z.string().min(1),
+});
+
 const headlineOutcomeSchema = z.strictObject({
   metric: z.string().min(1),
   label: z.string().min(1),
@@ -52,6 +64,7 @@ const profileSchema = z.strictObject({
   // z.string().email() / z.string().url() method forms.
   email: z.email(),
   links: z.strictObject({ linkedin: z.url(), github: z.url() }),
+  navigation: z.array(navigationSchema).min(1),
   roles: z
     .array(roleSchema)
     .min(1)
@@ -78,6 +91,15 @@ export const profile: Profile = profileSchema.parse({
     linkedin: "https://www.linkedin.com/in/josh-van-lente/",
     github: "https://github.com/JVL1",
   },
+  // The labels here are the same strings the homepage puts on its section
+  // headers, and the ids inside the hrefs are the ids those headers carry.
+  // Renaming a section on the page without changing it here leaves the rail
+  // pointing at an anchor that no longer exists, and nothing fails loudly.
+  navigation: [
+    { href: "/#work", label: "Selected work" },
+    { href: "/#track", label: "Track record" },
+    { href: "/about", label: "About" },
+  ],
   roles: [
     {
       id: "evernest-staff-pm",
@@ -179,3 +201,14 @@ export const profile: Profile = profileSchema.parse({
     },
   ],
 });
+
+/**
+ * The rail's contact links, in the order it renders them. Derived from the
+ * parsed profile rather than declared alongside it, so each URL is written once
+ * and the label that names it cannot drift from the address it points at.
+ */
+export const contactLinks: ReadonlyArray<{ label: string; href: string }> = [
+  { label: "LinkedIn", href: profile.links.linkedin },
+  { label: "GitHub", href: profile.links.github },
+  { label: profile.email, href: `mailto:${profile.email}` },
+];

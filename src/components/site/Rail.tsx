@@ -1,22 +1,22 @@
 import Link from "next/link";
-import { profile } from "@/data/profile";
-
-const sections = [
-  { href: "/#work", label: "Selected work" },
-  { href: "/#track", label: "Track record" },
-  { href: "/about", label: "About" },
-] as const;
+import { contactLinks, profile } from "@/data/profile";
 
 export function Rail() {
   const [first, ...tail] = profile.name.split(" ");
   const rest = tail.join(" ");
 
   return (
-    <aside className="sticky top-0 flex h-screen w-[330px] flex-col justify-between overflow-y-auto border-r border-border p-11 px-9">
+    // The width comes from the shell's 330px grid track, not from here. Setting
+    // it twice would hold the rail at 330px when Task 19 collapses the column.
+    // overflow-y-auto is load-bearing: the rail is 100vh with space-between, so
+    // below roughly 420px of viewport height the contact links clip unreachably.
+    <aside className="sticky top-0 flex h-screen flex-col justify-between overflow-y-auto border-r border-border p-11 px-9">
       <div>
         <p className="text-lg font-bold leading-tight tracking-tight">
           {first}
-          <span className="block text-text-muted">{rest}</span>
+          {/* A single-word name leaves nothing for the second line, and an empty
+              span is a node no test can address. */}
+          {rest && <span className="block text-text-muted">{rest}</span>}
         </p>
         <p className="mt-3.5 font-mono text-xs uppercase leading-relaxed tracking-[0.12em] text-text-subtle">
           {profile.role}
@@ -27,7 +27,7 @@ export function Rail() {
 
       <nav aria-label="Sections">
         <ul className="flex flex-col gap-5">
-          {sections.map((section) => (
+          {profile.navigation.map((section) => (
             <li key={section.href}>
               <Link
                 href={section.href}
@@ -41,15 +41,18 @@ export function Rail() {
       </nav>
 
       <ul className="flex flex-col gap-2 font-mono text-xs text-text-subtle">
-        <li>
-          <a href={profile.links.linkedin}>LinkedIn</a>
-        </li>
-        <li>
-          <a href={profile.links.github}>GitHub</a>
-        </li>
-        <li>
-          <a href={`mailto:${profile.email}`}>{profile.email}</a>
-        </li>
+        {contactLinks.map((contact) => (
+          <li key={contact.href}>
+            {/* These sit at text-subtle directly beneath a paragraph in the same
+                colour and font, so without a hover they read as body text. */}
+            <a
+              href={contact.href}
+              className="transition-colors duration-200 hover:text-text focus-visible:text-text"
+            >
+              {contact.label}
+            </a>
+          </li>
+        ))}
       </ul>
     </aside>
   );

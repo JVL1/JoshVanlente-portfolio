@@ -11,7 +11,9 @@ export function TrackRecord({ roles }: TrackRecordProps) {
       {roles.map((role) => (
         <li
           key={role.id}
-          className="grid grid-cols-[140px_1fr_120px] items-baseline gap-6 border-b border-border py-5"
+          // minmax(0,1fr) rather than 1fr: a raw fr track floors at min-content,
+          // so a long unbroken string would push the dates column off the row.
+          className="grid grid-cols-[140px_minmax(0,1fr)_120px] items-baseline gap-6 border-b border-border py-5"
         >
           <span className="text-lg font-semibold">{role.org}</span>
           <div>
@@ -25,9 +27,15 @@ export function TrackRecord({ roles }: TrackRecordProps) {
               </small>
             ))}
           </div>
-          <time className="text-right font-mono text-xs text-text-subtle">
+          {/* A span, not <time>: formatRoleDates renders ranges like "2023—2025"
+              and "2025—now", and <time> has no range form, so six of the seven
+              rows would carry a datetime the parser rejects. */}
+          <span
+            data-testid="role-dates"
+            className="text-right font-mono text-xs text-text-subtle"
+          >
             {formatRoleDates(role)}
-          </time>
+          </span>
         </li>
       ))}
     </ul>

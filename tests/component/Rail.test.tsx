@@ -12,8 +12,10 @@ describe("Rail", () => {
     const firstLine = screen.getByText(first, { selector: "p" });
     const secondLine = screen.getByText(rest);
 
+    // Whether the second line renders as a block is a styling choice jsdom
+    // cannot observe, and AGENTS.md forbids reaching for the class name to
+    // check it. The containment above is the part that carries meaning.
     expect(firstLine.contains(secondLine)).toBe(true);
-    expect(secondLine.classList.contains("block")).toBe(true);
   });
 
   it("shows profile positioning", () => {

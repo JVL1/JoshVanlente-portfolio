@@ -37,15 +37,18 @@ export default async function Home() {
           at Evernest.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
+          {/* --color-accent-hover exists for this button and was reaching
+              nothing: tokens.test.ts pins it under "CTA hover", so a green
+              contrast test was vouching for a colour that never shipped. */}
           <a
             href={`mailto:${profile.email}`}
-            className="rounded-full bg-accent px-[18px] py-2.5 text-base font-semibold text-bg"
+            className="rounded-full bg-accent px-[18px] py-2.5 text-base font-semibold text-bg transition-colors duration-200 hover:bg-accent-hover"
           >
             Email me
           </a>
           <a
             href={profile.links.linkedin}
-            className="rounded-full border border-border-cta px-[18px] py-2.5 text-base font-semibold text-text"
+            className="rounded-full border border-border-cta px-[18px] py-2.5 text-base font-semibold text-text transition-colors duration-200 hover:border-border-strong hover:text-accent"
           >
             LinkedIn ↗
           </a>
