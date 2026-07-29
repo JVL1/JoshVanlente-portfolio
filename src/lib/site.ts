@@ -5,6 +5,7 @@ export const site = {
   // og:image:width and og:image:height only when the entry is a descriptor
   // object; a bare string produces og:image on its own. Declaring them lets a
   // crawler lay the card out on its first scrape instead of fetching the image
-  // to measure it, which matters most for a dynamic edge route that may be cold.
+  // to measure it; `/og` is prerendered to a static PNG during `next build`, so
+  // these two numbers are fixed at the same moment the file they describe is.
   defaultOgImage: { url: "/og", width: 1920, height: 1080 },
 } as const;

@@ -13,8 +13,10 @@ export type ResolvedHeadlineOutcome = HeadlineOutcome & { href: string | null };
 
 // ---------------------------------------------------------------------------
 // Module scope: every check below runs the moment anything imports this file.
-// Pages, the sitemap, robots, the OG route, and generateStaticParams all import
-// it, so `next build` fails on a bad reference rather than shipping a dead link.
+// Pages, the sitemap, robots, and generateStaticParams all import it, so
+// `next build` fails on a bad reference rather than shipping a dead link. The OG
+// route is the one build-time consumer that does not: it draws only profile.ts,
+// and the build output confirms og/route.js never loads this chunk.
 // ---------------------------------------------------------------------------
 
 // Filenames must match slugs, so every error message below names a real file.

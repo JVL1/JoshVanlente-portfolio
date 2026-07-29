@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import sitemap from "@/app/sitemap";
+import sitemap, { lastModified } from "@/app/sitemap";
 import { getWorkItems } from "@/lib/content";
 import { work } from "#content";
 
@@ -58,12 +58,50 @@ describe("sitemap", () => {
       const entry = entries.find(
         (e) => e.url === `https://www.joshvanlente.com/work/${item.slug}`,
       );
-      // `updatedAt ?? publishedAt`: no write-up sets updatedAt today, so this
-      // takes the fallback. Pinning it means dropping updatedAt fails here
-      // rather than the first time someone sets it in frontmatter and lastmod
-      // silently stops moving.
-      expect(entry!.lastModified).toBe(item.updatedAt ?? item.publishedAt);
+      // No write-up sets updatedAt today, so every lastmod is the publish date,
+      // and that concrete value is what this asserts. The version this replaces
+      // wrote `item.updatedAt ?? item.publishedAt` on the expected side, which is
+      // the production expression recomputed. It could not see which of the two
+      // fields wins: reversing them to `publishedAt ?? updatedAt`, which breaks
+      // the edit date for good, kept all seven of these tests green.
+      expect(
+        item.updatedAt,
+        `${item.slug} now sets updatedAt, so its lastmod is that date rather than ` +
+          `publishedAt. Assert it directly and drop the file from this loop.`,
+      ).toBeUndefined();
+      expect(entry!.lastModified).toBe(item.publishedAt);
       expect(entry!.priority).toBe(0.7);
+    }
+  });
+
+  // The other branch of the fallback, which no content file can reach today.
+  describe("lastModified", () => {
+    it("takes the edit date when frontmatter records one", () => {
+      expect(
+        lastModified({ publishedAt: "2025-01-01", updatedAt: "2025-06-02" }),
+      ).toBe("2025-06-02");
+    });
+
+    it("falls back to the publish date when it does not", () => {
+      expect(lastModified({ publishedAt: "2025-01-01" })).toBe("2025-01-01");
+    });
+  });
+
+  it("sends a write-up's date and rank and claims no change frequency", async () => {
+    const entries = await sitemap();
+
+    for (const item of await getWorkItems()) {
+      const entry = entries.find(
+        (e) => e.url === `https://www.joshvanlente.com/work/${item.slug}`,
+      )!;
+      // Pinning the key set rather than the three values on their own, because
+      // `changeFrequency: "daily"` added to every write-up went unnoticed by every
+      // assertion in this file. A finished write-up has no edit cadence to
+      // promise, and lastmod already tells a crawler what it needs.
+      expect(
+        Object.keys(entry).sort(),
+        "a write-up entry carries a url, a lastmod, and a priority",
+      ).toEqual(["lastModified", "priority", "url"]);
     }
   });
 

@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ogCard } from "@/lib/og-card";
 import { contrastRatio } from "./helpers/contrast";
+import { styleObjects } from "./helpers/element-tree";
 
 const SRC_DIR = fileURLToPath(new URL("../../src/", import.meta.url));
 
@@ -157,35 +159,82 @@ describe("type scale", () => {
 
 describe("the OG card's sanctioned raw hex", () => {
   // Satori rasterizes the card outside a browser, so `var(--color-bg)` resolves
-  // to nothing and the route has to write the literal values. AGENTS.md records
-  // the exception; this pins it. Read off disk rather than copied here, the same
-  // way the contrast test reads globals.css, so the assertion cannot drift from
-  // what ships.
-  const OG_ROUTE_PATH = fileURLToPath(
-    new URL("../../src/app/og/route.tsx", import.meta.url),
-  );
-  const route = readFileSync(OG_ROUTE_PATH, "utf8");
+  // to nothing and the card has to write the literal values. AGENTS.md records
+  // the exception; this pins it. globals.css is still read off disk, so the
+  // expected side cannot drift from what ships.
+  //
+  // The card's side is read out of the exported element tree rather than out of
+  // src/app/og/route.tsx as text. Reading the text, both assertions here passed
+  // together under a mutation that set `background: "#eceeec"`, the text colour,
+  // which renders the card invisible, with the correct hexes left in a comment
+  // above it. A comment cannot satisfy an assertion about a style object.
+  const cardStyles = styleObjects(ogCard);
+
+  // Properties that can carry a colour. `border`, `outline`, and `boxShadow` are
+  // shorthands holding more than one, so a value is split into tokens before each
+  // is judged.
+  const COLOUR_PROP = /colou?r|background|border|outline|fill|stroke|shadow/i;
+
+  // Every notation CSS has for writing a colour out. The regex this replaces
+  // looked for `#rrggbb` alone, so `rgb(255, 0, 0)` walked past it untouched.
+  const COLOUR_NOTATION =
+    /#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|color-mix|light-dark)\([^)]*\)/g;
+
+  // Tokens a colour-capable shorthand may legitimately carry. Any other bare word
+  // on such a property is reported as a named colour, so `background: "red"`
+  // fails rather than passing for want of a 148-entry lookup table.
+  const NOT_A_COLOUR = new Set([
+    "none", "hidden", "solid", "dashed", "dotted", "double", "groove", "ridge",
+    "inset", "outset", "inherit", "initial", "revert", "unset", "auto",
+  ]);
+
+  /** Every colour named by one style object, however it is written. */
+  function coloursIn(style: Record<string, unknown>): string[] {
+    const found: string[] = [];
+    for (const [prop, raw] of Object.entries(style)) {
+      const value = String(raw);
+      const notated = value.match(COLOUR_NOTATION) ?? [];
+      found.push(...notated);
+      if (!COLOUR_PROP.test(prop)) continue;
+      for (const token of value
+        .replace(COLOUR_NOTATION, " ")
+        .split(/[\s,/]+/)
+        .filter(Boolean)) {
+        if (/^[-+.\d]/.test(token)) continue; // a length, a number, or a ratio
+        if (NOT_A_COLOUR.has(token.toLowerCase())) continue;
+        found.push(token);
+      }
+    }
+    return found;
+  }
 
   it("mirrors --color-bg and --color-text exactly", () => {
     const t = theme();
 
+    const filled = cardStyles.filter(
+      (s) => s.background !== undefined || s.backgroundColor !== undefined,
+    );
+    expect(filled, "the card fills exactly one element").toHaveLength(1);
     expect(
-      route,
+      filled[0].background ?? filled[0].backgroundColor,
       "the card's background must be the --color-bg value that ships",
-    ).toContain(`"${t["--color-bg"]}"`);
+    ).toBe(t["--color-bg"]);
+
+    const inked = cardStyles.filter((s) => s.color !== undefined);
+    expect(inked, "the card sets its text colour once").toHaveLength(1);
     expect(
-      route,
+      inked[0].color,
       "the card's text colour must be the --color-text value that ships",
-    ).toContain(`"${t["--color-text"]}"`);
+    ).toBe(t["--color-text"]);
   });
 
   it("spends the exception on those two colours and no others", () => {
-    const hexes = new Set(route.match(/#[0-9a-fA-F]{3,8}\b/g) ?? []);
     const t = theme();
+    const named = new Set(cardStyles.flatMap(coloursIn));
 
     expect(
-      [...hexes].sort(),
-      "a third hex in the OG route is outside the sanctioned exception",
+      [...named].sort(),
+      "a third colour in the OG card is outside the sanctioned exception",
     ).toEqual([t["--color-bg"], t["--color-text"]].sort());
   });
 });

@@ -210,6 +210,18 @@ strict on purpose:
 
 If a test fails, fix the code or report the failure with its output.
 
+**Do not assert on a source file read as a string.** A regex matched against a
+module's text is defeated from both directions: a comment carrying the right
+value satisfies an assertion the shipped code violates, and a comment mentioning
+the wrong one fails an assertion the code satisfies. A mutation pass beat seven
+assertions across the OG, token, and robots suites this way. One of them stayed
+green against a card whose background was set to the text colour, which renders
+it invisible, because the right hex was still sitting in a comment two lines
+above. Export the thing being judged and assert on its value:
+`src/lib/og-card.tsx` exists so the tests can read an element tree and an options
+object instead of `src/app/og/route.tsx`'s text. `globals.css` is the exception
+that stays, because a stylesheet has no value form to export.
+
 **TDD.** Write the failing test first, run it, capture the RED output, then
 implement. Report the RED output — it is how the orchestrator knows the test was
 written before the code.
@@ -256,13 +268,14 @@ asset, check whether it is the source of one that is referenced.
   resolve a CSS custom property. That is the one sanctioned place a raw hex
   appears; it does not license one in `src/`.
 
-  **`src/app/og/route.tsx` is the second sanctioned place, and the only one in
+  **`src/lib/og-card.tsx` is the second sanctioned place, and the only one in
   `src/`.** Satori rasterizes the Open Graph card outside a browser for the same
   reason, so `var(--color-bg)` resolves to nothing and the card has to name the
   values. It hard-codes `--color-bg` and `--color-text` and no other colour.
-  `tests/unit/tokens.test.ts` reads the route off disk and fails if either value
-  stops matching `globals.css`, or if a third hex appears there. Adding a raw hex
-  anywhere else in `src/` is still out.
+  `tests/unit/tokens.test.ts` imports the card's exported element tree, reads the
+  colours out of its style objects, and fails if either stops matching
+  `globals.css` or if a third colour appears anywhere in the tree. Adding a raw
+  hex anywhere else in `src/` is still out.
 - **No rendered text below 12px** (`--text-xs`). This is an acceptance criterion,
   asserted by both a unit test and a Playwright sweep.
 - **Every interactive element needs a `:focus-visible` style** distinct from the
