@@ -155,6 +155,41 @@ describe("type scale", () => {
   });
 });
 
+describe("the OG card's sanctioned raw hex", () => {
+  // Satori rasterizes the card outside a browser, so `var(--color-bg)` resolves
+  // to nothing and the route has to write the literal values. AGENTS.md records
+  // the exception; this pins it. Read off disk rather than copied here, the same
+  // way the contrast test reads globals.css, so the assertion cannot drift from
+  // what ships.
+  const OG_ROUTE_PATH = fileURLToPath(
+    new URL("../../src/app/og/route.tsx", import.meta.url),
+  );
+  const route = readFileSync(OG_ROUTE_PATH, "utf8");
+
+  it("mirrors --color-bg and --color-text exactly", () => {
+    const t = theme();
+
+    expect(
+      route,
+      "the card's background must be the --color-bg value that ships",
+    ).toContain(`"${t["--color-bg"]}"`);
+    expect(
+      route,
+      "the card's text colour must be the --color-text value that ships",
+    ).toContain(`"${t["--color-text"]}"`);
+  });
+
+  it("spends the exception on those two colours and no others", () => {
+    const hexes = new Set(route.match(/#[0-9a-fA-F]{3,8}\b/g) ?? []);
+    const t = theme();
+
+    expect(
+      [...hexes].sort(),
+      "a third hex in the OG route is outside the sanctioned exception",
+    ).toEqual([t["--color-bg"], t["--color-text"]].sort());
+  });
+});
+
 describe("stylesheet guards", () => {
   // Both of these came out of Task 2's review and are one careless edit from gone.
   it("keeps Tailwind's source scan narrowed to src and content", () => {

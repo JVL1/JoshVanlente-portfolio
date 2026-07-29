@@ -255,6 +255,14 @@ asset, check whether it is the source of one that is referenced.
   `var(--color-*)`, because sharp rasterizes them outside the browser and cannot
   resolve a CSS custom property. That is the one sanctioned place a raw hex
   appears; it does not license one in `src/`.
+
+  **`src/app/og/route.tsx` is the second sanctioned place, and the only one in
+  `src/`.** Satori rasterizes the Open Graph card outside a browser for the same
+  reason, so `var(--color-bg)` resolves to nothing and the card has to name the
+  values. It hard-codes `--color-bg` and `--color-text` and no other colour.
+  `tests/unit/tokens.test.ts` reads the route off disk and fails if either value
+  stops matching `globals.css`, or if a third hex appears there. Adding a raw hex
+  anywhere else in `src/` is still out.
 - **No rendered text below 12px** (`--text-xs`). This is an acceptance criterion,
   asserted by both a unit test and a Playwright sweep.
 - **Every interactive element needs a `:focus-visible` style** distinct from the
