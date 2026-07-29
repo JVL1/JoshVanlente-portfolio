@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { MDXContent } from "@/components/mdx/MDXContent";
@@ -6,6 +7,38 @@ import { getAllWorkSlugs, getWorkItem } from "@/lib/content";
 
 export async function generateStaticParams() {
   return (await getAllWorkSlugs()).map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const item = await getWorkItem(slug);
+
+  if (!item) return {};
+
+  return {
+    title: item.title,
+    description: item.summary,
+    alternates: { canonical: `/work/${item.slug}` },
+    openGraph: {
+      type: "article",
+      title: item.title,
+      description: item.summary,
+      url: `/work/${item.slug}`,
+      images: [
+        {
+          url: item.cover.src,
+          width: item.cover.width,
+          height: item.cover.height,
+        },
+      ],
+      publishedTime: item.publishedAt,
+      modifiedTime: item.updatedAt ?? item.publishedAt,
+    },
+  };
 }
 
 export default async function WorkItemPage({

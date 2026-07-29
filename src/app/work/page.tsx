@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import { CaseRow } from "@/components/site/CaseRow";
 import { SectionHeader } from "@/components/site/SectionHeader";
 import { getWorkItems } from "@/lib/content";
+
+export const metadata: Metadata = {
+  title: "Work",
+  description: "Case-study write-ups from Josh Van Lente's product work.",
+};
 
 export default async function WorkIndex() {
   const items = await getWorkItems();

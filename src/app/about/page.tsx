@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { about } from "@/data/about";
+
+export const metadata: Metadata = {
+  title: "About",
+  description:
+    "Josh Van Lente is an experienced product leader whose work spans fintech, proptech, and adtech.",
+};
 
 export default function AboutPage() {
   return (

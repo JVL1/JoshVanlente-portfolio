@@ -1,10 +1,24 @@
 import type { Metadata } from "next";
 import "@/styles/globals.css";
 import { Rail } from "@/components/site/Rail";
-import { profile } from "@/data/profile";
 import { instrumentSerif, inter, jetbrainsMono } from "@/lib/fonts";
+import { site } from "@/lib/site";
 
-export const metadata: Metadata = { title: profile.name };
+export const metadata: Metadata = {
+  metadataBase: new URL(site.baseURL),
+  title: {
+    default: "Josh Van Lente — Staff Product Manager",
+    template: "%s — Josh Van Lente",
+  },
+  description:
+    "Ten years building 0→1 products and platforms in vertical SaaS and fintech. Currently building an AI agent platform at Evernest.",
+  openGraph: {
+    type: "website",
+    siteName: "Josh Van Lente",
+    images: [site.defaultOgImage],
+  },
+  twitter: { card: "summary_large_image" },
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
