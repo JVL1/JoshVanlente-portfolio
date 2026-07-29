@@ -187,6 +187,34 @@ describe("stylesheet guards", () => {
     ).toEqual([]);
   });
 
+  it("lets no component cancel the focus ring by the CSS longhand either", () => {
+    // A reviewer proposed dodging the scan above by writing the longhand: an
+    // inline `outline: none` reads past a string match on `outline-none` while
+    // cancelling the same ring. globals.css is exempt because the one
+    // sanctioned exception lives there and the test below pins it; a component
+    // has no reason to write this at all.
+    const offenders = readdirRecursive(SRC_DIR)
+      .filter((f) => /\.(tsx?|css|mdx)$/.test(f))
+      .filter((f) => f !== CSS_PATH)
+      .filter((f) => /outline:\s*(none|0)\b/.test(readFileSync(f, "utf8")));
+    expect(
+      offenders,
+      "outline: none cancels the :focus-visible ring exactly as outline-none does",
+    ).toEqual([]);
+  });
+
+  it("drops the focus ring only on the skip link's target", () => {
+    // <main id="main"> is the whole page column, so the ring traces a rectangle
+    // far taller than the viewport and reads as a stray vertical line rather
+    // than as focus feedback. Dropping it there is deliberate, and it lives in
+    // the token file where it is visible. Pin the rule so a later edit cannot
+    // quietly remove it — or widen it past #main onto real controls.
+    expect(
+      css,
+      "the skip target's ring exception must exist and stay scoped to #main",
+    ).toMatch(/#main:focus-visible\s*\{\s*outline:\s*none;?\s*\}/);
+  });
+
   it("gates motion, including scrolling, behind prefers-reduced-motion", () => {
     const block = css.match(
       /@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*?scroll-behavior:\s*auto\s*!important/,

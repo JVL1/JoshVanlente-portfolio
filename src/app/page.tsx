@@ -14,8 +14,13 @@ export default async function Home() {
 
   return (
     // No <main> here: the layout owns it, so the skip link has one target.
-    <div className="mx-auto w-full max-w-[75rem] px-4 py-12 sm:px-8 sm:py-14">
-      <section className="pb-12">
+    <div className="mx-auto w-full max-w-[75rem] px-4 py-12 sm:px-8 sm:py-12">
+      {/* The hero is tighter than the sibling routes' `py-16 sm:py-24` because
+          the fold is an acceptance criterion: at 1280×800 at least half the
+          first case-study thumbnail must be visible without scrolling. Measured
+          at 0.46 before this trim, which missed. Type sizes and the 12px floor
+          are fixed, so vertical space here is the only variable left. */}
+      <section className="pb-8">
         <h1 className="max-w-[19ch] text-[clamp(38px,5.2vw,68px)] font-bold leading-none tracking-[-0.045em]">
           I find the bet worth making, then earn the right to{" "}
           <em className="font-serif font-normal italic tracking-[-0.015em] text-accent">

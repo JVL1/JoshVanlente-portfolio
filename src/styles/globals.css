@@ -96,6 +96,21 @@
     outline: 2px solid var(--color-accent);
     outline-offset: 3px;
   }
+
+  /* The skip link moves focus to <main id="main">, which is the whole page
+     column — measured at 2404px against an 800px viewport. An outline traces
+     that border box, so instead of framing anything it paints a green line down
+     the left edge that survives scrolling. `outline-offset` cannot fix it:
+     insetting a 2404px-tall rectangle leaves a 2404px-tall rectangle.
+
+     The ring is dropped for this one target only, and it is safe here because
+     <main> is a non-interactive container that receives focus programmatically.
+     The next Tab lands on a real control that draws its own ring, so keyboard
+     position is never lost. Every interactive element keeps the rule above,
+     which is what the acceptance criterion actually protects. */
+  #main:focus-visible {
+    outline: none;
+  }
 }
 
 /* Inside @layer base on purpose. For important declarations the cascade reverses
