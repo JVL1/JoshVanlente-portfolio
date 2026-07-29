@@ -2,7 +2,9 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-[75rem] items-center px-4 py-16 sm:px-8">
+    // No <main> here: the layout owns it, so a skip link has one element to
+    // target on every route.
+    <div className="mx-auto flex min-h-screen w-full max-w-[75rem] items-center px-4 py-16 sm:px-8">
       <div className="max-w-[68ch]">
         <h1 className="text-xl font-semibold tracking-[-0.02em] text-text">
           Page not found.
@@ -17,6 +19,6 @@ export default function NotFound() {
           Back to work
         </Link>
       </div>
-    </main>
+    </div>
   );
 }

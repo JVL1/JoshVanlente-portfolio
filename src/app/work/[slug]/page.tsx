@@ -19,7 +19,9 @@ export default async function WorkItemPage({
   if (!item) notFound();
 
   return (
-    <main className="mx-auto w-full max-w-[75rem] px-4 py-16 sm:px-8 sm:py-24">
+    // No <main> here: the layout owns it, so a skip link has one element to
+    // target on every route.
+    <div className="mx-auto w-full max-w-[75rem] px-4 py-16 sm:px-8 sm:py-24">
       <header className="max-w-[68ch]">
         <p className="font-mono text-xs uppercase tracking-[0.08em] text-text-subtle">
           {item.org} · {item.timeframe}
@@ -34,7 +36,10 @@ export default async function WorkItemPage({
         {item.outcomes.map((outcome) => (
           <div
             key={`${outcome.metric}-${outcome.label}`}
-            className="bg-bg px-4 py-6 first:pl-0 last:pr-0 sm:px-6"
+            // The row only exists at sm:, so the edge-trimming has to wait for
+            // it too — unprefixed, it stripped the padding from the first and
+            // last cards while they were still stacked.
+            className="bg-bg px-4 py-6 sm:px-6 sm:first:pl-0 sm:last:pr-0"
           >
             <dt className="font-mono text-xs uppercase tracking-[0.08em] text-text-muted">
               {outcome.label}
@@ -46,11 +51,17 @@ export default async function WorkItemPage({
         ))}
       </dl>
 
+      {/* alt="" because the <h1> two blocks up already says what the cover
+          shows; repeating it makes a screen reader read the title twice.
+          The sizes list traces the container: max-w-[75rem] is border-box and
+          the horizontal padding is 2rem below sm: and 4rem from sm: up, so the
+          image is 71rem once the container caps out, and 100vw minus that
+          padding until then. */}
       <Image
         className="mt-12 h-auto w-full rounded-lg"
         src={item.cover}
-        alt={item.title}
-        sizes="(min-width: 80rem) 75rem, calc(100vw - 2rem)"
+        alt=""
+        sizes="(min-width: 75rem) 71rem, (min-width: 40rem) calc(100vw - 4rem), calc(100vw - 2rem)"
         priority
       />
 
@@ -59,6 +70,6 @@ export default async function WorkItemPage({
           <MDXContent code={item.code} />
         </Prose>
       </div>
-    </main>
+    </div>
   );
 }

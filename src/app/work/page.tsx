@@ -6,13 +6,15 @@ export default async function WorkIndex() {
   const items = await getWorkItems();
 
   return (
-    <main className="mx-auto w-full max-w-[75rem] px-4 py-16 sm:px-8 sm:py-24">
-      <SectionHeader title="Work" count={items.length} id="work" />
+    // No <main> here: the layout owns it, so a skip link has one element to
+    // target on every route.
+    <div className="mx-auto w-full max-w-[75rem] px-4 py-16 sm:px-8 sm:py-24">
+      <SectionHeader title="Work" count={items.length} id="work" level={1} />
       <ul>
         {items.map((item) => (
-          <CaseRow key={item.slug} item={item} />
+          <CaseRow key={item.slug} item={item} level={2} />
         ))}
       </ul>
-    </main>
+    </div>
   );
 }
