@@ -6,9 +6,9 @@
 
 ---
 
-## Execution status — last updated 2026-07-28
+## Execution status — last updated 2026-07-29
 
-**Tasks 0 through 11 are complete and reviewed. Task 12 is next, and nothing blocks it — but read decision 17 first, because Task 12 now owns something the routes used to do for themselves.**
+**Tasks 0 through 14 are complete and reviewed. Task 15 is next, and Josh supplied its content on 2026-07-29 — see "About page inputs" below. Read decisions 20 and 21 first: one records that a plan instruction was unusable as written, the other that a recorded content correction was itself wrong.**
 
 Work happens in the worktree at `/Users/joshvanlente/Development/JoshVanlente-portfolio-impl` on `feat/portfolio-rebuild-impl`, 36 commits ahead of `feat/portfolio-rebuild`. The original checkout at `/Users/joshvanlente/Development/JoshVanlente-portfolio` stays on `feat/portfolio-rebuild` as a deliberate untouched copy of the old MDX tree — **do not modify it**.
 
@@ -26,9 +26,14 @@ Work happens in the worktree at `/Users/joshvanlente/Development/JoshVanlente-po
 | 9. MDX rendering | done | **4 rounds**, 7 commits — see decision 13 |
 | 10. Write-up route and 404 | done | reviewed with Task 11 |
 | 11. Work index and `CaseRow` | done | 3 models, quorum 3/3, 5 majors — all fixed in `c645119` |
-| 12 onward | not started | — |
+| 12. `Rail` and the skip link | done | reviewed with Tasks 13–14 |
+| 13. `MetricStrip`, `TrackRecord` | done | reviewed with Tasks 12–14 |
+| 14. Homepage | done | 3 models, quorum 3/3, 26 findings (0 critical, 5 major), 11 fixed in `6790a48`, 2 more in `54a43fa` |
+| 15 onward | not started | — |
 
-Suite is **151 tests green across 18 files** (77 at the start of Task 9). `npm run build`, `npm run test`, `npm run typecheck`, and `npm run lint` are all green.
+Suite is **171 tests green across 22 files** (77 at the start of Task 9). `npm run build`, `npm run test`, `npm run typecheck`, and `npm run lint` are all green.
+
+**The Tasks 12–14 review found three majors that a green build hid, and all three are the same shape: a thing that looks implemented and reaches nothing.** The rail hardcoded its navigation, so the section labels and the `work`/`track` anchor ids each lived in two files and a rename would have silently orphaned the anchor. `--color-accent-hover` was pinned by two `tokens.test.ts` rows under "CTA hover" while no element used it — a green contrast test vouching for a colour that never shipped. And the two linked metric cells were pixel-identical to the two plain ones, so the homepage's only route into the write-ups was invisible. The review also established that the obvious fix for the third is a no-op: `hover:text-accent` on the `<Link>` compiles and does nothing, because each child span sets its own colour and wins on specificity. **Check the built CSS, not the class list.**
 
 ### Decisions taken during execution, in addition to the three at the top of this file
 
@@ -50,10 +55,25 @@ Suite is **151 tests green across 18 files** (77 at the start of Task 9). `npm r
 17. **No route renders a `<main>` any more, and Task 12 must add one.** All three routes rendered their own, which would have nested `<main>` inside Task 12's `layout.tsx` wrapper and pointed the skip link at the wrong element. They now render a plain `<div>`. **Task 12 adds `<main id="main" tabIndex={-1}>` to `layout.tsx`** — until it does, the detail page's `<header>` claims the `banner` landmark, because it is a direct child of `<body>`. Task 12's `<main>` demotes it automatically.
 18. **`SectionHeader` and `CaseRow` both take a heading-level prop.** `SectionHeader` is `level?: 1 | 2`, default 2; `CaseRow` is `level?: 2 | 3`, default 3. `/work` passes 1 and 2 respectively. The defaults are correct under a homepage that owns its own `<h1>`, so **Task 14 should not need to pass either** — but check the rendered outline, because giving `/work` an `<h1>` is exactly what exposed a skipped h1 → h3 level the first time.
 19. **A figure paragraph is marked during the MDX transform, not matched in CSS.** `src/lib/mdx/rehype-figure-paragraph.ts` stamps `data-figure` on a paragraph whose entire content is one image; `Prose` selects `[&_p[data-figure]]:max-w-none`. The two `:has(… :only-child)` rules it replaced were both wrong the same way — CSS `:only-child` counts element siblings and ignores text nodes, so `text ![alt](x) text` lost the 68ch measure. **`registry.tsx` does not override `p`, which is the only reason the marker survives to the DOM.** If a `p` component is ever added there without spreading props, every figure silently reverts and nothing catches it.
+20. **Task 12 specified a class the repo's own guard forbids, and the guard won.** The task text puts `focus:outline-none` on `<main>`, but `tests/unit/tokens.test.ts` bans `outline-none` anywhere in `src/` — added in Task 3, because the base ring is an acceptance criterion. Omitting it was correct, and the consequence was real: activating the skip link painted the ring around `<main>`, which is the whole page column at 2404px against an 800px viewport, so it rendered as a green line down the left edge that survived scrolling. The fix is `#main:focus-visible { outline: none }` in the base layer, scoped to that one programmatic, non-interactive target. **The review's proposed `outline-offset: -2px` was refuted rather than adopted** — insetting a 2404px-tall rectangle leaves a 2404px-tall rectangle, so the line would have stayed. A reviewer separately proposed evading the ban by writing the CSS longhand; the guard now bans `outline: none` and `outline: 0` in components too, exempting `globals.css` where the sanctioned exception lives and is pinned by its own test.
+21. **The fold criterion missed at 0.4605 and was fixed by trimming the hero, not by the recorded fallback.** The design doc's declared variable was moving the metric strip below the work list; Josh chose the hero trim instead (2026-07-29). The gap was **3.66px**, not the ~40px first estimated from the ratio — at 92.5px thumbnail height, 0.5 needs `top ≤ 753.75` against a measured 757.41. 24px came out of the container and the hero's bottom padding, and the ratio is now **0.7416**. The review and the QA pass measured 0.4605 independently and agreed to four decimal places, which is why the number was trusted. **Type sizes and the 12px floor stay fixed; vertical space is the only variable.**
+22. **`src/app/layout.tsx` has no automated coverage, and that is a knowing gap.** It imports `@/lib/fonts`, which uses `next/font/google` and needs the Next SWC transform, so a jsdom test fails at import with `TypeError: (0, Inter) is not a function`. Covering it means mocking an internal module, which no test in this repo does. The file carries `<main id="main" tabIndex={-1}>` — the single attribute making the skip link work — and **Tasks 16 and 19 both edit it**. Task 22's Playwright suite is the right home for the assertion, since it runs against a real browser: add "Tab, Enter on the skip link, `document.activeElement.id === 'main'`" there.
 
 ### Blockers and open questions
 
-- **All content inputs for Tasks 7 and 8 are answered and shipped** — see "Content inputs, as answered" below. **Task 15 still needs the About narrative from Josh.** Do not invent it.
+- **All content inputs for Tasks 7 and 8 are answered and shipped** — see "Content inputs, as answered" below. **Task 15's About inputs arrived on 2026-07-29** — see "About page inputs" below. The narrative still needs Josh's sign-off on the exact wording before it is written to `src/data/about.ts`.
+
+### About page inputs, as answered on 2026-07-29
+
+Josh's answers to the three open questions. Task 15 writes these; it does not improve on them.
+
+| Input | Answer |
+|---|---|
+| Narrative | Keep the old site's intro as the base and extend it. Three additions in his words: he enjoys **big, hard problems that need systems thinking**; lately that has meant **"rethinking what is required of users to produce value vs can be done via automation or agents"** — he rejected a first draft's "rethinking how customers experience our product, with AI at the forefront" as too vague, so **do not restore the generic version**; and a personal close covering **two kids and his wife**, experiencing things through their eyes, plus **hiking, backpacking, and golf**. A three-paragraph draft was agreed in conversation and awaits his final wording. |
+| Education | **San Diego State University, B.S. Finance, minor Environmental Economics.** No graduation year. |
+| Supporting credentials | **Drop the three university bullets** (Associated Students representative, Environmental Business Club finance officer, Cricket Wireless internship) — they read junior at this career stage. **Drop the six "Skills" cards** entirely. Education is the only supporting credential. |
+
+**Task 15 Step 2's third correction is void.** That step lists three résumé errors to fix, the third being that the education minor "was listed as Environmental Economics; it is Sustainability." Josh was asked directly and chose to keep **Environmental Economics** (2026-07-29). The other two corrections stand: the "Prouct Manager" misspelling, and Ampush understated as Product Manager rather than Senior Product Manager. **A correction recorded in a plan is not automatically right — this one had been carried since the design doc and was wrong.**
 - **The image budget test now scans all of `public/`, not just `public/images/`.** Task 10's OG route and any favicon export land inside that scope, so an oversized card fails the suite rather than shipping quietly. Task 17's OG route is the one to watch.
 - **Vercel preview deployments sit behind SSO**, which breaks Tasks 22 and 23 as written — Playwright and the manual checklist would both test the auth wall, and LinkedIn's crawler cannot authenticate. Three options are written up in the spike result doc. **Raise it with Josh at Task 20**, so the answer exists before Task 22 needs it.
 - **`README.md` still sells the Once UI template**, including a Deploy button pointing at `once-ui-system/magic-portfolio`. No task owns it, and Task 21's hygiene grep is scoped to `src/` so it reports green regardless. Rewriting it needs Josh's voice.
@@ -61,6 +81,16 @@ Suite is **151 tests green across 18 files** (77 at the start of Task 9). `npm r
 - **`npm install` reports 21 vulnerabilities, 18 of them high**, all pre-existing and none introduced by this rebuild. Three packages also have install scripts pending `allowScripts` approval (`fsevents` ×2, `unrs-resolver`). **Task 21's hygiene sweep is the natural home.**
 - **`/work` and `/about` appear in no metadata task.** Task 16 names the write-up route and the homepage, so those two will inherit the root default rather than the `"%s — Josh Van Lente"` template. A plan gap, not a diff defect — fix it when Task 16 runs.
 - **`tsconfig.json` has no `noUncheckedIndexedAccess`.** `CaseRow` carries a runtime guard on `outcomes[0]` because the schema's `.min(1)` does not reach the type system — Zod 4's `.min()` returns `this`, so `WorkItem` infers `Outcome[]` rather than a non-empty tuple. Turning the flag on would surface the same class of bug repo-wide, at the cost of a sweep well outside any current task.
+
+Findings from the Tasks 12–14 review that its own scope could not fix. Each names where it belongs:
+
+- **`/work` is unreachable from every page.** The rail's three nav links are `/#work`, `/#track`, and `/about`; "Selected work" points at the homepage section, not the work index. The route exists, is in the sitemap, and no page links to it. **Task 16 or Task 19 should decide** whether the rail gains a fourth link or the homepage's "Selected work" header links through. This is a plan gap — no task ever assigned the link.
+- **`/about` is a live 404 on every route until Task 15 lands**, because the rail links it from every page. Expected, and the reason Task 15 cannot be deferred.
+- **The `↗` in "LinkedIn ↗" is inside the accessible name**, pinned by `home-page.test.tsx`, so a screen reader says "LinkedIn up-right arrow". The glyph also conventionally signals a new tab, which the link does not open. **Task 16's accessibility pass** should either `aria-hidden` the glyph or add `target="_blank"` with `rel="noopener"` — both change a pinned test, so it needs a deliberate call.
+- **Two component tests assert facts about their own fixtures.** `MetricStrip.test.tsx` re-implements `getHeadlineOutcomes`' href contract in its fixture, so it would keep passing against a contract the app no longer uses; `TrackRecord.test.tsx` duplicates `dates.test.ts` with the component barely involved. **Task 21's sweep** is the place to tighten them.
+- **`globals.css`'s `@theme static` comment is now half-false** — it cites Task 13's serif numerals as reaching tokens through raw `var()`, and they use utilities. The `static` keyword is still load-bearing for other reasons. **Task 21.**
+- **CTA tap targets are 41/43px** where `not-found.tsx` deliberately uses `min-h-11` (44px). **Task 19**, where touch is the subject.
+- **`<aside>` for the rail leaves the site with no `banner` landmark.** Subjective, raised by one reviewer. **Task 16 or 19** if it is worth addressing at all.
 
 Three findings from the Tasks 10–11 review were deferred to **Task 19**, where responsive behaviour is the actual subject rather than a side effect:
 
@@ -2925,7 +2955,7 @@ Three, all recorded in the design doc's Known content gaps, and all in content t
 
 - "Product Manager" was misspelled "Prouct Manager" three times.
 - Ampush was understated as Product Manager rather than Senior Product Manager (already correct in `profile.ts` from Task 4).
-- The education minor was listed as Environmental Economics; it is Sustainability.
+- ~~The education minor was listed as Environmental Economics; it is Sustainability.~~ **Void — do not apply.** Josh was asked directly on 2026-07-29 and chose to keep **Environmental Economics**. This "correction" was carried from the design doc and was itself the error.
 
 **Step 3: Verify and commit**
 
