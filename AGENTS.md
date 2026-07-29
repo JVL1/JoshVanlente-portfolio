@@ -154,12 +154,42 @@ once, which races the schema fixture tests. If a dev start fails, check before
 retrying:
 
 ```bash
-pgrep -f 'velite --watch'    # kill any survivors first
+ps -eo pid,command | grep 'velite --watch --strict'   # kill any survivors first
 ```
+
+**Use that form, not `pgrep -f 'velite --watch'`.** The `pgrep` pattern matches
+any process whose argv merely *contains* the string — during a code review it
+matched about 170 processes, because the review packet text itself names the
+script and every reviewer leg's argv carried it. The `ps | grep` form matches the
+real command line and reports actual survivors.
 
 This is a known, accepted trade. Fixing the process lifetime properly would mean
 adding `concurrently` as a dependency for a hazard that only appears after a
 failed start.
+
+**Two Velite processes must not run against the same config at once.** Velite
+compiles whichever config it finds to one fixed path,
+`node_modules/.velite.config.compiled.mjs`, and imports it back. A process that
+imports it mid-write gets a module with no `collections` and fails with
+`'collections' is required in 'velite.config.ts'`. Measured with no test code
+involved: 0 failures in 30 runs at concurrency 2, then 2 failures in ~30 runs at
+each of concurrency 4 and 6. `tests/unit/schema.test.ts` is safe only because it
+uses `execFileSync` and builds one at a time. A test that needs its own watcher
+writes a one-line re-export of the real config into its throwaway root, so Velite
+compiles into that fixture's `node_modules` instead.
+
+**A save made in the first moments of a watch can be silently lost.** Velite
+prints `watching for changes` *before* it constructs the Chokidar watcher, and
+that watcher runs with `ignoreInitial: true`, so a write landing during the
+initial scan is folded into the scan's baseline and emits no event. Nothing is
+broken — save again and it rebuilds. Worth knowing before debugging a rebuild
+that never came.
+
+**`npm run typecheck` fails on a stale route type after a route is deleted.**
+Next 16 leaves `.next/types/validator.ts` referencing the removed page, and `tsc`
+reports what looks like a real error in a file nobody wrote. Run `npm run build`
+first — every verification sequence in this repo is `test`, `lint`, `build`,
+`typecheck`, in that order.
 
 ## Rules
 

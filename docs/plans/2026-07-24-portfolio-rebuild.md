@@ -6,11 +6,11 @@
 
 ---
 
-## Execution status — last updated 2026-07-27
+## Execution status — last updated 2026-07-28
 
-**Tasks 0 through 8 are complete and reviewed. Task 9 is next, and nothing blocks it.**
+**Tasks 0 through 11 are complete and reviewed. Task 12 is next, and nothing blocks it — but read decision 17 first, because Task 12 now owns something the routes used to do for themselves.**
 
-Work happens in the worktree at `/Users/joshvanlente/Development/JoshVanlente-portfolio-impl` on `feat/portfolio-rebuild-impl`, 25 commits ahead of `feat/portfolio-rebuild`. The original checkout at `/Users/joshvanlente/Development/JoshVanlente-portfolio` stays on `feat/portfolio-rebuild` as a deliberate untouched copy of the old MDX tree — **do not modify it**; Task 7 may need to read from it, and Task 9 recovers `BeforeAfterSlider.tsx` from that branch's history.
+Work happens in the worktree at `/Users/joshvanlente/Development/JoshVanlente-portfolio-impl` on `feat/portfolio-rebuild-impl`, 36 commits ahead of `feat/portfolio-rebuild`. The original checkout at `/Users/joshvanlente/Development/JoshVanlente-portfolio` stays on `feat/portfolio-rebuild` as a deliberate untouched copy of the old MDX tree — **do not modify it**.
 
 | Task | State | Review |
 |---|---|---|
@@ -23,9 +23,12 @@ Work happens in the worktree at `/Users/joshvanlente/Development/JoshVanlente-po
 | 6. Content loader | done | 3 models, quorum 3/3, **2 majors** found and fixed |
 | 7. Frontmatter for five write-ups | done | reviewed with Task 8 |
 | 8. Image asset pass | done | 3 models, quorum 3/3, 13 findings, 10 fixed, 3 escalated to Josh and resolved |
-| 9 onward | not started | — |
+| 9. MDX rendering | done | **4 rounds**, 7 commits — see decision 13 |
+| 10. Write-up route and 404 | done | reviewed with Task 11 |
+| 11. Work index and `CaseRow` | done | 3 models, quorum 3/3, 5 majors — all fixed in `c645119` |
+| 12 onward | not started | — |
 
-Suite is 77 tests green across 8 files. **`npm run build`, `npm run test`, and `npm run typecheck` all work now** — Task 7 authored the valid content they were waiting on, so the bare-`npx` workaround below is history rather than instruction.
+Suite is **151 tests green across 18 files** (77 at the start of Task 9). `npm run build`, `npm run test`, `npm run typecheck`, and `npm run lint` are all green.
 
 ### Decisions taken during execution, in addition to the three at the top of this file
 
@@ -40,6 +43,13 @@ Suite is 77 tests green across 8 files. **`npm run build`, `npm run test`, and `
 10. **The comparison slider's two frames are processed identically, and two tests enforce it.** They ship at 1280×720 and the same WebP quantizer index. Task 8 originally squeezed each under the 300KB budget independently, landing them at quality 59 and 78 — which degraded the *unenhanced* frame more than the enhanced one, in the one widget whose job is letting a reader judge the enhancement. `tests/unit/helpers/webp-quantizer.ts` reads the quality back out of the VP8 header, because sharp can write a quality but cannot read one. Task 9 renders this slider; do not re-encode either frame alone.
 11. **Charts spend the accent once, on the payoff number.** `AGENTS.md`'s accent rule now names four places rather than three. Both `pipeline-drift` charts were drawn light-mode and would have rendered as white slabs on `#0a0b0b`; they are recoloured to the tokens, with hex values hard-coded because sharp rasterizes them outside the browser and cannot resolve a CSS custom property. Task 9 is the first task that actually renders them.
 12. **Task 6 ships two deviations from its own written implementation**, both from its review, and both there to make a claimed invariant provable. `resolveRole` and `filterPublished` are now composed by `resolveAndFilter` in `content-rules.ts` rather than sequenced inline in `content.ts`, because the plan's version of the "resolve drafts before filtering" test called `resolveRole` directly — and `resolveRole` never reads `draft`, so the test passed whichever order the loader used. `assertHeadlineSlugs` takes an optional third argument, every item including drafts, so a headline slug pointing at a real-but-drafted write-up says so instead of reading like a misspelling. Neither changes the loader's runtime behaviour. Both are the two-module split doing its job, so do not "restore" the plan text over them.
+13. **Task 9 took seven commits and four review rounds, and the pattern is worth knowing before Task 17.** Each round's findings were real and mostly invisible to a green build: an `import` in an MDX body compiled clean and threw an anonymous `SyntaxError` at render; a raw `<img />` in MDX bypassed the dimension plugin entirely; a throw inside the tree walk orphaned in-flight sharp promises and buried the good error message; Tailwind 4 kept its default `--text-*--line-height` siblings so every heading rendered at leading nobody chose. Two rounds also *introduced* defects that the next round caught. **Do not read a green `npm run build` as evidence that a dynamic-boundary task is done.**
+14. **The review grace cap is 2400s on `Review: high` tasks** (Josh's call, 2026-07-27), and 900s elsewhere. On Task 9 the two fast legs finished in 102–350s, agreed with each other, and were wrong about mechanism three separate times — twice filing a Major that did not exist. The slow native leg took 1050–1260s because it compiled bodies, built probe routes, and read the emitted CSS, and it found every build-integrity bug. **Task 17 is the only remaining `Review: high` task.** Its findings-only reviewer must not finalise on a fast 2-of-3 majority.
+15. **The test suite now runs two Vitest projects.** `node` keeps the original globs and environment; `dom` runs `tests/component/**/*.test.tsx` on jsdom, with `tests/component/setup.ts` polyfilling `PointerEvent` and pointer capture. Do not flip the whole suite to jsdom — `schema.test.ts` and `dev-loop.test.ts` spawn real processes and must not run in a DOM.
+16. **Two plan claims that "no unit test is possible here" were false, and both are now tested.** Task 9 said the slider's pointer and font-swap behaviour could not be unit-tested because jsdom does no layout; Task 10 said importing the route into Vitest would fail at import time on `next/navigation` and `next/image`. Both premises were true in isolation and neither conclusion followed — `aria-valuenow` is a clean observable, and `tests/component/BeforeAfterSlider.test.tsx` already renders `next/image` unmocked with no `vi.mock` anywhere. **A test that passes identically before and after a fix is the thing to avoid; "hard to test" is not the same as "impossible".**
+17. **No route renders a `<main>` any more, and Task 12 must add one.** All three routes rendered their own, which would have nested `<main>` inside Task 12's `layout.tsx` wrapper and pointed the skip link at the wrong element. They now render a plain `<div>`. **Task 12 adds `<main id="main" tabIndex={-1}>` to `layout.tsx`** — until it does, the detail page's `<header>` claims the `banner` landmark, because it is a direct child of `<body>`. Task 12's `<main>` demotes it automatically.
+18. **`SectionHeader` and `CaseRow` both take a heading-level prop.** `SectionHeader` is `level?: 1 | 2`, default 2; `CaseRow` is `level?: 2 | 3`, default 3. `/work` passes 1 and 2 respectively. The defaults are correct under a homepage that owns its own `<h1>`, so **Task 14 should not need to pass either** — but check the rendered outline, because giving `/work` an `<h1>` is exactly what exposed a skipped h1 → h3 level the first time.
+19. **A figure paragraph is marked during the MDX transform, not matched in CSS.** `src/lib/mdx/rehype-figure-paragraph.ts` stamps `data-figure` on a paragraph whose entire content is one image; `Prose` selects `[&_p[data-figure]]:max-w-none`. The two `:has(… :only-child)` rules it replaced were both wrong the same way — CSS `:only-child` counts element siblings and ignores text nodes, so `text ![alt](x) text` lost the 68ch measure. **`registry.tsx` does not override `p`, which is the only reason the marker survives to the DOM.** If a `p` component is ever added there without spreading props, every figure silently reverts and nothing catches it.
 
 ### Blockers and open questions
 
@@ -48,6 +58,15 @@ Suite is 77 tests green across 8 files. **`npm run build`, `npm run test`, and `
 - **Vercel preview deployments sit behind SSO**, which breaks Tasks 22 and 23 as written — Playwright and the manual checklist would both test the auth wall, and LinkedIn's crawler cannot authenticate. Three options are written up in the spike result doc. **Raise it with Josh at Task 20**, so the answer exists before Task 22 needs it.
 - **`README.md` still sells the Once UI template**, including a Deploy button pointing at `once-ui-system/magic-portfolio`. No task owns it, and Task 21's hygiene grep is scoped to `src/` so it reports green regardless. Rewriting it needs Josh's voice.
 - A hard-killed test run leaks a fixture directory under `tests/.tmp/`. Gitignored and inert, but they accumulate; a `globalSetup` that clears the directory would sweep them.
+- **`npm install` reports 21 vulnerabilities, 18 of them high**, all pre-existing and none introduced by this rebuild. Three packages also have install scripts pending `allowScripts` approval (`fsevents` ×2, `unrs-resolver`). **Task 21's hygiene sweep is the natural home.**
+- **`/work` and `/about` appear in no metadata task.** Task 16 names the write-up route and the homepage, so those two will inherit the root default rather than the `"%s — Josh Van Lente"` template. A plan gap, not a diff defect — fix it when Task 16 runs.
+- **`tsconfig.json` has no `noUncheckedIndexedAccess`.** `CaseRow` carries a runtime guard on `outcomes[0]` because the schema's `.min(1)` does not reach the type system — Zod 4's `.min()` returns `this`, so `WorkItem` infers `Outcome[]` rather than a non-empty tuple. Turning the flag on would surface the same class of bug repo-wide, at the cost of a sweep well outside any current task.
+
+Three findings from the Tasks 10–11 review were deferred to **Task 19**, where responsive behaviour is the actual subject rather than a side effect:
+
+- At 320px a wrapped `CaseRow` title makes the focus ring fragment into five stacked boxes, one per line box. It satisfies the rule and reads as a rendering bug. Moving the ring to the `<li>` would give one rectangle and pair with the padding treatment already there.
+- `SectionHeader`'s accessible name is `"WORK"`, not `"Work"` — Chrome folds `text-transform: uppercase` into the computed name, and some screen readers spell all-caps letter by letter. Applies site-wide.
+- The shipped responsive treatment is an 80px thumbnail at a 640px breakpoint with the year column kept; the design doc specifies 90px and dropping the year below 900px. At 320px the first row is 445px tall with the year floating at its midpoint, far from its title. **Task 19 will need to unwind this rather than build on it.**
 
 Four items came out of Task 6's review that its own three-file scope could not fix. Each names where it belongs. (The `s.isodate()` one has already served its purpose — Task 7's dates are all canonical — but the schema is still loose, so it stays listed for Task 5's file.)
 
