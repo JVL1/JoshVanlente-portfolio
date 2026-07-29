@@ -6,6 +6,9 @@ import { getWorkItems } from "@/lib/content";
 export const metadata: Metadata = {
   title: "Work",
   description: "Case-study write-ups from Josh Van Lente's product work.",
+  // Self-referencing, so the apex, www, and Vercel preview origins the site is
+  // reachable at all point at one indexable URL. metadataBase resolves it.
+  alternates: { canonical: "/work" },
 };
 
 export default async function WorkIndex() {

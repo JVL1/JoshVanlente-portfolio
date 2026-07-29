@@ -3,6 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { MDXContent } from "@/components/mdx/MDXContent";
 import { Prose } from "@/components/site/Prose";
+import { profile } from "@/data/profile";
 import { getAllWorkSlugs, getWorkItem } from "@/lib/content";
 
 export async function generateStaticParams() {
@@ -25,6 +26,11 @@ export async function generateMetadata({
     alternates: { canonical: `/work/${item.slug}` },
     openGraph: {
       type: "article",
+      // Next replaces the parent openGraph block wholesale rather than merging
+      // it, so the root's siteName does not survive into a write-up. Repeating
+      // it here is what keeps the attribution line on the cards these pages get
+      // shared with, which are the most-shared pages on the site.
+      siteName: profile.name,
       title: item.title,
       description: item.summary,
       url: `/work/${item.slug}`,

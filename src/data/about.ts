@@ -1,13 +1,21 @@
 import { z } from "zod";
 
-const educationSchema = z.strictObject({
-  institution: z.string().min(1),
-  degree: z.string().min(1),
-  minor: z.string().min(1),
+// `.min(1)` alone accepts a single space, which renders as an empty line and
+// still builds. Requiring a non-whitespace character is what makes the claim
+// "an empty narrative fails the build" true for the blank-looking cases too.
+const nonBlank = z.string().regex(/\S/, "expected a non-whitespace character");
+
+export const educationSchema = z.strictObject({
+  institution: nonBlank,
+  degree: nonBlank,
+  minor: nonBlank,
 });
 
-const aboutSchema = z.strictObject({
-  narrative: z.array(z.string().min(1)).min(1),
+// Exported so tests/unit/about.test.ts can prove the rejection cases directly.
+// The parse below runs at module scope, so a reader importing `about` cannot
+// observe a rejection; only the schema itself can be asked what it refuses.
+export const aboutSchema = z.strictObject({
+  narrative: z.array(nonBlank).min(1),
   education: educationSchema,
 });
 

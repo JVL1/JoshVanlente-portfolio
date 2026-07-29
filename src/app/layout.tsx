@@ -1,21 +1,27 @@
 import type { Metadata } from "next";
 import "@/styles/globals.css";
 import { Rail } from "@/components/site/Rail";
+import { profile } from "@/data/profile";
 import { instrumentSerif, inter, jetbrainsMono } from "@/lib/fonts";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.baseURL),
+  // Composed from profile.ts rather than written out, so a change to Josh's
+  // name or role reaches the browser tab and the search result along with the
+  // rest of the site. The em dash is a separator here, not prose.
   title: {
-    default: "Josh Van Lente — Staff Product Manager",
-    template: "%s — Josh Van Lente",
+    default: `${profile.name} — ${profile.role}`,
+    template: `%s — ${profile.name}`,
   },
   description:
     "Ten years building 0→1 products and platforms in vertical SaaS and fintech. Currently building an AI agent platform at Evernest.",
   openGraph: {
     type: "website",
-    siteName: "Josh Van Lente",
-    images: [site.defaultOgImage],
+    siteName: profile.name,
+    images: [
+      { ...site.defaultOgImage, alt: `${profile.name}, ${profile.role}` },
+    ],
   },
   twitter: { card: "summary_large_image" },
 };
