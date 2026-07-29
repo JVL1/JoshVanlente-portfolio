@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import { CaseRow } from "@/components/site/CaseRow";
 import { MetricStrip } from "@/components/site/MetricStrip";
 import { SectionHeader } from "@/components/site/SectionHeader";
 import { TrackRecord } from "@/components/site/TrackRecord";
 import { profile } from "@/data/profile";
 import { getHeadlineOutcomes, getRoles, getWorkItems } from "@/lib/content";
+
+// The canonical belongs here rather than in the root layout: `alternates` set in
+// a layout propagates to every child that does not override it, which would give
+// the 404 page a canonical of "/" and invite Google to index it as the homepage.
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 export default async function Home() {
   const [outcomes, items, roles] = await Promise.all([

@@ -33,13 +33,19 @@ describe("the About page", () => {
     }
   });
 
-  it("renders the education credential", () => {
+  it("renders the education credential, with the minor marked as one", () => {
     render(<AboutPage />);
     const education = within(screen.getByTestId("education"));
 
     expect(education.getByText(about.education.institution)).toBeTruthy();
-    expect(education.getByText(about.education.degree)).toBeTruthy();
-    expect(education.getByText(about.education.minor)).toBeTruthy();
+    // One line, and the word "minor" is in it. Stacked and unlabelled, the two
+    // read as two degrees at equal rank — asserting the combined string is what
+    // stops a later edit splitting them back apart and overstating the minor.
+    expect(
+      education.getByText(
+        `${about.education.degree}, minor ${about.education.minor}`,
+      ),
+    ).toBeTruthy();
   });
 
   it("contains no em dash", () => {

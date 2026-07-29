@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { about, aboutSchema } from "@/data/about";
+import { about, aboutMetaDescription, aboutSchema } from "@/data/about";
 
 // Transcribed from Josh's approved wording, signed off 2026-07-29. Written out
 // longhand rather than read off `about`, for the same reason profile.test.ts
@@ -30,6 +30,25 @@ describe("about.narrative", () => {
     for (const [index, paragraph] of about.narrative.entries()) {
       expect(paragraph, `paragraph ${index + 1}`).not.toContain("—");
     }
+  });
+});
+
+describe("aboutMetaDescription", () => {
+  // The Google snippet for /about. The description that ran before this was a
+  // third-person rewrite of this same sentence, so a searcher met one voice in
+  // the result and another on the page.
+  it("is the narrative's opening sentence, in Josh's own words", () => {
+    expect(aboutMetaDescription).toBe(
+      "I'm an experienced product leader with a track record of delivering results as both a team leader and a hands-on contributor.",
+    );
+  });
+
+  // The point of deriving it is that it cannot drift from the page. Asserting
+  // the prefix relationship rather than only the literal above means rewording
+  // the narrative's first sentence fails here instead of quietly leaving the
+  // snippet describing a page that no longer says that.
+  it("stays a prefix of the first paragraph", () => {
+    expect(about.narrative[0]!.startsWith(aboutMetaDescription)).toBe(true);
   });
 });
 

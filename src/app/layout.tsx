@@ -14,8 +14,7 @@ export const metadata: Metadata = {
     default: `${profile.name} — ${profile.role}`,
     template: `%s — ${profile.name}`,
   },
-  description:
-    "Ten years building 0→1 products and platforms in vertical SaaS and fintech. Currently building an AI agent platform at Evernest.",
+  description: profile.metaDescription,
   openGraph: {
     type: "website",
     siteName: profile.name,

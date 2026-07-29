@@ -43,6 +43,26 @@ describe("the homepage", () => {
     );
   });
 
+  // profile.metaDescription is the site's default Google snippet and is an
+  // abridgement of the lede above, sharing two sentences with it verbatim. The
+  // lede has to stay JSX because a phrase inside it is emphasised, so the two
+  // cannot be one string. This asserts the overlap instead: reword the lede
+  // without reworking the description and this fails, rather than the snippet
+  // silently describing a page that no longer says that.
+  it("keeps the meta description's sentences in the rendered lede", async () => {
+    const { container } = render(await Home());
+    const lede = container.querySelector("[data-testid='lede']")?.textContent;
+
+    const sentences = profile.metaDescription
+      .split(". ")
+      .map((sentence) => (sentence.endsWith(".") ? sentence : `${sentence}.`));
+
+    expect(sentences.length).toBeGreaterThan(1);
+    for (const sentence of sentences) {
+      expect(lede, `lede must still contain: ${sentence}`).toContain(sentence);
+    }
+  });
+
   it("links the two calls to action to the profile contact paths", async () => {
     render(await Home());
 

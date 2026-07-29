@@ -60,6 +60,16 @@ const profileSchema = z.strictObject({
   name: z.string().min(1),
   role: z.string().min(1),
   disciplines: z.string().min(1),
+  /**
+   * The site's default meta description, and so the Google snippet for every
+   * page that does not set its own. It is an abridgement of the homepage lede,
+   * which lives as JSX in src/app/page.tsx because a phrase inside it is
+   * emphasised. Two sentences are shared verbatim between them, and
+   * tests/component/home-page.test.tsx asserts both still appear in the rendered
+   * lede — so editing the lede without editing this fails loudly rather than
+   * silently desyncing what a searcher reads from what the page says.
+   */
+  metaDescription: z.string().min(1),
   // Zod 4: the top-level z.email()/z.url() replace the deprecated
   // z.string().email() / z.string().url() method forms.
   email: z.email(),
@@ -86,6 +96,8 @@ export const profile: Profile = profileSchema.parse({
   name: "Josh Van Lente",
   role: "Staff Product Manager",
   disciplines: "Vertical SaaS · FinTech · AI",
+  metaDescription:
+    "Ten years building 0→1 products and platforms in vertical SaaS and fintech. Currently building an AI agent platform at Evernest.",
   email: "Josh@vanlente.net",
   links: {
     linkedin: "https://www.linkedin.com/in/josh-van-lente/",

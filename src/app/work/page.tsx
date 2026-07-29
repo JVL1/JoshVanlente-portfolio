@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { CaseRow } from "@/components/site/CaseRow";
 import { SectionHeader } from "@/components/site/SectionHeader";
+import { profile } from "@/data/profile";
 import { getWorkItems } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Work",
-  description: "Case-study write-ups from Josh Van Lente's product work.",
+  // Composed from profile.name rather than spelling it out, so this index says
+  // whose work it is from the same source as every other page.
+  description: `Case-study write-ups from ${profile.name}'s product work.`,
   // Self-referencing, so the apex, www, and Vercel preview origins the site is
   // reachable at all point at one indexable URL. metadataBase resolves it.
   alternates: { canonical: "/work" },

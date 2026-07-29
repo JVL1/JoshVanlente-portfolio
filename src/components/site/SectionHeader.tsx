@@ -1,6 +1,12 @@
 type SectionHeaderProps = {
   title: string;
-  count: number;
+  /**
+   * Omitted where the section has nothing to count. /about's two headings have
+   * no collection behind them, and before this was optional they hand-rolled
+   * the same typography, which would have left Task 19's site-wide
+   * accessible-name fix with two call sites it could not reach.
+   */
+  count?: number;
   id?: string;
   /**
    * The heading level this header renders. It defaults to 2, which is what the
@@ -29,9 +35,11 @@ export function SectionHeader({
           <span> is dropped: a span computes to `generic`, which ARIA forbids
           from carrying one. The role also hides the padded digits, so what a
           screen reader hears is the count and its unit. */}
-      <span role="img" aria-label={`${count} items`}>
-        {String(count).padStart(2, "0")}
-      </span>
+      {count !== undefined && (
+        <span role="img" aria-label={`${count} items`}>
+          {String(count).padStart(2, "0")}
+        </span>
+      )}
     </header>
   );
 }

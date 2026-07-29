@@ -34,3 +34,19 @@ export const about: About = aboutSchema.parse({
     minor: "Environmental Economics",
   },
 });
+
+/**
+ * The Google snippet for /about.
+ *
+ * Derived from the narrative's opening sentence rather than written separately.
+ * The page is Josh's approved first-person copy, and the description that ran
+ * before this was a third-person rewrite of the same sentence, so a searcher met
+ * one voice in the result and another on the page. Deriving it means the two
+ * cannot drift apart at all, rather than drifting and being caught by a test.
+ */
+function firstSentence(text: string): string {
+  const end = text.indexOf(". ");
+  return end === -1 ? text : text.slice(0, end + 1);
+}
+
+export const aboutMetaDescription = firstSentence(about.narrative[0]!);
