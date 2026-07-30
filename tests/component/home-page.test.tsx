@@ -81,6 +81,17 @@ describe("the homepage", () => {
     expect(container.querySelector("#track")).not.toBeNull();
   });
 
+  it("links the selected-work heading to the full work index", async () => {
+    render(await Home());
+
+    expect(
+      screen
+        .getByRole("heading", { name: "Selected work" })
+        .querySelector("a")
+        ?.getAttribute("href"),
+    ).toBe("/work");
+  });
+
   it("renders the four selected outcomes", async () => {
     render(await Home());
 

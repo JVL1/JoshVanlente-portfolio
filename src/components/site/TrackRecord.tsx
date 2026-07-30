@@ -13,10 +13,12 @@ export function TrackRecord({ roles }: TrackRecordProps) {
           key={role.id}
           // minmax(0,1fr) rather than 1fr: a raw fr track floors at min-content,
           // so a long unbroken string would push the dates column off the row.
-          className="grid grid-cols-[140px_minmax(0,1fr)_120px] items-baseline gap-6 border-b border-border py-5"
+          className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 gap-y-1 border-b border-border py-5 min-[900px]:grid-cols-[140px_minmax(0,1fr)_120px] min-[900px]:gap-6"
         >
-          <span className="text-lg font-semibold">{role.org}</span>
-          <div>
+          <span className="min-w-0 text-lg font-semibold [overflow-wrap:anywhere]">
+            {role.org}
+          </span>
+          <div className="col-span-2 row-start-2 min-w-0 [overflow-wrap:anywhere] min-[900px]:col-span-1 min-[900px]:col-start-2 min-[900px]:row-start-1">
             <p className="text-base text-text-muted">{role.title}</p>
             {role.achievements.map((achievement) => (
               <small
@@ -32,7 +34,7 @@ export function TrackRecord({ roles }: TrackRecordProps) {
               rows would carry a datetime the parser rejects. */}
           <span
             data-testid="role-dates"
-            className="text-right font-mono text-xs text-text-subtle"
+            className="col-start-2 row-start-1 text-right font-mono text-xs text-text-subtle min-[900px]:col-start-3"
           >
             {formatRoleDates(role)}
           </span>

@@ -97,6 +97,18 @@
     outline-offset: 3px;
   }
 
+  /* A wrapped title produces one outline fragment per line. The link keeps
+     keyboard focus, while its case row draws one rectangle around the complete
+     target. */
+  .case-row:has(a:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  .case-row a:focus-visible {
+    outline-color: transparent;
+  }
+
   /* The skip link moves focus to <main id="main">, which is the whole page
      column — measured at 2404px against an 800px viewport. An outline traces
      that border box, so instead of framing anything it paints a green line down

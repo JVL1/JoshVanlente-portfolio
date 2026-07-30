@@ -38,12 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to content
         </a>
-        <div className="mx-auto grid max-w-[1440px] grid-cols-[330px_1fr]">
-          <Rail />
-          <main id="main" tabIndex={-1} className="min-w-0">
-            {children}
-          </main>
-        </div>
+        <Rail>{children}</Rail>
       </body>
     </html>
   );

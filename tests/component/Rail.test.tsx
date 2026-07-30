@@ -4,6 +4,28 @@ import { Rail } from "@/components/site/Rail";
 import { profile } from "@/data/profile";
 
 describe("Rail", () => {
+  it("lays out the banner, main content, and contact footer in reading order", () => {
+    render(
+      <Rail>
+        <h1>A headline</h1>
+      </Rail>,
+    );
+
+    const banner = screen.getByRole("banner");
+    const main = screen.getByRole("main");
+    const footer = screen.getByRole("contentinfo");
+
+    expect(banner.compareDocumentPosition(main)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(main.compareDocumentPosition(footer)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
+      "A headline",
+    );
+  });
+
   it("splits the profile name across two lines", () => {
     const [first, ...tail] = profile.name.split(" ");
     const rest = tail.join(" ");

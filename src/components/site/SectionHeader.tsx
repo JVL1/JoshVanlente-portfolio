@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 type SectionHeaderProps = {
   title: string;
   /**
@@ -8,6 +10,7 @@ type SectionHeaderProps = {
    */
   count?: number;
   id?: string;
+  href?: string;
   /**
    * The heading level this header renders. It defaults to 2, which is what the
    * homepage's sections want — the metric strip and the track record both sit
@@ -21,6 +24,7 @@ export function SectionHeader({
   title,
   count,
   id,
+  href,
   level = 2,
 }: SectionHeaderProps) {
   const Heading = level === 1 ? "h1" : "h2";
@@ -28,15 +32,29 @@ export function SectionHeader({
   return (
     <header
       id={id}
-      className="flex items-center justify-between border-b border-text pb-3 font-mono text-xs uppercase tracking-[0.2em]"
+      className="flex min-w-0 items-center justify-between gap-4 border-b border-text pb-3 font-mono text-xs uppercase tracking-[0.2em]"
     >
-      <Heading>{title}</Heading>
+      <Heading
+        aria-label={title}
+        className="min-w-0 [overflow-wrap:anywhere]"
+      >
+        {href ? (
+          <Link
+            href={href}
+            className="transition-colors duration-200 hover:text-accent focus-visible:text-accent"
+          >
+            {title}
+          </Link>
+        ) : (
+          title
+        )}
+      </Heading>
       {/* role="img" because the count renders as `05`, and a name on a bare
           <span> is dropped: a span computes to `generic`, which ARIA forbids
           from carrying one. The role also hides the padded digits, so what a
           screen reader hears is the count and its unit. */}
       {count !== undefined && (
-        <span role="img" aria-label={`${count} items`}>
+        <span role="img" aria-label={`${count} items`} className="shrink-0">
           {String(count).padStart(2, "0")}
         </span>
       )}

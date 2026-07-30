@@ -20,14 +20,14 @@ export default async function Home() {
 
   return (
     // No <main> here: the layout owns it, so the skip link has one target.
-    <div className="mx-auto w-full max-w-[75rem] px-4 py-12 sm:px-8 sm:py-12">
+    <div className="mx-auto w-full max-w-[75rem] px-4 py-9 min-[360px]:px-5 min-[900px]:px-8 min-[900px]:py-12">
       {/* The hero is tighter than the sibling routes' `py-16 sm:py-24` because
           the fold is an acceptance criterion: at 1280×800 at least half the
           first case-study thumbnail must be visible without scrolling. Measured
           at 0.46 before this trim, which missed. Type sizes and the 12px floor
           are fixed, so vertical space here is the only variable left. */}
       <section className="pb-8">
-        <h1 className="max-w-[19ch] text-[clamp(38px,5.2vw,68px)] font-bold leading-none tracking-[-0.045em]">
+        <h1 className="max-w-[18ch] text-[clamp(38px,11.2vw,46px)] font-bold leading-none tracking-[-0.045em] [overflow-wrap:anywhere] min-[900px]:max-w-[19ch] min-[900px]:text-[clamp(38px,5.2vw,68px)]">
           I find the bet worth making, then earn the right to{" "}
           <em className="font-serif font-normal italic tracking-[-0.015em] text-accent">
             finish it
@@ -53,13 +53,13 @@ export default async function Home() {
               contrast test was vouching for a colour that never shipped. */}
           <a
             href={`mailto:${profile.email}`}
-            className="rounded-full bg-accent px-[18px] py-2.5 text-base font-semibold text-bg transition-colors duration-200 hover:bg-accent-hover"
+            className="inline-flex min-h-11 items-center rounded-full bg-accent px-[18px] py-2.5 text-base font-semibold text-bg transition-colors duration-200 hover:bg-accent-hover"
           >
             Email me
           </a>
           <a
             href={profile.links.linkedin}
-            className="rounded-full border border-border-cta px-[18px] py-2.5 text-base font-semibold text-text transition-colors duration-200 hover:border-border-strong hover:text-accent"
+            className="inline-flex min-h-11 items-center rounded-full border border-border-cta px-[18px] py-2.5 text-base font-semibold text-text transition-colors duration-200 hover:border-border-strong hover:text-accent"
           >
             LinkedIn ↗
           </a>
@@ -71,8 +71,13 @@ export default async function Home() {
         <MetricStrip outcomes={outcomes} />
       </section>
 
-      <section className="mt-12">
-        <SectionHeader title="Selected work" count={items.length} id="work" />
+      <section className="mt-10 min-[900px]:mt-12">
+        <SectionHeader
+          title="Selected work"
+          count={items.length}
+          id="work"
+          href="/work"
+        />
         <ul>
           {items.map((item) => (
             <CaseRow key={item.slug} item={item} />
@@ -80,7 +85,7 @@ export default async function Home() {
         </ul>
       </section>
 
-      <section className="mt-16">
+      <section className="mt-12 min-[900px]:mt-16">
         <SectionHeader title="Track record" count={roles.length} id="track" />
         <TrackRecord roles={roles} />
       </section>

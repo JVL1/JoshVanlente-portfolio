@@ -7,7 +7,7 @@ type MetricStripProps = {
 
 export function MetricStrip({ outcomes }: MetricStripProps) {
   return (
-    <div className="grid grid-cols-4 border-b border-border">
+    <div className="grid grid-cols-2 border-b border-border min-[900px]:grid-cols-4">
       {outcomes.map((outcome) => {
         // The group-* variants only bite in the linked branch, which is the
         // point: a plain cell has no `group` ancestor, so it stays inert. They
@@ -29,14 +29,17 @@ export function MetricStrip({ outcomes }: MetricStripProps) {
           <div
             key={`${outcome.org}-${outcome.metric}-${outcome.label}`}
             data-testid="metric"
-            className="border-r border-border px-4 py-8 text-center last:border-r-0"
+            className="min-w-0 border-b border-r border-border px-2 py-5 text-center even:border-r-0 [&:nth-last-child(-n+2)]:border-b-0 min-[900px]:border-b-0 min-[900px]:px-4 min-[900px]:py-8 min-[900px]:even:border-r min-[900px]:last:border-r-0"
           >
             {outcome.href ? (
               // `block`, not `inline-block`: an inline-block establishes a line
               // box whose inherited 16px strut pushed the attribution in the two
               // linked cells below the two plain ones, across a strip whose whole
               // job is alignment. It also widens the target to the full cell.
-              <Link href={outcome.href} className="group block">
+              <Link
+                href={outcome.href}
+                className="group block [overflow-wrap:anywhere]"
+              >
                 {content}
               </Link>
             ) : (
@@ -47,7 +50,7 @@ export function MetricStrip({ outcomes }: MetricStripProps) {
                 what an sr-only separator would not do. */}
             <p
               data-testid="metric-attribution"
-              className="mt-3 font-mono text-xs text-text-subtle"
+              className="mt-3 font-mono text-xs text-text-subtle [overflow-wrap:anywhere]"
             >
               {outcome.org}
               <span aria-hidden="true"> · </span>

@@ -11,6 +11,16 @@ describe("SectionHeader", () => {
     );
   });
 
+  it("exposes the title's original case as the heading name", () => {
+    render(<SectionHeader title="Track record" count={4} />);
+
+    expect(
+      screen
+        .getByRole("heading", { level: 2 })
+        .getAttribute("aria-label"),
+    ).toBe("Track record");
+  });
+
   it("takes the page's h1 when asked", () => {
     render(<SectionHeader title="Work" count={5} level={1} />);
 
