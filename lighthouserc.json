@@ -21,10 +21,13 @@
           "error",
           { "minScore": 0.95, "aggregationMethod": "median" }
         ],
-        "color-contrast": ["error", { "minScore": 1 }],
+        "color-contrast": [
+          "error",
+          { "minScore": 1, "aggregationMethod": "pessimistic" }
+        ],
         "resource-summary:image:size": [
           "error",
-          { "maxNumericValue": 500000 }
+          { "maxNumericValue": 500000, "aggregationMethod": "pessimistic" }
         ]
       }
     }
