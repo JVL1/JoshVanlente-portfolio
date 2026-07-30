@@ -154,6 +154,10 @@ test.describe("public routes and metadata", () => {
         "href",
         canonicalURL(route),
       );
+      await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
+        "content",
+        canonicalURL(route),
+      );
     }
   });
 });
@@ -223,6 +227,17 @@ test.describe("content evidence and navigation", () => {
 
     await page.keyboard.press("Tab");
     await expect(skipLink).toBeFocused();
+    const focusRing = await skipLink.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        color: style.outlineColor,
+        style: style.outlineStyle,
+        width: Number.parseFloat(style.outlineWidth),
+      };
+    });
+    expect(focusRing.style).not.toBe("none");
+    expect(focusRing.width).toBeGreaterThanOrEqual(2);
+    expect(focusRing.color).not.toBe("rgba(0, 0, 0, 0)");
     await page.keyboard.press("Enter");
     await expect(page.locator("#main")).toBeFocused();
   });
@@ -365,12 +380,7 @@ test.describe("responsive layout", () => {
 
 test.describe("motion and type safeguards", () => {
   test("rendered leaf text never falls below 12 pixels", async ({ page }) => {
-    const routes = [
-      "/",
-      "/work",
-      "/work/cutting-six-of-seven-steps",
-      "/about",
-    ];
+    const routes = [...PUBLISHED_ROUTES, "/work/does-not-exist"];
 
     for (const route of routes) {
       await page.goto(route);

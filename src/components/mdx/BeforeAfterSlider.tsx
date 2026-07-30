@@ -61,6 +61,7 @@ export function BeforeAfterSlider({
     const el = containerRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
+    if (rect.width <= 0) return;
     const x = clientX - rect.left;
     const pct = (x / rect.width) * 100;
     setInset(clamp(pct));
@@ -107,9 +108,13 @@ export function BeforeAfterSlider({
   // same gesture. The Pointer Events spec fires lostpointercapture after the
   // cancel, but nothing here depends on that order holding.
   const onPointerCancel: React.PointerEventHandler<HTMLDivElement> = (e) => {
-    if (gestureStart.current?.pointerId !== e.pointerId) return;
+    const ownsActivePointer = activePointerId.current === e.pointerId;
+    const start = gestureStart.current;
+    const ownsSnapshot = start?.pointerId === e.pointerId;
+    if (!ownsActivePointer && !ownsSnapshot) return;
+
     activePointerId.current = null;
-    setInset(gestureStart.current.inset);
+    if (ownsSnapshot) setInset(start.inset);
     gestureStart.current = null;
   };
 
@@ -158,6 +163,7 @@ export function BeforeAfterSlider({
     // pointerId 1 for the whole session, so the cancel of some later gesture
     // matches a snapshot taken before these keypresses and restores the divider
     // to where it sat before them.
+    activePointerId.current = null;
     gestureStart.current = null;
     setInset(clamp(next));
   };

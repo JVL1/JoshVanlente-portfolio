@@ -1,3 +1,5 @@
+import { profile } from "@/data/profile";
+
 export const site = {
   baseURL: "https://www.joshvanlente.com",
   // src/app/og/route.tsx renders the card at 1920×1080. The dimensions are
@@ -9,3 +11,30 @@ export const site = {
   // these two numbers are fixed at the same moment the file they describe is.
   defaultOgImage: { url: "/og", width: 1920, height: 1080 },
 } as const;
+
+/**
+ * Build the complete Open Graph block for a static page.
+ *
+ * Next replaces nested metadata objects instead of merging their fields. A
+ * page that sets only `url` therefore drops the layout's site name and image,
+ * so every static route uses this one complete shape.
+ */
+export function websiteOpenGraph(
+  url: string,
+  title: string,
+  description: string,
+) {
+  return {
+    type: "website" as const,
+    siteName: profile.name,
+    title,
+    description,
+    url,
+    images: [
+      {
+        ...site.defaultOgImage,
+        alt: `${profile.name}, ${profile.role}`,
+      },
+    ],
+  };
+}

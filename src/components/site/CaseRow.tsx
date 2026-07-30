@@ -73,8 +73,8 @@ export function CaseRow({ item, level = 3 }: CaseRowProps) {
             <span className="text-text-subtle">{outcome.label}</span>
           </p>
           <ul className="relative z-10 mt-2 flex w-fit flex-wrap gap-x-3 gap-y-1 font-mono text-xs uppercase tracking-[0.08em] text-text-subtle">
-            {item.tags.map((tag) => (
-              <li key={tag}>{tag}</li>
+            {item.tags.map((tag, index) => (
+              <li key={`${tag}-${index}`}>{tag}</li>
             ))}
           </ul>
         </div>

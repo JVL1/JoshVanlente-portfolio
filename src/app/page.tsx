@@ -5,11 +5,19 @@ import { SectionHeader } from "@/components/site/SectionHeader";
 import { TrackRecord } from "@/components/site/TrackRecord";
 import { profile } from "@/data/profile";
 import { getHeadlineOutcomes, getRoles, getWorkItems } from "@/lib/content";
+import { websiteOpenGraph } from "@/lib/site";
 
 // The canonical belongs here rather than in the root layout: `alternates` set in
 // a layout propagates to every child that does not override it, which would give
 // the 404 page a canonical of "/" and invite Google to index it as the homepage.
-export const metadata: Metadata = { alternates: { canonical: "/" } };
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  openGraph: websiteOpenGraph(
+    "/",
+    `${profile.name} — ${profile.role}`,
+    profile.metaDescription,
+  ),
+};
 
 export default async function Home() {
   const [outcomes, items, roles] = await Promise.all([

@@ -1,4 +1,5 @@
 import { defineConfig, s } from "velite";
+import { resolve, sep } from "node:path";
 import rehypeFigureParagraph from "./src/lib/mdx/rehype-figure-paragraph";
 import rehypeImageDimensions from "./src/lib/mdx/rehype-image-dimensions";
 import remarkNoEsm from "./src/lib/mdx/remark-no-esm";
@@ -16,8 +17,23 @@ import remarkNoEsm from "./src/lib/mdx/remark-no-esm";
  * Falling back on empty would be safe but silent. An empty override is always a
  * mistake, so it throws and names itself.
  */
-function pathFromEnv(name: string, fallback: string): string {
-  const value = process.env[name];
+// Velite bundles this config into node_modules before evaluating it, so
+// import.meta.url points at the bundle rather than this source file. Every
+// project command runs with the repository as cwd; that is also the base Velite
+// itself uses when it resolves these paths.
+const REPO_ROOT = resolve(process.cwd());
+const FIXTURE_OUTPUT_ROOT = resolve(REPO_ROOT, "tests", ".tmp");
+const CLEANED_OUTPUT_ENV = new Set([
+  "VELITE_OUTPUT_DIR",
+  "VELITE_ASSETS_DIR",
+]);
+
+export function pathFromEnv(
+  name: string,
+  fallback: string,
+  override = process.env[name],
+): string {
+  const value = override;
   if (value === undefined) return fallback;
   if (value.trim() === "") {
     throw new Error(
@@ -26,13 +42,56 @@ function pathFromEnv(name: string, fallback: string): string {
         `root, which --clean would then delete.`,
     );
   }
+
+  // These two paths are recursively removed by `velite build --clean`. Their
+  // environment overrides exist only for the fixture suite, so accept the
+  // committed default or a descendant of that suite's throwaway root. A broad
+  // value such as "." or "public" would otherwise turn a successful build into
+  // deletion of authored files.
+  if (CLEANED_OUTPUT_ENV.has(name)) {
+    const target = resolve(REPO_ROOT, value);
+    const defaultTarget = resolve(REPO_ROOT, fallback);
+    const isFixtureTarget = target.startsWith(FIXTURE_OUTPUT_ROOT + sep);
+
+    if (target !== defaultTarget && !isFixtureTarget) {
+      throw new Error(
+        `${name} may only resolve to its default ("${fallback}") or below ` +
+          `${FIXTURE_OUTPUT_ROOT}; received "${value}". Velite deletes this ` +
+          `path recursively when --clean is present.`,
+      );
+    }
+  }
+
   return value;
 }
 
-const outcome = s.object({
-  metric: s.string().min(1),
-  label: s.string().min(1),
-});
+const dateOnly = s
+  .string()
+  .refine(
+    (value) => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+      const parsed = new Date(`${value}T00:00:00.000Z`);
+      return (
+        Number.isFinite(parsed.getTime()) &&
+        parsed.toISOString().slice(0, 10) === value
+      );
+    },
+    "must be a real calendar date in YYYY-MM-DD format",
+  )
+  .transform((value) => {
+    const parsed = new Date(`${value}T00:00:00.000Z`);
+    // Zod still runs transforms after a failed refinement. Preserve the bad
+    // input long enough for Velite to print the field-level schema issue rather
+    // than replacing it with an anonymous RangeError from toISOString().
+    return Number.isFinite(parsed.getTime()) ? parsed.toISOString() : value;
+  });
+
+const outcome = s
+  .object({
+    metric: s.string().min(1),
+    label: s.string().min(1),
+  })
+  .strict();
 
 export default defineConfig({
   // The fixture suite points the real config at a throwaway content tree.
@@ -59,8 +118,8 @@ export default defineConfig({
           slug: s.slug("work"),
           title: s.string().min(1).max(160),
           summary: s.string().min(1).max(300),
-          publishedAt: s.isodate(),
-          updatedAt: s.isodate().optional(),
+          publishedAt: dateOnly,
+          updatedAt: dateOnly.optional(),
 
           // Exactly one of: roleId, or the org/role pair. Refined below.
           roleId: s.string().min(1).optional(),
@@ -93,6 +152,7 @@ export default defineConfig({
           // The loader compares this path with the authored slug per entry.
           sourcePath: s.path(),
         })
+        .strict()
         .superRefine((data, context) => {
           const hasRoleId = Boolean(data.roleId);
           const hasLiteral = Boolean(data.org && data.role);

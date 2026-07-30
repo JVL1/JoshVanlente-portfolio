@@ -6,6 +6,9 @@ import { getWorkItem } from "@/lib/content";
 // deleting generateMetadata from the page left `npm run typecheck` green and the
 // failure showed up only at runtime.
 import { generateMetadata as pageGenerateMetadata } from "@/app/work/[slug]/page";
+import { metadata as homeMetadata } from "@/app/page";
+import { metadata as workMetadata } from "@/app/work/page";
+import { metadata as aboutMetadata } from "@/app/about/page";
 
 function generateMetadata(slug: string) {
   return pageGenerateMetadata({ params: Promise.resolve({ slug }) });
@@ -61,6 +64,33 @@ describe("work item metadata", () => {
     await expect(
       generateMetadata("unknown-work-item"),
     ).resolves.toStrictEqual({});
+  });
+});
+
+describe("static page metadata", () => {
+  it.each([
+    ["home", homeMetadata, "/"],
+    ["work", workMetadata, "/work"],
+    ["about", aboutMetadata, "/about"],
+  ])("gives %s a complete, self-referencing Open Graph card", (_name, metadata, url) => {
+    expect(metadata).toMatchObject({
+      alternates: { canonical: url },
+      openGraph: {
+        type: "website",
+        siteName: profile.name,
+        title: expect.any(String),
+        description: expect.any(String),
+        url,
+        images: [
+          {
+            url: "/og",
+            width: 1920,
+            height: 1080,
+            alt: `${profile.name}, ${profile.role}`,
+          },
+        ],
+      },
+    });
   });
 });
 

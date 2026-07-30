@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SectionHeader } from "@/components/site/SectionHeader";
 import { about, aboutMetaDescription } from "@/data/about";
+import { websiteOpenGraph } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "About",
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
   // Self-referencing, so the apex, www, and Vercel preview origins the site is
   // reachable at all point at one indexable URL. metadataBase resolves it.
   alternates: { canonical: "/about" },
+  openGraph: websiteOpenGraph("/about", "About", aboutMetaDescription),
 };
 
 export default function AboutPage() {

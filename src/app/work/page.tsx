@@ -3,15 +3,19 @@ import { CaseRow } from "@/components/site/CaseRow";
 import { SectionHeader } from "@/components/site/SectionHeader";
 import { profile } from "@/data/profile";
 import { getWorkItems } from "@/lib/content";
+import { websiteOpenGraph } from "@/lib/site";
+
+const description = `Case-study write-ups from ${profile.name}'s product work.`;
 
 export const metadata: Metadata = {
   title: "Work",
   // Composed from profile.name rather than spelling it out, so this index says
   // whose work it is from the same source as every other page.
-  description: `Case-study write-ups from ${profile.name}'s product work.`,
+  description,
   // Self-referencing, so the apex, www, and Vercel preview origins the site is
   // reachable at all point at one indexable URL. metadataBase resolves it.
   alternates: { canonical: "/work" },
+  openGraph: websiteOpenGraph("/work", "Work", description),
 };
 
 export default async function WorkIndex() {

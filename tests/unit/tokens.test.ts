@@ -299,7 +299,7 @@ describe("the OG card's sanctioned raw hex", () => {
     ]);
 
     const offenders = readdirRecursive(SRC_DIR)
-      .filter((f) => /\.(tsx?|css|mdx)$/.test(f))
+      .filter((f) => /\.(?:[cm]?[jt]sx?|s?css|sass|mdx)$/.test(f))
       .filter((f) => !EXEMPT.has(f))
       .flatMap((f) =>
         readFileSync(f, "utf8")
@@ -319,6 +319,24 @@ describe("the OG card's sanctioned raw hex", () => {
     expect(
       offenders,
       "colour in src/ comes from a token; Satori is the one reason to write a value",
+    ).toEqual([]);
+
+    const arbitraryNamedColours = readdirRecursive(SRC_DIR)
+      .filter((f) => /\.(?:[cm]?[jt]sx?|s?css|sass|mdx)$/.test(f))
+      .flatMap((f) =>
+        readFileSync(f, "utf8")
+          .split("\n")
+          .filter((line) => !/^\s*(\/\/|\/\*|\*)/.test(line))
+          .flatMap((line) =>
+            line.match(
+              /\b(?:text|bg|border|outline|ring|fill|stroke)-\[[a-z][\w-]*\]/gi,
+            ) ?? [],
+          )
+          .map((hit) => `${f}: ${hit}`),
+      );
+    expect(
+      arbitraryNamedColours,
+      "an arbitrary named colour bypasses the three-token palette",
     ).toEqual([]);
   });
 });
@@ -347,7 +365,7 @@ describe("stylesheet guards", () => {
     // the ring an acceptance criterion, so ban the utility rather than rely on
     // nobody reaching for a Tailwind 3 reflex.
     const offenders = readdirRecursive(SRC_DIR)
-      .filter((f) => /\.(tsx?|css|mdx)$/.test(f))
+      .filter((f) => /\.(?:[cm]?[jt]sx?|s?css|sass|mdx)$/.test(f))
       .filter((f) => /\boutline-(none|hidden)\b/.test(readFileSync(f, "utf8")));
     expect(
       offenders,
@@ -362,7 +380,7 @@ describe("stylesheet guards", () => {
     // sanctioned exception lives there and the test below pins it; a component
     // has no reason to write this at all.
     const offenders = readdirRecursive(SRC_DIR)
-      .filter((f) => /\.(tsx?|css|mdx)$/.test(f))
+      .filter((f) => /\.(?:[cm]?[jt]sx?|s?css|sass|mdx)$/.test(f))
       .filter((f) => f !== CSS_PATH)
       .filter((f) => /outline:\s*(none|0)\b/.test(readFileSync(f, "utf8")));
     expect(

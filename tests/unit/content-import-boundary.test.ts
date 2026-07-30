@@ -14,6 +14,8 @@ describe("the content import boundary", () => {
       "src/app/forbidden.jsx",
       "src/app/forbidden.mjs",
       "src/app/forbidden.mts",
+      "scripts/forbidden.ts",
+      "scripts/forbidden.mjs",
     ];
 
     for (const filePath of staticImports) {

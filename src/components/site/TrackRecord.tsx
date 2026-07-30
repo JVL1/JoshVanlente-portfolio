@@ -20,9 +20,9 @@ export function TrackRecord({ roles }: TrackRecordProps) {
           </span>
           <div className="col-span-2 row-start-2 min-w-0 [overflow-wrap:anywhere] min-[900px]:col-span-1 min-[900px]:col-start-2 min-[900px]:row-start-1">
             <p className="text-base text-text-muted">{role.title}</p>
-            {role.achievements.map((achievement) => (
+            {role.achievements.map((achievement, index) => (
               <small
-                key={achievement}
+                key={`${achievement}-${index}`}
                 className="mt-1 block text-sm text-text-subtle"
               >
                 {achievement}

@@ -21,7 +21,10 @@ const config = [
   // Keep that boundary enforceable so a later route cannot publish a draft by
   // importing generated data directly.
   {
-    files: ["src/**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}"],
+    files: [
+      "src/**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}",
+      "scripts/**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}",
+    ],
     rules: {
       "no-restricted-imports": [
         "error",

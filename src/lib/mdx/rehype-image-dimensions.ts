@@ -117,8 +117,20 @@ export default function rehypeImageDimensions({ dir = "public" }: Options = {}) 
       if (!properties) return;
 
       const src = properties.src;
-      // A protocol-relative "//cdn/a.png" also starts with "/" and is remote.
-      if (typeof src !== "string" || !src.startsWith("/") || src.startsWith("//")) return;
+      if (typeof src !== "string") return;
+      // Remote and embedded images do not live below public/, so this plugin
+      // cannot measure them at build time. A protocol-relative URL also starts
+      // with "/", which is why it is checked first.
+      if (src.startsWith("//") || /^[a-z][a-z\d+.-]*:/i.test(src)) return;
+      if (!src.startsWith("/")) {
+        errors.push(
+          new Error(
+            `rehype-image-dimensions: local image src "${src}" must be an ` +
+              `absolute site path such as "/images/example.png"`,
+          ),
+        );
+        return;
+      }
 
       // The file is resolved and checked before any dimension is considered, so
       // a typo'd path fails the build whatever the author wrote alongside it.

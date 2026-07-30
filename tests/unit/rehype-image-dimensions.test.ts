@@ -73,6 +73,12 @@ describe("rehypeImageDimensions", () => {
     expect(out).not.toMatch(/width=/);
   });
 
+  it("rejects a relative local src before next/image reports anonymous dimensions", async () => {
+    await expect(run('<img src="images/cover.png" alt="x">')).rejects.toThrow(
+      /absolute.*\/images\//i,
+    );
+  });
+
   it("throws naming the src when a local file is missing", async () => {
     await expect(run('<img src="/nope.png" alt="x">')).rejects.toThrow(/nope\.png/);
   });

@@ -27,9 +27,9 @@ afterEach(() => {
  * component computes comes out as NaN or 0. Giving the container a width is
  * what makes a clientX mean a position.
  */
-function stubLayout() {
+function stubLayout(width = WIDTH) {
   const original = HTMLElement.prototype.getBoundingClientRect;
-  const rect = new DOMRect(0, 0, WIDTH, 225);
+  const rect = new DOMRect(0, 0, width, 225);
   HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect() {
     return rect;
   };
@@ -109,6 +109,15 @@ function renderSlider(initial: number) {
 }
 
 describe("BeforeAfterSlider", () => {
+  it("keeps its value when layout reports a zero-width container", () => {
+    stubLayout(0);
+    const widget = renderSlider(50);
+
+    pointer(widget, "pointerdown", { pointerId: 1, clientX: 100 });
+
+    expect(insetNow()).toBe(50);
+  });
+
   it("leaves the drag with the finger that started it when a second one lands", () => {
     stubLayout();
     const widget = renderSlider(50);
@@ -155,6 +164,18 @@ describe("BeforeAfterSlider", () => {
     // here would throw away five deliberate keypresses.
     pointer(widget, "pointercancel", { pointerId: 1 });
     expect(insetNow()).toBe(15);
+  });
+
+  it("lets a new pointer start after the keyboard ends the old gesture", () => {
+    stubLayout();
+    const widget = renderSlider(50);
+
+    pointer(widget, "pointerdown", { pointerId: 1, clientX: atPercent(10) });
+    fireEvent.keyDown(screen.getByRole("slider"), { key: "ArrowRight" });
+    pointer(widget, "pointercancel", { pointerId: 1 });
+    pointer(widget, "pointerdown", { pointerId: 2, clientX: atPercent(80) });
+
+    expect(insetNow()).toBe(80);
   });
 
   it("re-measures the labels once the fonts have settled", async () => {

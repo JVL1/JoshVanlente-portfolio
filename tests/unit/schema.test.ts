@@ -11,6 +11,7 @@ import {
 import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
+import { pathFromEnv } from "../../velite.config";
 
 // Resolved from this file, not the launching shell's cwd. With process.cwd()
 // a run started from a subdirectory failed 7/7 with ENOENT on the fixture PNG
@@ -254,6 +255,45 @@ describe("content schema, under --strict", () => {
     );
   });
 
+  it("rejects an unknown top-level frontmatter key", () => {
+    expectSchemaFailure(
+      buildWith({
+        "valid-item.mdx": VALID.replace(
+          'draft: false',
+          'draft: false\ndrfat: true',
+        ),
+      }),
+      /drfat/,
+    );
+  });
+
+  it("rejects an unknown key inside an outcome", () => {
+    expectSchemaFailure(
+      buildWith({
+        "valid-item.mdx": VALID.replace(
+          '    label: "Something real"',
+          '    label: "Something real"\n    attribution: "Untracked"',
+        ),
+      }),
+      /attribution/,
+    );
+  });
+
+  it.each(["2025-02-30", "3/4/2025", "2025-13-01"])(
+    "rejects publishedAt %s as something other than a real YYYY-MM-DD date",
+    (publishedAt) => {
+      expectSchemaFailure(
+        buildWith({
+          "valid-item.mdx": VALID.replace(
+            'publishedAt: "2026-01-01"',
+            `publishedAt: "${publishedAt}"`,
+          ),
+        }),
+        /publishedAt/,
+      );
+    },
+  );
+
   it("rejects two write-ups sharing a slug", () => {
     // Both files declare slug "valid-item"; one filename must differ to exist.
     // The pattern deliberately excludes the bare word "slug": an ordinary
@@ -351,5 +391,26 @@ describe("content schema, under --strict", () => {
       }),
       /roleId/,
     );
+  });
+});
+
+describe("Velite output path overrides", () => {
+  it.each([".", "public", "src", "../outside"])(
+    "rejects %s before --clean can target authored files",
+    (value) => {
+      expect(() =>
+        pathFromEnv("VELITE_OUTPUT_DIR", ".velite", value),
+      ).toThrow(/VELITE_OUTPUT_DIR/);
+    },
+  );
+
+  it("allows a fixture output below tests/.tmp", () => {
+    expect(
+      pathFromEnv(
+        "VELITE_OUTPUT_DIR",
+        ".velite",
+        join(REPO, "tests", ".tmp", "fixture-safe", ".velite-out"),
+      ),
+    ).toContain(join("tests", ".tmp", "fixture-safe", ".velite-out"));
   });
 });
