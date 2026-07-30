@@ -21,7 +21,7 @@ const config = [
   // Keep that boundary enforceable so a later route cannot publish a draft by
   // importing generated data directly.
   {
-    files: ["src/**/*.{ts,tsx}"],
+    files: ["src/**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}"],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -35,12 +35,21 @@ const config = [
           ],
         },
       ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ImportExpression[source.value='#content']",
+          message:
+            "Import published work through @/lib/content; only src/lib/content.ts may read #content.",
+        },
+      ],
     },
   },
   {
     files: ["src/lib/content.ts"],
     rules: {
       "no-restricted-imports": "off",
+      "no-restricted-syntax": "off",
     },
   },
 ];

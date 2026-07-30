@@ -9,14 +9,15 @@ const outcomes: ResolvedHeadlineOutcome[] = [
     label: "Gross margin per user",
     org: "Azibo",
     period: "2023—2025",
-    slug: "all-in-one-rental-platform",
-    href: "/work/all-in-one-rental-platform",
+    slug: "the-source-slug-is-not-the-route",
+    href: "/work/the-rendered-route",
   },
   {
     metric: "$300M+",
     label: "Annual payment volume",
     org: "Azibo",
     period: "2023—2025",
+    slug: "a-slug-does-not-make-this-a-link",
     href: null,
   },
   {
@@ -24,8 +25,8 @@ const outcomes: ResolvedHeadlineOutcome[] = [
     label: "Faster time to lease",
     org: "Evernest",
     period: "2025—2026",
-    slug: "cutting-six-of-seven-steps",
-    href: "/work/cutting-six-of-seven-steps",
+    slug: "a-second-source-slug",
+    href: "/work/a-second-rendered-route",
   },
   {
     metric: "50%",
@@ -60,8 +61,8 @@ describe("MetricStrip", () => {
       expect(cell).toBeDefined();
 
       const link = within(cell!).queryByRole("link");
-      if (outcome.slug) {
-        expect(link?.getAttribute("href")).toBe(`/work/${outcome.slug}`);
+      if (outcome.href) {
+        expect(link?.getAttribute("href")).toBe(outcome.href);
         expect(link?.textContent).toContain(outcome.metric);
         expect(link?.textContent).toContain(outcome.label);
       } else {
