@@ -55,6 +55,27 @@ Scored 27/40 on Nielsen's heuristics before fixes. Applied to variant E:
   headline voice rather than the layout — "swap in another product person's content and nothing
   breaks." Protect those three in the rebuild.
 
+## Mobile layout prototype — verdict
+
+**Question:** When the desktop identity rail collapses, where should navigation and contact links
+go on a phone?
+
+**Answer: variant A.** Josh chose it after comparing all three variants and a revised variant C
+that moved the section navigation above the outcome cards.
+
+Variant A uses this document order:
+
+1. Identity masthead
+2. Section navigation
+3. Headline and positioning
+4. Outcome cards
+5. Selected work
+6. Track record
+7. Contact links in the footer
+
+At 390 pixels, each case-study row keeps a 90-pixel thumbnail beside its text. At 320 pixels, the
+thumbnail stacks above the text. The outcome cards use two columns at both widths.
+
 ## Cleanup
 
 Delete `prototypes/` once the winning design is folded into the real build. The variant code

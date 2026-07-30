@@ -1,0 +1,1185 @@
+<!doctype html>
+<!--
+  Throwaway prototype: three collapsed-homepage variants, switchable with
+  ?variant=A|B|C and ?viewport=390|320, rendered at the two Task 18 viewports.
+
+  Question: when the desktop rail disappears, where should navigation and
+  contact chrome move so positioning and evidence still arrive first?
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mobile layout prototype — Josh Van Lente</title>
+  <style>
+    @font-face {
+      font-family: "Inter Prototype";
+      src: url("../public/fonts/Inter.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    :root {
+      color-scheme: dark;
+      --bg: #0a0b0b;
+      --surface: #171918;
+      --text: #eceeec;
+      --muted: #adb1ac;
+      --subtle: #8a8e89;
+      --accent: #c8ff2e;
+      --accent-hover: #d8ff63;
+      --border: #1d1f1e;
+      --border-strong: #262a27;
+      --outer: #111312;
+      --outer-panel: #191c1a;
+      --font-sans: "Inter Prototype", Inter, ui-sans-serif, system-ui, sans-serif;
+      --font-serif: "Instrument Serif", Georgia, serif;
+      --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: var(--outer);
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--outer);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button,
+    a {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    button:focus-visible,
+    a:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .prototype-shell {
+      min-height: 100vh;
+      padding: 28px 24px 104px;
+    }
+
+    .prototype-heading {
+      width: min(100%, 880px);
+      margin: 0 auto 22px;
+      text-align: center;
+    }
+
+    .prototype-kicker {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .prototype-heading h1 {
+      margin: 0;
+      font-size: clamp(24px, 4vw, 38px);
+      letter-spacing: -0.035em;
+    }
+
+    .prototype-summary {
+      max-width: 64ch;
+      margin: 10px auto 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .prototype-viewport-controls {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 18px 0;
+    }
+
+    .viewport-button {
+      min-height: 42px;
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      padding: 8px 15px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .viewport-button[aria-pressed="true"] {
+      border-color: var(--accent);
+      color: var(--text);
+      background: rgba(200, 255, 46, 0.08);
+    }
+
+    .device-stage {
+      display: grid;
+      place-items: start center;
+      min-width: 100%;
+      overflow-x: auto;
+      padding: 0 12px 24px;
+    }
+
+    .device-frame {
+      position: relative;
+      flex: none;
+      border: 1px solid #303431;
+      border-radius: 30px;
+      padding: 10px;
+      background: #030404;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
+    }
+
+    .device-frame::before {
+      position: absolute;
+      z-index: 2;
+      top: 17px;
+      left: 50%;
+      width: 76px;
+      height: 6px;
+      border-radius: 999px;
+      background: #242725;
+      content: "";
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .device-preview {
+      display: block;
+      border: 0;
+      border-radius: 21px;
+      background: var(--bg);
+    }
+
+    .prototype-switcher {
+      position: fixed;
+      z-index: 100;
+      left: 50%;
+      bottom: 20px;
+      display: grid;
+      grid-template-columns: 48px minmax(190px, 1fr) 48px;
+      align-items: center;
+      width: min(calc(100vw - 24px), 390px);
+      border: 1px solid #343835;
+      border-radius: 999px;
+      padding: 6px;
+      background: rgba(25, 28, 26, 0.96);
+      box-shadow: 0 16px 44px rgba(0, 0, 0, 0.48);
+      backdrop-filter: blur(14px);
+      transform: translateX(-50%);
+    }
+
+    .prototype-switcher button {
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: 50%;
+      background: #242725;
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    .prototype-switcher button:hover {
+      color: var(--accent);
+    }
+
+    .variant-label {
+      padding: 0 8px;
+      text-align: center;
+    }
+
+    .variant-label strong,
+    .variant-label span {
+      display: block;
+    }
+
+    .variant-label strong {
+      font-size: 13px;
+    }
+
+    .variant-label span {
+      margin-top: 2px;
+      color: var(--subtle);
+      font-size: 11px;
+    }
+
+    /* Embedded phone surface. */
+    html.embed-mode,
+    html.embed-mode body {
+      min-height: 100%;
+      background: var(--bg);
+    }
+
+    html.embed-mode {
+      scrollbar-color: var(--border-strong) var(--bg);
+      scrollbar-width: thin;
+    }
+
+    html.embed-mode body {
+      overflow-x: hidden;
+    }
+
+    .site {
+      min-height: 100vh;
+      background: var(--bg);
+      overflow-x: hidden;
+    }
+
+    .site a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .skip-link {
+      position: absolute;
+      z-index: 50;
+      left: -9999px;
+      top: 10px;
+      border-radius: 999px;
+      padding: 10px 16px;
+      color: var(--bg) !important;
+      background: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .skip-link:focus {
+      left: 12px;
+    }
+
+    .identity-name {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 750;
+      line-height: 1.05;
+      letter-spacing: -0.035em;
+    }
+
+    .identity-name span {
+      display: block;
+      color: var(--muted);
+    }
+
+    .identity-role {
+      margin: 10px 0 0;
+      color: var(--subtle);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.5;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .section-nav ul,
+    .contact-list,
+    .metric-grid,
+    .case-list,
+    .role-list,
+    .tag-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .section-nav ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+    }
+
+    .section-nav a {
+      display: block;
+      min-height: 44px;
+      padding: 13px 0 10px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .section-nav a:hover,
+    .section-nav a:focus-visible {
+      color: var(--accent);
+    }
+
+    .page-main {
+      min-width: 0;
+      padding-inline: 20px;
+    }
+
+    .hero {
+      padding: 34px 0 30px;
+    }
+
+    .hero h1 {
+      max-width: 18ch;
+      margin: 0;
+      font-size: clamp(38px, 11.2vw, 46px);
+      font-weight: 750;
+      line-height: 0.99;
+      letter-spacing: -0.048em;
+      overflow-wrap: anywhere;
+    }
+
+    .hero h1 em {
+      color: var(--accent);
+      font-family: var(--font-serif);
+      font-weight: 400;
+      letter-spacing: -0.012em;
+    }
+
+    .lede {
+      max-width: 58ch;
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.62;
+    }
+
+    .lede strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .cta-row a {
+      min-height: 44px;
+      border: 1px solid #2c302d;
+      border-radius: 999px;
+      padding: 11px 17px;
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .cta-row .primary {
+      border-color: var(--accent);
+      color: var(--bg);
+      background: var(--accent);
+    }
+
+    .cta-row a:hover,
+    .cta-row a:focus-visible {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .cta-row .primary:hover,
+    .cta-row .primary:focus-visible {
+      border-color: var(--accent-hover);
+      color: var(--bg);
+      background: var(--accent-hover);
+    }
+
+    .section-block {
+      margin-top: 42px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--text);
+      padding-bottom: 10px;
+    }
+
+    .section-heading h2,
+    .section-heading span {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .section-heading h2 {
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .section-heading span {
+      color: var(--subtle);
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      border-bottom: 1px solid var(--border);
+    }
+
+    .metric-item {
+      min-width: 0;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 22px 8px 20px;
+      text-align: center;
+    }
+
+    .metric-item:nth-child(2n) {
+      border-right: 0;
+    }
+
+    .metric-item:nth-last-child(-n + 2) {
+      border-bottom: 0;
+    }
+
+    .metric-number {
+      display: block;
+      font-family: var(--font-serif);
+      font-size: clamp(34px, 10vw, 42px);
+      line-height: 1;
+      letter-spacing: -0.035em;
+    }
+
+    .metric-label,
+    .metric-source {
+      display: block;
+      overflow-wrap: anywhere;
+    }
+
+    .metric-label {
+      margin-top: 8px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.42;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .metric-source {
+      margin-top: 7px;
+      color: var(--subtle);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.42;
+    }
+
+    .case-item {
+      position: relative;
+      display: grid;
+      grid-template-columns: 90px minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+      border-bottom: 1px solid var(--border);
+      padding: 18px 0;
+      transition: border-color 180ms ease;
+    }
+
+    .case-item:hover,
+    .case-item:has(a:focus-visible) {
+      border-color: var(--accent);
+    }
+
+    .case-thumb {
+      aspect-ratio: 16 / 10;
+      border-radius: 7px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .case-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.8;
+    }
+
+    .case-copy {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .case-title {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.28;
+      letter-spacing: -0.025em;
+    }
+
+    .case-title a::after {
+      position: absolute;
+      inset: 0;
+      content: "";
+    }
+
+    .case-title a:hover,
+    .case-title a:focus-visible {
+      color: var(--accent);
+    }
+
+    .case-summary {
+      position: relative;
+      z-index: 1;
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .case-outcome {
+      position: relative;
+      z-index: 1;
+      margin: 9px 0 0;
+      color: var(--subtle);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .case-outcome strong {
+      color: var(--text);
+      font-family: var(--font-serif);
+      font-size: 17px;
+      font-weight: 400;
+    }
+
+    .tag-list {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px 10px;
+      margin-top: 9px;
+      color: var(--subtle);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .role-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 4px 12px;
+      border-bottom: 1px solid var(--border);
+      padding: 17px 0;
+    }
+
+    .role-org,
+    .role-title,
+    .role-dates {
+      margin: 0;
+    }
+
+    .role-org {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .role-title {
+      grid-column: 1 / -1;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .role-dates {
+      color: var(--subtle);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .contact-footer {
+      margin-top: 54px;
+      border-top: 1px solid var(--text);
+      padding: 28px 20px 38px;
+    }
+
+    .contact-footer h2 {
+      margin: 0 0 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .contact-list {
+      display: grid;
+      gap: 2px;
+    }
+
+    .contact-list a {
+      display: inline-flex;
+      min-height: 44px;
+      align-items: center;
+      color: var(--subtle);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .contact-list a:hover,
+    .contact-list a:focus-visible {
+      color: var(--accent);
+    }
+
+    /* A: the design document's starting answer. */
+    .variant-a .masthead {
+      border-bottom: 1px solid var(--border);
+      padding: 32px 20px 0;
+    }
+
+    .variant-a .section-nav {
+      margin-top: 20px;
+    }
+
+    .variant-a .hero {
+      padding-top: 36px;
+    }
+
+    /* B: positioning precedes navigation, while navigation remains in-flow. */
+    .variant-b .priority-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      border-bottom: 1px solid var(--border);
+      padding: 24px 20px 20px;
+    }
+
+    .variant-b .priority-header .identity-name span {
+      display: inline;
+      margin-left: 0.24em;
+    }
+
+    .variant-b .priority-header > div,
+    .variant-c .hero-identity > div {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 18ch);
+      align-items: start;
+      justify-content: space-between;
+      gap: 18px;
+      width: 100%;
+    }
+
+    .variant-b .priority-header .identity-role {
+      max-width: 18ch;
+      margin: 0;
+      text-align: right;
+    }
+
+    .variant-b .hero {
+      padding-bottom: 24px;
+    }
+
+    .variant-b .section-nav {
+      margin: 0 -20px;
+      border-block: 1px solid var(--border);
+      padding: 0 20px;
+    }
+
+    .variant-b .section-nav ul {
+      justify-content: space-between;
+    }
+
+    .variant-b .metric-section {
+      margin-top: 38px;
+    }
+
+    /* C: the headline leads, then navigation, evidence, and supporting copy. */
+    .variant-c .hero-identity {
+      margin-bottom: 30px;
+    }
+
+    .variant-c .hero-identity .identity-name span {
+      display: inline;
+      margin-left: 0.24em;
+    }
+
+    .variant-c .hero-identity .identity-role {
+      max-width: 18ch;
+      margin: 0;
+      text-align: right;
+    }
+
+    .variant-c .hero {
+      padding-top: 25px;
+      padding-bottom: 30px;
+    }
+
+    .variant-c .metric-section {
+      margin-top: 0;
+    }
+
+    .variant-c .hero-details {
+      padding: 28px 0 4px;
+    }
+
+    .variant-c .hero-details .lede {
+      margin-top: 0;
+    }
+
+    .evidence-nav {
+      position: static;
+      z-index: 40;
+      margin: 0 -8px 30px;
+      border: 1px solid #343835;
+      border-radius: 999px;
+      padding: 4px 12px;
+      background: rgba(23, 25, 24, 0.96);
+      box-shadow: 0 10px 34px rgba(0, 0, 0, 0.48);
+      backdrop-filter: blur(12px);
+    }
+
+    .evidence-nav ul {
+      justify-content: space-between;
+      flex-wrap: nowrap;
+      gap: 5px;
+    }
+
+    .evidence-nav a {
+      padding-inline: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 359px) {
+      .page-main {
+        padding-inline: 16px;
+      }
+
+      .hero h1 {
+        font-size: 37px;
+      }
+
+      .lede {
+        font-size: 14px;
+      }
+
+      .case-item {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+      }
+
+      .case-thumb {
+        width: 100%;
+      }
+
+      .contact-footer,
+      .variant-a .masthead,
+      .variant-b .priority-header {
+        padding-inline: 16px;
+      }
+
+      .variant-b .priority-header > div,
+      .variant-c .hero-identity > div {
+        display: block;
+      }
+
+      .variant-b .priority-header .identity-role,
+      .variant-c .hero-identity .identity-role {
+        max-width: none;
+        margin-top: 10px;
+        text-align: left;
+      }
+
+      .variant-b .section-nav {
+        margin-inline: -16px;
+        padding-inline: 16px;
+      }
+
+      .variant-b .section-nav ul {
+        gap: 6px 12px;
+      }
+
+      .evidence-nav {
+        margin-inline: -8px;
+        padding-inline: 8px;
+      }
+
+      .evidence-nav a {
+        font-size: 11px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .prototype-shell {
+        padding-inline: 8px;
+      }
+
+      .prototype-heading {
+        padding-inline: 10px;
+      }
+
+      .device-stage {
+        justify-content: start;
+        place-items: start;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="prototype-shell" id="prototype-shell">
+    <header class="prototype-heading">
+      <p class="prototype-kicker">Task 18 · throwaway prototype</p>
+      <h1>Where should mobile chrome go?</h1>
+      <p class="prototype-summary" id="prototype-summary">
+        Flip between three ordering strategies, then test each at both required viewports.
+        Scroll inside the phone. The production choice will be rebuilt rather than copied.
+      </p>
+      <div class="prototype-viewport-controls" aria-label="Prototype viewport">
+        <button class="viewport-button" type="button" data-viewport="390">390 × 844</button>
+        <button class="viewport-button" type="button" data-viewport="320">320 × 568</button>
+      </div>
+    </header>
+
+    <div class="device-stage">
+      <div class="device-frame">
+        <iframe
+          class="device-preview"
+          id="device-preview"
+          title="Mobile homepage prototype"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
+  <div class="prototype-switcher" aria-label="Prototype variants">
+    <button id="previous-variant" type="button" aria-label="Previous variant">←</button>
+    <div class="variant-label" aria-live="polite">
+      <strong id="variant-name"></strong>
+      <span id="variant-description"></span>
+    </div>
+    <button id="next-variant" type="button" aria-label="Next variant">→</button>
+  </div>
+
+  <script>
+    const variants = [
+      {
+        key: "A",
+        name: "A — Familiar masthead",
+        description: "Identity + nav, then positioning; contacts in footer",
+      },
+      {
+        key: "B",
+        name: "B — Headline first",
+        description: "Identity, positioning, then in-flow navigation",
+      },
+      {
+        key: "C",
+        name: "C — Headline, nav, evidence",
+        description: "Headline → navigation → outcomes → supporting copy",
+      },
+    ];
+
+    const metrics = [
+      ["2.8×", "Monetized users", "Azibo · 2023—2025"],
+      ["$300M+", "Annual payment volume", "Azibo · 2023—2025"],
+      ["1→7", "Products in the suite", "Azibo · 2023—2025"],
+      ["9%", "Faster time to lease", "Evernest · 2025—2026"],
+    ];
+
+    const work = [
+      {
+        slug: "cutting-six-of-seven-steps",
+        title: "Cutting six of seven steps made photos 50% cheaper and leasing 9% faster",
+        summary: "An automated research loop showed my seven-step photo pipeline was obsolete. Collapsing it to one generative pass held quality at 50% lower cost, and made room for tenant item removal and virtual staging.",
+        outcome: ["50%", "Lower cost per enhanced photo"],
+        tags: ["AI/LLM", "Cost"],
+        cover: "../content/work/cutting-six-of-seven-steps/cover.webp",
+      },
+      {
+        slug: "deterministic-ai-photo-pipeline",
+        title: "A deterministic AI pipeline for real-estate photos",
+        summary: "Chose a deterministic pipeline over a single generative pass, so every enhancement is reproducible and nothing ships distorted.",
+        outcome: ["Cost parity", "Matched the incumbent vendor, in-house"],
+        tags: ["AI/LLM", "Pipeline"],
+        cover: "../content/work/deterministic-ai-photo-pipeline/cover.webp",
+      },
+      {
+        slug: "all-in-one-rental-platform",
+        title: "Vision for an all-in-one rental platform",
+        summary: "Made the case for the platform bet, then shipped it — one product became seven, and margin per user tripled.",
+        outcome: ["1→7", "Products in the suite"],
+        tags: ["Strategy", "0→1"],
+        cover: "../content/work/all-in-one-rental-platform/cover.webp",
+      },
+      {
+        slug: "smarter-payouts-predictive-model",
+        title: "Smarter payouts: training a predictive model",
+        summary: "Predicted which payouts would fail before they did, so fewer transactions bounced.",
+        outcome: ["35%", "More payouts delivered within two days"],
+        tags: ["ML", "Payments"],
+        cover: "../content/work/smarter-payouts-predictive-model/cover.webp",
+      },
+      {
+        slug: "product-led-growth-strategy",
+        title: "A unique product-led growth strategy",
+        summary: "Bet on partnerships over paid acquisition; it became the largest and highest-margin lead source in company history.",
+        outcome: ["#1", "Growth channel by new users and units"],
+        tags: ["Growth", "Partnerships"],
+        cover: "../content/work/product-led-growth-strategy/cover.webp",
+      },
+    ];
+
+    const roles = [
+      ["Evernest", "Staff Product Manager, AI/LLM Initiatives", "2025—now"],
+      ["Built", "Principal Product Manager", "2025"],
+      ["Azibo", "Senior Manager, Product Management", "2023—2025"],
+      ["Azibo", "Senior Product Manager", "2022—2023"],
+      ["Upstart", "Product Manager", "2019—2021"],
+      ["Twitter", "Product Manager", "2018—2019"],
+      ["Ampush", "Senior Product Manager", "2013—2018"],
+    ];
+
+    const identity = () => `
+      <div>
+        <p class="identity-name">Josh<span>Van Lente</span></p>
+        <p class="identity-role">Staff Product Manager<br>Vertical SaaS · FinTech · AI</p>
+      </div>`;
+
+    const navigation = (className = "") => `
+      <nav class="section-nav ${className}" aria-label="Sections">
+        <ul>
+          <li><a href="#work">Selected work</a></li>
+          <li><a href="#track">Track record</a></li>
+          <li><a href="/about">About</a></li>
+        </ul>
+      </nav>`;
+
+    const heroLead = (includeIdentity = false) => `
+      ${includeIdentity ? `<div class="hero-identity">${identity()}</div>` : ""}
+      <h1>I find the bet worth making, then earn the right to <em>finish it</em>.</h1>`;
+
+    const heroDetails = () => `
+      <p class="lede">Ten years building 0→1 products and platforms in vertical SaaS and fintech. Mostly that means research, collaboration, and working out when a bet is actually worth making — then shipping proof along the way that earns the next step. Currently building <strong>an AI agent platform</strong> at Evernest.</p>
+      <div class="cta-row">
+        <a class="primary" href="mailto:Josh@vanlente.net">Email me</a>
+        <a href="https://www.linkedin.com/in/josh-van-lente/">LinkedIn ↗</a>
+      </div>`;
+
+    const hero = (includeIdentity = false) => `
+      <section class="hero">
+        ${heroLead(includeIdentity)}
+        ${heroDetails()}
+      </section>`;
+
+    const sectionHeading = (title, count, id = "") => `
+      <div class="section-heading" ${id ? `id="${id}"` : ""}>
+        <h2>${title}</h2>
+        <span>${String(count).padStart(2, "0")}</span>
+      </div>`;
+
+    const outcomes = () => `
+      <section class="section-block metric-section" aria-labelledby="outcomes-heading">
+        <div class="section-heading">
+          <h2 id="outcomes-heading">Selected outcomes</h2>
+          <span>04</span>
+        </div>
+        <ul class="metric-grid">
+          ${metrics.map(([number, label, source]) => `
+            <li class="metric-item">
+              <span class="metric-number">${number}</span>
+              <span class="metric-label">${label}</span>
+              <span class="metric-source">${source}</span>
+            </li>`).join("")}
+        </ul>
+      </section>`;
+
+    const selectedWork = () => `
+      <section class="section-block">
+        ${sectionHeading("Selected work", work.length, "work")}
+        <ul class="case-list">
+          ${work.map((item) => `
+            <li class="case-item">
+              <div class="case-thumb"><img src="${item.cover}" alt=""></div>
+              <div class="case-copy">
+                <h3 class="case-title"><a href="/work/${item.slug}">${item.title}</a></h3>
+                <p class="case-summary">${item.summary}</p>
+                <p class="case-outcome"><strong>${item.outcome[0]}</strong> ${item.outcome[1]}</p>
+                <ul class="tag-list">${item.tags.map((tag) => `<li>${tag}</li>`).join("")}</ul>
+              </div>
+            </li>`).join("")}
+        </ul>
+      </section>`;
+
+    const trackRecord = () => `
+      <section class="section-block">
+        ${sectionHeading("Track record", roles.length, "track")}
+        <ul class="role-list">
+          ${roles.map(([org, title, dates]) => `
+            <li class="role-item">
+              <p class="role-org">${org}</p>
+              <p class="role-dates">${dates}</p>
+              <p class="role-title">${title}</p>
+            </li>`).join("")}
+        </ul>
+      </section>`;
+
+    const contactFooter = () => `
+      <footer class="contact-footer" id="contact">
+        <h2>Contact</h2>
+        <ul class="contact-list">
+          <li><a href="https://www.linkedin.com/in/josh-van-lente/">LinkedIn ↗</a></li>
+          <li><a href="https://github.com/JVL1">GitHub ↗</a></li>
+          <li><a href="mailto:Josh@vanlente.net">Josh@vanlente.net</a></li>
+        </ul>
+      </footer>`;
+
+    const variantA = () => `
+      <div class="site variant-a">
+        <a class="skip-link" href="#main">Skip to content</a>
+        <header class="masthead">
+          ${identity()}
+          ${navigation()}
+        </header>
+        <main class="page-main" id="main" tabindex="-1">
+          ${hero()}
+          ${outcomes()}
+          ${selectedWork()}
+          ${trackRecord()}
+        </main>
+        ${contactFooter()}
+      </div>`;
+
+    const variantB = () => `
+      <div class="site variant-b">
+        <a class="skip-link" href="#main">Skip to content</a>
+        <header class="priority-header">${identity()}</header>
+        <main class="page-main" id="main" tabindex="-1">
+          ${hero()}
+          ${navigation()}
+          ${outcomes()}
+          ${selectedWork()}
+          ${trackRecord()}
+        </main>
+        ${contactFooter()}
+      </div>`;
+
+    const variantC = () => `
+      <div class="site variant-c">
+        <a class="skip-link" href="#main">Skip to content</a>
+        <main class="page-main" id="main" tabindex="-1">
+          <section class="hero">${heroLead(true)}</section>
+          ${navigation("evidence-nav")}
+          ${outcomes()}
+          <div class="hero-details">${heroDetails()}</div>
+          ${selectedWork()}
+          ${trackRecord()}
+        </main>
+        ${contactFooter()}
+      </div>`;
+
+    const renderers = { A: variantA, B: variantB, C: variantC };
+    const query = new URLSearchParams(window.location.search);
+
+    if (query.get("embed") === "1") {
+      document.documentElement.classList.add("embed-mode");
+      const key = renderers[query.get("variant")] ? query.get("variant") : "A";
+      document.body.innerHTML = renderers[key]();
+
+      window.addEventListener("keydown", (event) => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.matches("input, textarea, [contenteditable]")) return;
+        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+          window.parent.postMessage(
+            { type: "prototype-cycle", delta: event.key === "ArrowLeft" ? -1 : 1 },
+            "*",
+          );
+        }
+      });
+    } else {
+      let variantIndex = Math.max(
+        0,
+        variants.findIndex((variant) => variant.key === query.get("variant")),
+      );
+      let viewport = query.get("viewport") === "320" ? "320" : "390";
+
+      const preview = document.getElementById("device-preview");
+      const name = document.getElementById("variant-name");
+      const description = document.getElementById("variant-description");
+      const viewportButtons = [...document.querySelectorAll("[data-viewport]")];
+
+      function renderPrototype() {
+        const variant = variants[variantIndex];
+        const dimensions = viewport === "320"
+          ? { width: 320, height: 568 }
+          : { width: 390, height: 844 };
+        const embeddedUrl = new URL(window.location.href);
+        embeddedUrl.search = "";
+        embeddedUrl.hash = "";
+        embeddedUrl.searchParams.set("embed", "1");
+        embeddedUrl.searchParams.set("variant", variant.key);
+
+        preview.width = dimensions.width;
+        preview.height = dimensions.height;
+        preview.src = embeddedUrl.href;
+        preview.title = `${variant.name} at ${dimensions.width} by ${dimensions.height}`;
+        name.textContent = variant.name;
+        description.textContent = variant.description;
+
+        viewportButtons.forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.viewport === viewport));
+        });
+
+        const shareUrl = new URL(window.location.href);
+        shareUrl.search = "";
+        shareUrl.searchParams.set("variant", variant.key);
+        shareUrl.searchParams.set("viewport", viewport);
+        history.replaceState(null, "", shareUrl);
+      }
+
+      function cycleVariant(delta) {
+        variantIndex = (variantIndex + delta + variants.length) % variants.length;
+        renderPrototype();
+      }
+
+      document.getElementById("previous-variant").addEventListener("click", () => cycleVariant(-1));
+      document.getElementById("next-variant").addEventListener("click", () => cycleVariant(1));
+      viewportButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          viewport = button.dataset.viewport;
+          renderPrototype();
+        });
+      });
+
+      window.addEventListener("message", (event) => {
+        if (event.data?.type === "prototype-cycle") cycleVariant(event.data.delta);
+      });
+
+      window.addEventListener("keydown", (event) => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.matches("input, textarea, [contenteditable]")) return;
+        if (event.key === "ArrowLeft") cycleVariant(-1);
+        if (event.key === "ArrowRight") cycleVariant(1);
+      });
+
+      renderPrototype();
+    }
+  </script>
+</body>
+</html>
