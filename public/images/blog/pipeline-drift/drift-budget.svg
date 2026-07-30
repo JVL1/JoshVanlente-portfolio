@@ -1,0 +1,56 @@
+<!--
+  Source of truth for drift-budget.webp. Edit this, then re-export (see
+  scripts/resize-images.mjs).
+
+  Colours are the site tokens from src/styles/globals.css, hard-coded because an
+  SVG rendered by sharp cannot read a CSS custom property. The accent (#c8ff2e)
+  appears exactly once, on the after-number: the drop from 5.5-9 passes to 3 is
+  the only claim this chart makes, and in an all-neutral version it read at the
+  same weight as the before-number and landed flat.
+
+  Generic font families only. This rasterizes through librsvg, which resolves
+  system fonts and never sees the next/font faces the site itself loads, so
+  naming Inter here would silently fall back anyway.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" width="2400" height="720" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1200" height="360" fill="#0a0b0b"/>
+
+  <!-- BEFORE -->
+  <text x="26" y="34" font-size="13" font-weight="700" fill="#8a8e89" letter-spacing="1.6">BEFORE, WITH BOTH NEW FEATURES ADDED</text>
+
+  <text x="26" y="78" font-size="14" fill="#eceeec">Enhancement</text>
+  <g>
+    <circle cx="290" cy="73" r="12" fill="#adb1ac"/>
+    <circle cx="322" cy="73" r="12" fill="#adb1ac"/>
+    <circle cx="354" cy="73" r="12" fill="#adb1ac"/>
+    <path d="M 386 61 a 12 12 0 0 0 0 24 z" fill="#adb1ac"/>
+    <circle cx="386" cy="73" r="12" fill="none" stroke="#4a4f4b" stroke-dasharray="3 3"/>
+    <circle cx="418" cy="73" r="12" fill="none" stroke="#4a4f4b" stroke-dasharray="3 3"/>
+    <circle cx="450" cy="73" r="12" fill="none" stroke="#4a4f4b" stroke-dasharray="3 3"/>
+    <circle cx="482" cy="73" r="12" fill="none" stroke="#4a4f4b" stroke-dasharray="3 3"/>
+  </g>
+  <text x="510" y="78" font-size="13" fill="#adb1ac">3.5 on average, up to 7</text>
+
+  <text x="26" y="118" font-size="14" fill="#eceeec">Tenant item removal</text>
+  <circle cx="290" cy="113" r="12" fill="#adb1ac"/>
+  <text x="26" y="154" font-size="14" fill="#eceeec">Virtual staging</text>
+  <circle cx="290" cy="149" r="12" fill="#adb1ac"/>
+
+  <text x="790" y="118" font-size="30" font-weight="700" fill="#eceeec">5.5 to 9</text>
+  <text x="790" y="142" font-size="13" fill="#adb1ac">There was no drift budget left to spend.</text>
+
+  <line x1="26" y1="188" x2="1174" y2="188" stroke="#262a27"/>
+
+  <!-- AFTER -->
+  <text x="26" y="228" font-size="13" font-weight="700" fill="#8a8e89" letter-spacing="1.6">AFTER — WHAT SHIPPED</text>
+
+  <text x="26" y="272" font-size="14" fill="#eceeec">Tenant item removal</text>
+  <circle cx="290" cy="267" r="12" fill="#adb1ac"/>
+  <text x="26" y="304" font-size="14" fill="#eceeec">Enhancement</text>
+  <circle cx="322" cy="299" r="12" fill="#adb1ac"/>
+  <text x="26" y="336" font-size="14" fill="#eceeec">Virtual staging</text>
+  <circle cx="354" cy="331" r="12" fill="#adb1ac"/>
+
+  <text x="790" y="300" font-size="30" font-weight="700" fill="#c8ff2e">3</text>
+  <text x="790" y="324" font-size="13" fill="#adb1ac">And only for an occupied unit. A vacant one costs 1 or 2.</text>
+</svg>

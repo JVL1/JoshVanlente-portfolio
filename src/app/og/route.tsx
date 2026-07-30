@@ -1,106 +1,43 @@
-import { ImageResponse } from 'next/og'
-import { baseURL, renderContent } from '@/app/resources';
-import { getTranslations } from 'next-intl/server';
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { ImageResponse } from "next/og";
+import { ogCard, ogCardOptions } from "@/lib/og-card";
 
-export const runtime = 'edge';
+/**
+ * The one Open Graph card, serving the three pages that have no cover image of
+ * their own: `/`, `/work`, and `/about`. Every write-up sets its own `cover` and
+ * overrides `og:image`, so this card never stands in for a specific piece of
+ * work and has nothing to say about one. It says who he is.
+ *
+ * The card's structure and its render options live in `src/lib/og-card.tsx`.
+ * What stays here is the part that needs Next and the filesystem: the
+ * `ImageResponse` call and the font read.
+ *
+ * Nothing here varies per request, so Next renders the PNG once during
+ * `next build` and serves it as a static file.
+ */
+export const dynamic = "force-static";
 
-export async function GET(request: Request) {
-    let url = new URL(request.url)
-    let title = url.searchParams.get('title') || 'Portfolio'
-    const font = fetch(
-        new URL('../../../public/fonts/Inter.ttf', import.meta.url)
-    ).then((res) => res.arrayBuffer());
-    const fontData = await font;
+const FONT_PATH = join(process.cwd(), "public/fonts/Inter.ttf");
 
-    const t = await getTranslations();
-    const { person } = renderContent(t);
+async function loadInter(): Promise<Buffer> {
+  try {
+    return await readFile(FONT_PATH);
+  } catch (cause) {
+    throw new Error(`og card: cannot read the Inter face at ${FONT_PATH}`, {
+      cause,
+    });
+  }
+}
 
-    return new ImageResponse(
-        (
-            <div
-                style={{
-                    display: 'flex',
-                    width: '100%',
-                    height: '100%',
-                    padding: '8rem',
-                    background: '#151515',
-                }}>
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        gap: '4rem',
-                        fontFamily: 'Inter',
-                        fontStyle: 'normal',
-                        color: 'white',
-                    }}>
-                    <span
-                        style={{
-                            fontSize: '8rem',
-                            lineHeight: '8rem',
-                            letterSpacing: '-0.05em',
-                            whiteSpace: 'pre-wrap',
-                            textWrap: 'balance',
-                        }}>
-                        {title}
-                    </span>
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '5rem'
-                        }}>
-                        <img 
-                            src={'https://' + baseURL + person.avatar}
-                            alt={`${person.name}'s avatar`}
-                            style={{
-                                width: '12rem',
-                                height: '12rem',
-                                objectFit: 'cover',
-                                borderRadius: '100%',
-                            }}
-                        />
-                        <div
-                            style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '0.75rem'
-                            }}>
-                            <span
-                                style={{
-                                    fontSize: '4.5rem',
-                                    lineHeight: '4.5rem',
-                                    whiteSpace: 'pre-wrap',
-                                    textWrap: 'balance',
-                                }}>
-                                {person.name}
-                            </span>
-                            <span
-                                style={{
-                                    fontSize: '2.5rem',
-                                    lineHeight: '2.5rem',
-                                    whiteSpace: 'pre-wrap',
-                                    textWrap: 'balance',
-                                    opacity: '0.6'
-                                }}>
-                                {person.role}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        ),
-        {
-            width: 1920,
-            height: 1080,
-            fonts: [
-                {
-                    name: 'Inter',
-                    data: fontData,
-                    style: 'normal',
-                },
-              ],
-        }
-    )
+export async function GET() {
+  const fontData = await loadInter();
+
+  return new ImageResponse(ogCard, {
+    width: ogCardOptions.width,
+    height: ogCardOptions.height,
+    // The descriptors carry the face's name, style, and weight; the bytes are
+    // attached here, because reading them is a build-time disk operation.
+    fonts: ogCardOptions.fonts.map((face) => ({ ...face, data: fontData })),
+  });
 }

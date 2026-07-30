@@ -1,0 +1,76 @@
+<!--
+  Source of truth for generative-passes.webp. Edit this, then re-export (see
+  scripts/resize-images.mjs).
+
+  Colours are the site tokens from src/styles/globals.css, hard-coded because an
+  SVG rendered by sharp cannot read a CSS custom property. The accent (#c8ff2e)
+  appears exactly once, on "1 pass". The "One combined edit" box is lifted with a
+  brighter border (#4a4f4b) rather than a second accent mark, so the eye still
+  lands there first without spending the accent twice.
+
+  Generic font families only — see the note in drift-budget.svg.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="2400" height="840" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8a8e89"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="420" fill="#0a0b0b"/>
+
+  <!-- ================= BEFORE ================= -->
+  <text x="26" y="42" font-size="13" font-weight="700" fill="#8a8e89" letter-spacing="1.6">BEFORE</text>
+
+  <rect x="26" y="58" width="286" height="104" rx="10" fill="#171918" stroke="#262a27" stroke-dasharray="6 4"/>
+  <text x="44" y="82" font-size="12" font-weight="600" fill="#adb1ac">Analysis — text only</text>
+  <text x="44" y="106" font-size="13" fill="#eceeec">Classify the scene, then decide</text>
+  <text x="44" y="126" font-size="13" fill="#eceeec">which corrections this photo</text>
+  <text x="44" y="146" font-size="13" fill="#eceeec">needs and how much.</text>
+
+  <g stroke="#8a8e89" stroke-width="1.4" marker-end="url(#arrow)">
+    <line x1="320" y1="110" x2="348" y2="110"/>
+  </g>
+
+  <g font-size="12" fill="#adb1ac" text-anchor="middle">
+    <rect x="358" y="64" width="112" height="42" rx="6" fill="#171918" stroke="#262a27"/>
+    <text x="414" y="90">Perspective</text>
+    <rect x="358" y="116" width="112" height="42" rx="6" fill="#171918" stroke="#262a27"/>
+    <text x="414" y="142">Brighten</text>
+    <rect x="486" y="64" width="112" height="42" rx="6" fill="#171918" stroke="#262a27"/>
+    <text x="542" y="90">Window pull</text>
+    <rect x="486" y="116" width="112" height="42" rx="6" fill="#171918" stroke="#262a27"/>
+    <text x="542" y="136">White</text><text x="542" y="151">balance</text>
+    <rect x="614" y="64" width="112" height="42" rx="6" fill="#171918" stroke="#262a27"/>
+    <text x="670" y="90">Relight</text>
+    <rect x="614" y="116" width="112" height="42" rx="6" fill="#171918" stroke="#262a27"/>
+    <text x="670" y="142">Sky</text>
+    <rect x="742" y="90" width="112" height="42" rx="6" fill="#171918" stroke="#262a27"/>
+    <text x="798" y="110">Color</text><text x="798" y="125">correction</text>
+  </g>
+
+  <text x="884" y="100" font-size="26" font-weight="700" fill="#eceeec">3.5 passes</text>
+  <text x="884" y="124" font-size="13" fill="#adb1ac">on an average photo, up to 7,</text>
+  <text x="884" y="142" font-size="13" fill="#adb1ac">each one chained into the next</text>
+
+  <line x1="26" y1="212" x2="1174" y2="212" stroke="#262a27"/>
+
+  <!-- ================= AFTER ================= -->
+  <text x="26" y="262" font-size="13" font-weight="700" fill="#8a8e89" letter-spacing="1.6">AFTER</text>
+
+  <rect x="26" y="278" width="286" height="104" rx="10" fill="#171918" stroke="#262a27" stroke-dasharray="6 4"/>
+  <text x="44" y="302" font-size="12" font-weight="600" fill="#adb1ac">Analysis — unchanged</text>
+  <text x="44" y="326" font-size="13" fill="#eceeec">Classify the scene, then decide</text>
+  <text x="44" y="346" font-size="13" fill="#eceeec">which corrections this photo</text>
+  <text x="44" y="366" font-size="13" fill="#eceeec">needs and how much.</text>
+
+  <g stroke="#8a8e89" stroke-width="1.4" marker-end="url(#arrow)">
+    <line x1="320" y1="330" x2="348" y2="330"/>
+  </g>
+
+  <rect x="358" y="300" width="496" height="60" rx="8" fill="#171918" stroke="#4a4f4b" stroke-width="2"/>
+  <text x="606" y="328" font-size="15" font-weight="600" fill="#eceeec" text-anchor="middle">One combined edit</text>
+  <text x="606" y="348" font-size="12" fill="#adb1ac" text-anchor="middle">the same corrections, assembled into a single prompt</text>
+
+  <text x="884" y="320" font-size="26" font-weight="700" fill="#c8ff2e">1 pass</text>
+  <text x="884" y="344" font-size="13" fill="#adb1ac">every photo, nothing chained</text>
+</svg>
