@@ -6,11 +6,11 @@
 
 ---
 
-## Execution status — last updated 2026-07-29
+## Execution status — last updated 2026-07-30
 
-**Tasks 0 through 17 are complete and reviewed. Task 18 is next.** Read decisions 20 through 23 first. Between them they record that a plan instruction was unusable as written, that a recorded content correction was itself wrong, that a task's spec described a feature nothing on the site used, and that three review rounds were needed before that task's tests actually guarded anything.
+**Tasks 0 through 21 are complete and reviewed. Task 23 Steps 1 through 3 are next; Task 22 follows the first preview and manual browser pass.** Read decisions 20 through 24 first. They record the responsive choice, deferred review findings, the static Open Graph card, and the preview-protection decision that changes the last two tasks.
 
-Work happens in the worktree at `/Users/joshvanlente/Development/JoshVanlente-portfolio-impl` on `feat/portfolio-rebuild-impl`, 36 commits ahead of `feat/portfolio-rebuild`. The original checkout at `/Users/joshvanlente/Development/JoshVanlente-portfolio` stays on `feat/portfolio-rebuild` as a deliberate untouched copy of the old MDX tree — **do not modify it**.
+Work happens in the worktree at `/Users/joshvanlente/Development/JoshVanlente-portfolio-impl` on `feat/portfolio-rebuild-impl`, 61 commits ahead of `feat/portfolio-rebuild`. The original checkout at `/Users/joshvanlente/Development/JoshVanlente-portfolio` stays on `feat/portfolio-rebuild` as a deliberate untouched copy of the old MDX tree — **do not modify it**.
 
 | Task | State | Review |
 |---|---|---|
@@ -32,9 +32,15 @@ Work happens in the worktree at `/Users/joshvanlente/Development/JoshVanlente-po
 | 15. About page | done | reviewed with Task 16 |
 | 16. Metadata | done | 3 models, quorum 3/3, 20 findings (0 critical, 6 major), 11 fixed in `64a0687`, 5 more in `af150ee` |
 | 17. `sitemap.ts`, `robots.ts`, OG route | done | **3 rounds**, 34 findings; see decision 23 |
-| 18 onward | not started | — |
+| 18. Mobile layout prototype | done | exempt — Josh chose variant A |
+| 19. Responsive implementation | done | review fixes in `21fbf4d` |
+| 20. Lighthouse CI | done | 9 audits passed at 100 performance and accessibility |
+| 21. Final quality sweep | done | review fixes in `48d3e5e` |
+| 23. Cutover, Steps 1–3 | in progress | exempt |
+| 22. Playwright e2e | waiting | starts after the first preview passes the manual checklist |
+| 23. Cutover, Steps 4–7 | waiting | resumes after Task 22 |
 
-Suite is **236 tests green across 29 files** (77 at the start of Task 9, 195 at the start of Task 17). `npm run build`, `npm run test`, `npm run typecheck`, and `npm run lint` are all green.
+Suite is **240 tests green across 31 files** (77 at the start of Task 9, 195 at the start of Task 17). `npm run test`, `npm run lint`, `npm run build`, and `npm run typecheck` are all green.
 
 **The Tasks 12–14 review found three majors that a green build hid, and all three are the same shape: a thing that looks implemented and reaches nothing.** The rail hardcoded its navigation, so the section labels and the `work`/`track` anchor ids each lived in two files and a rename would have silently orphaned the anchor. `--color-accent-hover` was pinned by two `tokens.test.ts` rows under "CTA hover" while no element used it — a green contrast test vouching for a colour that never shipped. And the two linked metric cells were pixel-identical to the two plain ones, so the homepage's only route into the write-ups was invisible. The review also established that the obvious fix for the third is a no-op: `hover:text-accent` on the `<Link>` compiles and does nothing, because each child span sets its own colour and wins on specificity. **Check the built CSS, not the class list.**
 
@@ -72,6 +78,10 @@ Suite is **236 tests green across 29 files** (77 at the start of Task 9, 195 at 
 
     Two process notes. The `tw` channel escapes only where `style` leaves that property unset, because an explicit `style` value wins, so the obvious mutation looks inert and the real one does not. And **agent reports were wrong three times and re-verification caught each**: a mutation leg claimed an assertion could never fail when deleting the fallback did fail it, claimed a dimension change went green when `metadata.test.ts` already pinned it, and a review orchestrator twice returned a progress note that read like a finished review. The tell remains the missing `Reviewers:`/`Quorum:` block. On round 3 the Gemini leg ran 1417 seconds and wrote zero bytes, so that round is an honest 2 of 3.
 
+24. **Tasks 22 and 23 use Vercel Protection Bypass for Automation** (Josh's call, 2026-07-30). Preview protection stays on. Playwright reads `VERCEL_AUTOMATION_BYPASS_SECRET` from the local environment and sends it in the `x-vercel-protection-bypass` header; it also sends `x-vercel-set-bypass-cookie: true` so browser requests inherit access. The secret is never committed, printed, or placed in a saved URL. The manual browser pass uses the same headers for its first request.
+
+    LinkedIn's crawler cannot send the header. Putting the secret in a URL would disclose a project-wide credential to LinkedIn and browser history, so the LinkedIn composer check moves from the protected preview to Task 23's production verification. The preview pass still verifies the canonical Open Graph tags and opens each advertised image directly.
+
 **Task 17's `?title=` parameter is deleted, and the three amendments this section used to carry are void.** They are recorded here only so a reader of Task 17's own text knows why it says what it says. The section previously observed that `src/lib/site.ts` points every cover-less page's `og:image` at a bare `/og`, so a route taking its title from a query parameter would receive `null`, and it prescribed a fallback string, a no-parameter verification case, and a length cap. The first review round drew the further conclusion: if nothing ever passes the parameter, the parameter should not exist. Josh chose deletion on 2026-07-29. `/og` is now one prerendered static card that says his name and his role, once each, from `profile.ts`. **Task 17's Step 3 text still describes the query parameter; ignore it, and do not restore the parameter.** See decision 23.
 
 `/og` is live and every page that advertises it resolves. The old instruction not to deploy to a public origin before Task 17 is satisfied.
@@ -97,7 +107,7 @@ Josh's answers to the three open questions. Task 15 writes these; it does not im
 - **A draft's cover image is publicly served, and no route-level guard covers assets.** Velite copies every cover into `public/static/` before the loader's draft filtering exists, so `draft-fixture`'s cover ships as `/static/cover-845fcd12.webp`. Today that is harmless: it is an 86-byte, 64×40 placeholder. The mechanism is not harmless. A real draft with a real cover photograph would be publicly readable at a hashed URL before the write-up is published. Nothing links or indexes it, so it is not a search-engine leak, and the sitemap containment Task 17 proves for **routes** does not extend to **assets**. **Task 21.**
 - **`public/fonts/Inter.ttf` is a second, unlinked copy of the site typeface**, 415KB, now read only by the OG card, while every page loads Inter through `next/font/google` in `src/lib/fonts.ts`. The two are not even the same weight: the bundled file is a static Bold face. Changing the site's typeface would silently leave the card behind. Consolidating means touching the font loading every page depends on, which is why it is **Task 21** rather than Task 17.
 - **`/og` is served with `cache-control: public, max-age=0, must-revalidate`, and that is accepted.** Next discards `ImageResponse`'s own `immutable, max-age=31536000` and records the revalidating header for the prerendered file. Correctness is fine and a redeploy invalidates cleanly; browsers and crawlers simply revalidate rather than cache a 68KB PNG. There is no supported override while the route stays `force-static`, and static is worth more than the header.
-- **Vercel preview deployments sit behind SSO**, which breaks Tasks 22 and 23 as written — Playwright and the manual checklist would both test the auth wall, and LinkedIn's crawler cannot authenticate. Three options are written up in the spike result doc. **Raise it with Josh at Task 20**, so the answer exists before Task 22 needs it.
+- **The preview-protection decision is resolved.** Josh chose Vercel Protection Bypass for Automation on 2026-07-30; see decision 24. The remaining operational prerequisite is a generated secret available locally as `VERCEL_AUTOMATION_BYPASS_SECRET` before the manual preview pass begins.
 - **`README.md` still sells the Once UI template**, including a Deploy button pointing at `once-ui-system/magic-portfolio`. No task owns it, and Task 21's hygiene grep is scoped to `src/` so it reports green regardless. Rewriting it needs Josh's voice.
 - A hard-killed test run leaks a fixture directory under `tests/.tmp/`. Gitignored and inert, but they accumulate; a `globalSetup` that clears the directory would sweep them.
 - **`npm install` reports 21 vulnerabilities, 18 of them high**, all pre-existing and none introduced by this rebuild. Three packages also have install scripts pending `allowScripts` approval (`fsevents` ×2, `unrs-resolver`). **Task 21's hygiene sweep is the natural home.**
@@ -3457,7 +3467,7 @@ git commit -am "chore: static verification sweep fixes"
 - [ ] `/gallery` → 404
 - [ ] `/sitemap.xml` → 8 URLs, no draft slugs
 - [ ] `/robots.txt` → allows all, names the sitemap
-- [ ] `/og?title=Test` → a 1920×1080 PNG on the near-black background
+- [ ] `/og` → a 1920×1080 PNG on the near-black background
 
 ### Motion
 
@@ -3481,13 +3491,28 @@ git commit -am "chore: static verification sweep fixes"
 
 **Step 1: Point Playwright at the preview, and recon it**
 
-The suite runs against a deployed URL, so the base URL is an input rather than a constant:
+The suite runs against a deployed URL, so the base URL is an input rather than a constant. A protected preview also needs the automation secret that Josh chose in decision 24:
 
 ```ts
 // playwright.config.ts
+const previewUrl = process.env.PREVIEW_URL;
+const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+
+if (previewUrl && !bypassSecret) {
+  throw new Error("PREVIEW_URL requires VERCEL_AUTOMATION_BYPASS_SECRET");
+}
+
 export default defineConfig({
   testDir: "tests/e2e",
-  use: { baseURL: process.env.PREVIEW_URL ?? "http://localhost:3000" },
+  use: {
+    baseURL: previewUrl ?? "http://localhost:3000",
+    extraHTTPHeaders: bypassSecret
+      ? {
+          "x-vercel-protection-bypass": bypassSecret,
+          "x-vercel-set-bypass-cookie": "true",
+        }
+      : undefined,
+  },
 });
 ```
 
@@ -3694,6 +3719,14 @@ Then hand back to Task 23 Step 4, which pushes this suite and lets the preview r
 
 Note the current production deployment's Vercel ID and commit SHA, in writing, before anything ships. A rollback plan discovered during an outage is not a rollback plan.
 
+**Recorded 2026-07-30, before the cutover push:**
+
+- Vercel deployment URL: `https://magic-portfolio-for-next-3kxvhhbh8.vercel.app`
+- GitHub deployment ID: `3300265866`
+- Commit SHA: `2fe9d083e757f53b6a791d124ea407f6c78ad0e4`
+
+The public GitHub deployment record confirms that this immutable Vercel URL completed successfully as Production. Vercel's internal `dpl_…` identifier requires project authentication and is not present in the public record; the immutable URL and GitHub deployment ID are the available rollback handles.
+
 **Step 2: Delete the prototypes**
 
 Before the PR, not after. `prototypes/` is deleted as part of the branch so the deletion is in the merge — a commit made after the merge would need its own second PR and deploy, which is how "cleanup" quietly never happens.
@@ -3707,7 +3740,9 @@ The prototype code was written under prototype constraints — no tests, no erro
 
 **Step 3: Deploy a preview and verify a URL matrix**
 
-Push `feat/portfolio-rebuild-impl`. Against the preview URL, check: every retained route, every removed route, `/sitemap.xml`, `/robots.txt`, canonical tags, and social previews (paste a write-up URL into LinkedIn's post composer and confirm the card).
+Push `feat/portfolio-rebuild-impl`. Against the preview URL, check every retained route, every removed route, `/sitemap.xml`, `/robots.txt`, canonical tags, and the Open Graph tags and images. Send `x-vercel-protection-bypass` and `x-vercel-set-bypass-cookie: true` on the first browser request, using `VERCEL_AUTOMATION_BYPASS_SECRET` from the local environment.
+
+LinkedIn cannot send that header, so its composer check runs against production in Step 6. Do not put the bypass secret in a URL to make the preview crawlable.
 
 Then run the Manual Test Checklist in full, and hand off to Task 22.
 
@@ -3726,7 +3761,7 @@ Then open one PR from `feat/portfolio-rebuild` to `main`. Use the `evernest-supe
 
 **Step 6: Verify production**
 
-After the merge deploys, re-run the URL matrix against `joshvanlente.com`. **Confirm that `/en/*` 404s in production** — that is the deliberate decision, and this is the last moment to change Josh's mind about it before every indexed link breaks for real. The mitigation, if he wants it, is about six lines in `next.config.ts`.
+After the merge deploys, re-run the URL matrix against `joshvanlente.com`. Paste a write-up URL into LinkedIn's post composer and confirm its card now that the crawler can reach the site. **Confirm that `/en/*` 404s in production** — that is the deliberate decision, and this is the last moment to change Josh's mind about it before every indexed link breaks for real. The mitigation, if he wants it, is about six lines in `next.config.ts`.
 
 **Step 7: Clean up the worktree**
 
