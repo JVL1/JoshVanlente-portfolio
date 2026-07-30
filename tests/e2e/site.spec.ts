@@ -294,17 +294,19 @@ test.describe("responsive layout", () => {
     page,
   }) => {
     for (const width of [320, 900]) {
-      await page.setViewportSize({ width, height: 800 });
-      await page.goto("/");
+      await test.step(`${width}px viewport`, async () => {
+        await page.setViewportSize({ width, height: 800 });
+        await page.goto("/");
 
-      const name = page.getByTestId("profile-name");
-      const dimensions = await name.evaluate((element) => ({
-        height: element.getBoundingClientRect().height,
-        lineHeight: Number.parseFloat(getComputedStyle(element).lineHeight),
-      }));
+        const name = page.getByTestId("profile-name");
+        const dimensions = await name.evaluate((element) => ({
+          height: element.getBoundingClientRect().height,
+          lineHeight: Number.parseFloat(getComputedStyle(element).lineHeight),
+        }));
 
-      expect(await name.textContent()).toBe("Josh Van Lente");
-      expect(dimensions.height).toBeCloseTo(dimensions.lineHeight, 0);
+        expect(await name.textContent()).toBe("Josh Van Lente");
+        expect(dimensions.height).toBeCloseTo(dimensions.lineHeight, 0);
+      });
     }
   });
 
