@@ -290,6 +290,26 @@ test.describe("content evidence and navigation", () => {
 });
 
 test.describe("responsive layout", () => {
+  test("the profile name stays on one line across rail layouts", async ({
+    page,
+  }) => {
+    for (const width of [320, 900]) {
+      await test.step(`${width}px viewport`, async () => {
+        await page.setViewportSize({ width, height: 800 });
+        await page.goto("/");
+
+        const name = page.getByTestId("profile-name");
+        const dimensions = await name.evaluate((element) => ({
+          height: element.getBoundingClientRect().height,
+          lineHeight: Number.parseFloat(getComputedStyle(element).lineHeight),
+        }));
+
+        expect(await name.textContent()).toBe("Josh Van Lente");
+        expect(dimensions.height).toBeCloseTo(dimensions.lineHeight, 0);
+      });
+    }
+  });
+
   test("a 120-character work title cannot create horizontal overflow", async ({
     page,
   }) => {

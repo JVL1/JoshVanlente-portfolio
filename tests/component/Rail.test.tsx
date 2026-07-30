@@ -26,18 +26,13 @@ describe("Rail", () => {
     );
   });
 
-  it("splits the profile name across two lines", () => {
-    const [first, ...tail] = profile.name.split(" ");
-    const rest = tail.join(" ");
+  it("renders the profile name as one complete phrase", () => {
+    const [first] = profile.name.split(" ");
     render(<Rail />);
 
-    const firstLine = screen.getByText(first, { selector: "p" });
-    const secondLine = screen.getByText(rest);
+    const name = screen.getByText(first, { selector: "p" });
 
-    // Whether the second line renders as a block is a styling choice jsdom
-    // cannot observe, and AGENTS.md forbids reaching for the class name to
-    // check it. The containment above is the part that carries meaning.
-    expect(firstLine.contains(secondLine)).toBe(true);
+    expect(name.textContent).toBe(profile.name);
   });
 
   it("shows profile positioning", () => {
