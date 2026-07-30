@@ -180,6 +180,13 @@ describe("the OG card's sanctioned raw hex", () => {
   const COLOUR_NOTATION =
     /#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|color-mix|light-dark)\([^)]*\)/g;
 
+  // Tailwind's built-in palette compiles to raw colour values after this test
+  // has scanned the source, so classes such as text-red-500 contain no notation
+  // COLOUR_NOTATION can see. Match the framework's colour families at the
+  // utility boundary, including gradients and variants such as hover:.
+  const TAILWIND_PALETTE_CLASS =
+    /\b(?:text|bg|border|outline|ring|ring-offset|fill|stroke|from|via|to|divide|decoration|caret|accent|shadow|placeholder)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|black|white)(?:-(?:50|[1-9]00|950))?(?:\/(?:\d{1,3}|\[[^\]]+\]))?\b/g;
+
   // Tokens a colour-capable shorthand may legitimately carry. Any other bare word
   // on such a property is reported as a named colour, so `background: "red"`
   // fails rather than passing for want of a 148-entry lookup table.
@@ -253,6 +260,15 @@ describe("the OG card's sanctioned raw hex", () => {
       ]);
     });
   });
+
+  it.each(["text-red-500", "hover:bg-white", "from-blue-600"])(
+    "recognizes the built-in palette utility %s",
+    (utility) => {
+      expect(utility.match(TAILWIND_PALETTE_CLASS)).toEqual([
+        utility.replace(/^hover:/, ""),
+      ]);
+    },
+  );
 
   it("mirrors --color-bg and --color-text exactly", () => {
     const t = theme();
@@ -337,6 +353,20 @@ describe("the OG card's sanctioned raw hex", () => {
     expect(
       arbitraryNamedColours,
       "an arbitrary named colour bypasses the three-token palette",
+    ).toEqual([]);
+
+    const builtInPaletteColours = readdirRecursive(SRC_DIR)
+      .filter((f) => /\.(?:[cm]?[jt]sx?|s?css|sass|mdx)$/.test(f))
+      .flatMap((f) =>
+        readFileSync(f, "utf8")
+          .split("\n")
+          .filter((line) => !/^\s*(\/\/|\/\*|\*)/.test(line))
+          .flatMap((line) => line.match(TAILWIND_PALETTE_CLASS) ?? [])
+          .map((hit) => `${f}: ${hit}`),
+      );
+    expect(
+      builtInPaletteColours,
+      "a built-in Tailwind colour bypasses the three-token palette",
     ).toEqual([]);
   });
 });

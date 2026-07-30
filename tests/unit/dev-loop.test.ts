@@ -159,6 +159,7 @@ function startDev(body: string): Dev {
       // The stub first, then the repo's binaries — which is what npm puts on
       // PATH for a script.
       PATH: `${stubBin}:${BIN}:${process.env.PATH ?? ""}`,
+      VELITE_FIXTURE_ROOT: root,
       VELITE_CONTENT_ROOT: root,
       VELITE_OUTPUT_DIR: out,
       VELITE_ASSETS_DIR: join(root, ".assets-out"),

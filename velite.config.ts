@@ -1,5 +1,5 @@
 import { defineConfig, s } from "velite";
-import { resolve, sep } from "node:path";
+import { basename, resolve, sep } from "node:path";
 import rehypeFigureParagraph from "./src/lib/mdx/rehype-figure-paragraph";
 import rehypeImageDimensions from "./src/lib/mdx/rehype-image-dimensions";
 import remarkNoEsm from "./src/lib/mdx/remark-no-esm";
@@ -17,12 +17,6 @@ import remarkNoEsm from "./src/lib/mdx/remark-no-esm";
  * Falling back on empty would be safe but silent. An empty override is always a
  * mistake, so it throws and names itself.
  */
-// Velite bundles this config into node_modules before evaluating it, so
-// import.meta.url points at the bundle rather than this source file. Every
-// project command runs with the repository as cwd; that is also the base Velite
-// itself uses when it resolves these paths.
-const REPO_ROOT = resolve(process.cwd());
-const FIXTURE_OUTPUT_ROOT = resolve(REPO_ROOT, "tests", ".tmp");
 const CLEANED_OUTPUT_ENV = new Set([
   "VELITE_OUTPUT_DIR",
   "VELITE_ASSETS_DIR",
@@ -32,6 +26,8 @@ export function pathFromEnv(
   name: string,
   fallback: string,
   override = process.env[name],
+  fixtureRootOverride = process.env.VELITE_FIXTURE_ROOT,
+  contentRootOverride = process.env.VELITE_CONTENT_ROOT,
 ): string {
   const value = override;
   if (value === undefined) return fallback;
@@ -44,20 +40,35 @@ export function pathFromEnv(
   }
 
   // These two paths are recursively removed by `velite build --clean`. Their
-  // environment overrides exist only for the fixture suite, so accept the
-  // committed default or a descendant of that suite's throwaway root. A broad
-  // value such as "." or "public" would otherwise turn a successful build into
-  // deletion of authored files.
+  // environment overrides exist only for fixture suites. A fixture names its
+  // root explicitly, uses that same directory as its content root, and keeps
+  // every cleanable output below it. Requiring all three facts lets the
+  // dev-loop fixture change cwd safely without making a broad value such as
+  // "." or "public" legal in the repository.
   if (CLEANED_OUTPUT_ENV.has(name)) {
-    const target = resolve(REPO_ROOT, value);
-    const defaultTarget = resolve(REPO_ROOT, fallback);
-    const isFixtureTarget = target.startsWith(FIXTURE_OUTPUT_ROOT + sep);
+    const base = resolve(process.cwd());
+    const target = resolve(base, value);
+    const defaultTarget = resolve(base, fallback);
+    const fixtureRoot = fixtureRootOverride
+      ? resolve(base, fixtureRootOverride)
+      : null;
+    const contentRoot = contentRootOverride
+      ? resolve(base, contentRootOverride)
+      : null;
+    const isNamedFixture =
+      fixtureRoot !== null && /^(?:fixture|devloop)-/.test(basename(fixtureRoot));
+    const isFixtureTarget =
+      fixtureRoot !== null &&
+      contentRoot === fixtureRoot &&
+      isNamedFixture &&
+      target.startsWith(fixtureRoot + sep);
 
     if (target !== defaultTarget && !isFixtureTarget) {
       throw new Error(
         `${name} may only resolve to its default ("${fallback}") or below ` +
-          `${FIXTURE_OUTPUT_ROOT}; received "${value}". Velite deletes this ` +
-          `path recursively when --clean is present.`,
+          `the explicit VELITE_FIXTURE_ROOT used as VELITE_CONTENT_ROOT; ` +
+          `received "${value}". Velite deletes this path recursively when ` +
+          `--clean is present.`,
       );
     }
   }

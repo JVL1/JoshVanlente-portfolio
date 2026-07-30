@@ -99,6 +99,7 @@ function buildWith(files: Record<string, string>) {
 
   const env = {
     ...process.env,
+    VELITE_FIXTURE_ROOT: root,
     VELITE_CONTENT_ROOT: root,
     VELITE_OUTPUT_DIR: join(root, ".velite-out"),
     // Redirect assets too so a fixture build cannot clean public/static.
@@ -405,12 +406,32 @@ describe("Velite output path overrides", () => {
   );
 
   it("allows a fixture output below tests/.tmp", () => {
+    const fixtureRoot = join(
+      REPO,
+      "tests",
+      ".tmp",
+      "fixture-safe",
+    );
     expect(
       pathFromEnv(
         "VELITE_OUTPUT_DIR",
         ".velite",
-        join(REPO, "tests", ".tmp", "fixture-safe", ".velite-out"),
+        join(fixtureRoot, ".velite-out"),
+        fixtureRoot,
+        fixtureRoot,
       ),
     ).toContain(join("tests", ".tmp", "fixture-safe", ".velite-out"));
+  });
+
+  it("does not treat the repository itself as a fixture root", () => {
+    expect(() =>
+      pathFromEnv(
+        "VELITE_OUTPUT_DIR",
+        ".velite",
+        "src",
+        ".",
+        ".",
+      ),
+    ).toThrow(/VELITE_OUTPUT_DIR/);
   });
 });

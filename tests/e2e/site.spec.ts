@@ -229,7 +229,13 @@ test.describe("content evidence and navigation", () => {
     await expect(skipLink).toBeFocused();
     const focusRing = await skipLink.evaluate((element) => {
       const style = getComputedStyle(element);
+      const probe = document.createElement("span");
+      probe.style.color = "var(--color-accent)";
+      document.body.append(probe);
+      const accent = getComputedStyle(probe).color;
+      probe.remove();
       return {
+        accent,
         color: style.outlineColor,
         style: style.outlineStyle,
         width: Number.parseFloat(style.outlineWidth),
@@ -237,7 +243,7 @@ test.describe("content evidence and navigation", () => {
     });
     expect(focusRing.style).not.toBe("none");
     expect(focusRing.width).toBeGreaterThanOrEqual(2);
-    expect(focusRing.color).not.toBe("rgba(0, 0, 0, 0)");
+    expect(focusRing.color).toBe(focusRing.accent);
     await page.keyboard.press("Enter");
     await expect(page.locator("#main")).toBeFocused();
   });
