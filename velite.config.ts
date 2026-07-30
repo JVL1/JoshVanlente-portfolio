@@ -1,5 +1,5 @@
 import { defineConfig, s } from "velite";
-import { basename, resolve, sep } from "node:path";
+import { basename, dirname, resolve, sep } from "node:path";
 import rehypeFigureParagraph from "./src/lib/mdx/rehype-figure-paragraph";
 import rehypeImageDimensions from "./src/lib/mdx/rehype-image-dimensions";
 import remarkNoEsm from "./src/lib/mdx/remark-no-esm";
@@ -57,10 +57,16 @@ export function pathFromEnv(
       : null;
     const isNamedFixture =
       fixtureRoot !== null && /^(?:fixture|devloop)-/.test(basename(fixtureRoot));
+    const fixtureParent = fixtureRoot ? dirname(fixtureRoot) : null;
+    const isTestFixture =
+      fixtureParent !== null &&
+      basename(fixtureParent) === ".tmp" &&
+      basename(dirname(fixtureParent)) === "tests";
     const isFixtureTarget =
       fixtureRoot !== null &&
       contentRoot === fixtureRoot &&
       isNamedFixture &&
+      isTestFixture &&
       target.startsWith(fixtureRoot + sep);
 
     if (target !== defaultTarget && !isFixtureTarget) {

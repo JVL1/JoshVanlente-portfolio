@@ -434,4 +434,17 @@ describe("Velite output path overrides", () => {
       ),
     ).toThrow(/VELITE_OUTPUT_DIR/);
   });
+
+  it("does not trust a repository merely because its name starts with fixture-", () => {
+    const syntheticRepo = join(REPO, "fixture-repository");
+    expect(() =>
+      pathFromEnv(
+        "VELITE_OUTPUT_DIR",
+        ".velite",
+        join(syntheticRepo, "src"),
+        syntheticRepo,
+        syntheticRepo,
+      ),
+    ).toThrow(/VELITE_OUTPUT_DIR/);
+  });
 });

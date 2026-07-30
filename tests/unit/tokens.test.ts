@@ -185,7 +185,7 @@ describe("the OG card's sanctioned raw hex", () => {
   // COLOUR_NOTATION can see. Match the framework's colour families at the
   // utility boundary, including gradients and variants such as hover:.
   const TAILWIND_PALETTE_CLASS =
-    /\b(?:text|bg|border|outline|ring|ring-offset|fill|stroke|from|via|to|divide|decoration|caret|accent|shadow|placeholder)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|black|white)(?:-(?:50|[1-9]00|950))?(?:\/(?:\d{1,3}|\[[^\]]+\]))?\b/g;
+    /\b(?:text|bg|border(?:-[xysetrbl])?|outline|ring|ring-offset|fill|stroke|from|via|to|divide|decoration|caret|accent|shadow|placeholder)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|black|white)(?:-(?:50|[1-9]00|950))?(?:\/(?:\d{1,3}|\[[^\]]+\]))?\b/g;
 
   // Tokens a colour-capable shorthand may legitimately carry. Any other bare word
   // on such a property is reported as a named colour, so `background: "red"`
@@ -261,7 +261,14 @@ describe("the OG card's sanctioned raw hex", () => {
     });
   });
 
-  it.each(["text-red-500", "hover:bg-white", "from-blue-600"])(
+  it.each([
+    "text-red-500",
+    "hover:bg-white",
+    "from-blue-600",
+    "border-t-red-500",
+    "border-x-white",
+    "hover:border-s-blue-600",
+  ])(
     "recognizes the built-in palette utility %s",
     (utility) => {
       expect(utility.match(TAILWIND_PALETTE_CLASS)).toEqual([
