@@ -41,7 +41,7 @@ export function SectionHeader({
         {href ? (
           <Link
             href={href}
-            className="transition-colors duration-200 hover:text-accent focus-visible:text-accent"
+            className="inline-flex min-h-11 items-center transition-colors duration-200 hover:text-accent focus-visible:text-accent min-[900px]:min-h-0"
           >
             {title}
           </Link>

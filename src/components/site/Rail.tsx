@@ -30,12 +30,12 @@ export function Rail({ children }: RailProps) {
           aria-label="Sections"
           className="mt-5 min-[900px]:row-start-2 min-[900px]:mt-0 min-[900px]:self-center"
         >
-          <ul className="flex flex-wrap gap-x-[18px] gap-y-2 min-[900px]:flex-col min-[900px]:gap-5">
+          <ul className="flex flex-nowrap gap-x-2 min-[360px]:gap-x-[18px] min-[900px]:flex-col min-[900px]:gap-5">
             {profile.navigation.map((section) => (
               <li key={section.href}>
                 <Link
                   href={section.href}
-                  className="relative flex min-h-11 w-fit items-center gap-0 font-mono text-xs uppercase tracking-[0.12em] text-text-muted transition-[color,gap] duration-200 before:h-px before:w-0 before:bg-accent before:transition-[width] before:duration-200 hover:gap-3 hover:text-text hover:before:w-5 focus-visible:gap-3 focus-visible:text-text focus-visible:before:w-5 min-[900px]:min-h-0"
+                  className="relative flex min-h-11 w-fit items-center gap-0 whitespace-nowrap font-mono text-xs uppercase tracking-[0.12em] text-text-muted transition-colors duration-200 before:absolute before:bottom-1 before:left-0 before:h-px before:w-0 before:bg-accent before:transition-[width] before:duration-200 hover:text-text hover:before:w-5 focus-visible:text-text focus-visible:before:w-5 min-[900px]:min-h-0 min-[900px]:transition-[color,gap] min-[900px]:before:static min-[900px]:hover:gap-3 min-[900px]:focus-visible:gap-3"
                 >
                   {section.label}
                 </Link>
