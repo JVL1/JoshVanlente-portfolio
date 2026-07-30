@@ -1,0 +1,3 @@
+Not a PNG. This file exists so a test can start a sharp job that is certain to
+reject, which is the only way to prove the plugin settles its in-flight jobs
+before it throws the error the author needs to read.

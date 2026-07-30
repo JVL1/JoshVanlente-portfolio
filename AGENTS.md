@@ -28,6 +28,7 @@ holds the old template: `src/app/[locale]/`, `src/once-ui/`, SCSS modules, and
 | React | 19.2.8 | Server Components by default |
 | Tailwind CSS | 4.3.3 | `@theme` tokens in `src/styles/globals.css`, no `tailwind.config.js` |
 | Velite | 0.4.0 | pinned exactly, no caret — pre-1.0 with a parallel 1.0-alpha line |
+| Zod | 4.4.3 (app) / **3 (Velite)** | two versions, deliberately — see below |
 | Vitest | ^3 | unit tests |
 | Playwright | ^1.56 | e2e, runs against a deployed preview |
 | Lighthouse CI | ^0.15 | accessibility and performance gates |
@@ -54,20 +55,141 @@ Path aliases: `@/*` → `./src/*`, `#content` → `./.velite`. Both are declared
 `tsconfig.json` **and** mirrored in `vitest.config.ts` — Vitest does not read
 tsconfig paths on its own. If you add an alias, add it in both places.
 
+**Unit tests run in two Vitest projects**, declared in `vitest.config.ts`. The
+`node` project covers `tests/unit/**/*.test.ts` and anything under `src/`; those
+suites spawn Velite and read the tree off disk, and a DOM would only slow them
+down. The `dom` project covers `tests/component/**/*.test.tsx` on jsdom, with
+`tests/component/setup.ts` supplying the two APIs jsdom omits that the widgets
+read: the `PointerEvent` constructor and the pointer-capture methods on
+`Element`. Put a test for a component in `tests/component`, and give it a `.tsx`
+extension or the `dom` project will not collect it.
+
+**There are two Zods in this repo and they are not interchangeable.**
+`velite.config.ts` uses `s.*`, which is Velite's own bundled **zod 3** — Velite
+declares no `zod` dependency and ships its own inside the bundle. Everything
+under `src/` uses the repo's **zod 4**. Consequences:
+
+- In `velite.config.ts`, zod 4 API does not exist. No `.check()`, no
+  `z.looseObject`, no `z.strictObject`. Use `.strict()`, `.superRefine()`, and
+  the other zod 3 idioms.
+- In `src/`, use zod 4: top-level `z.email()` and `z.url()`, not the deprecated
+  `z.string().email()` method forms.
+- **Never hand a schema built with the repo's `zod` to Velite.** Velite calls
+  zod 3 internals directly (`schema._parse({ data, path, meta, parent })`), which
+  a zod 4 object does not implement. `src/lib/content-rules.ts` may import zod
+  freely because it validates plain objects itself and never passes a schema to
+  Velite.
+
 ## Commands
 
 ```bash
-npm run dev         # velite --watch alongside next dev
+npm run dev         # velite build --strict, then a velite watcher alongside next dev
 npm run build       # velite build --clean --strict && next build
 npm run test        # velite build --strict && vitest run
-npm run typecheck   # tsc --noEmit
+npm run typecheck   # velite build --strict && tsc --noEmit
 npm run lint        # eslint .   (NOT `next lint` — removed in Next 16)
 npm run e2e         # playwright test, needs PREVIEW_URL
 npm run lighthouse  # lhci autorun
 ```
 
-`.velite/` is generated and gitignored, so `npm run test` regenerates it first.
-On a clean checkout, `#content` resolves to nothing until Velite has run.
+`.velite/` is generated and gitignored, so `test`, `build`, and `typecheck` all
+regenerate it first. On a clean checkout, `#content` resolves to nothing until
+Velite has run, and a bare `tsc --noEmit` fails with `TS2307: Cannot find module
+'#content'` rather than with anything pointing at the missing build step.
+
+Until Task 5 writes `velite.config.ts`, all three of those scripts fail by
+design. Verify with `npx next build`, `npx vitest run`, and `npx tsc --noEmit`
+directly, and do not weaken the scripts to make them run early.
+
+The `dev` script is `velite build --strict && (velite --watch --strict & next dev)`,
+and every piece of that earns its place.
+
+`--strict` is what makes the MDX guards bite in the dev loop. Without it Velite
+reports a rejected body, exits 0, and writes a `work.json` with that entry
+dropped, so the write-up disappears from the dev site and nothing fails. With it
+the initial build exits 1 and prints the rejection, and a rebuild that fails
+during watch leaves the last good `work.json` in place rather than overwriting
+it — the watcher catches the error and logs it, so it survives the failed edit.
+
+The separate `velite build --strict` in front is what lets the failure reach the
+author. `&` yields the status of the command after it, so in `velite --watch
+--strict & next dev` a Velite exit of 1 was discarded: the watcher was gone, the
+script reported success, and `next dev` served the last good content forever
+with nothing rebuilding. `sh -c 'false & sleep 0.2'` exits 0, which is the whole
+of it. Running the build first costs about half a second on a dev start and
+turns a rejected body into a non-zero `npm run dev` that never reaches
+`next dev`. `tests/unit/dev-loop.test.ts` runs the script whole, with a stub in
+place of `next dev`, and asserts both halves.
+
+**An edit made in the first second of `npm run dev` can be missed.** Velite
+prints `watching for changes` before it builds its Chokidar watcher, and
+Chokidar ignores everything it finds during its own initial scan. A save that
+lands inside that window is absorbed into the scan's baseline, so no rebuild
+event is ever emitted for it — the rebuild does not arrive late, it never
+arrives. Save again and the dev loop behaves normally. This is why
+`tests/unit/dev-loop.test.ts` touches the fixture until Velite reports a rebuild
+before it makes the edit it actually asserts on.
+
+**Two Velite processes must not share a config.** Velite compiles whichever
+`velite.config.ts` it finds to a single fixed path beside it,
+`node_modules/.velite.config.compiled.mjs`, and imports it back from there.
+Start two at once and they write and read that one file: the reader can import
+it mid-write and get a module with no `collections`, which Velite reports as
+`'collections' is required in 'velite.config.ts'` — a config error with nothing
+wrong with the config. Measured here against separate content roots and
+outputs, it is 0 failures in 30 builds two at a time and 2 in 32 at four. A test
+that spawns Velite concurrently with another one needs a config of its own; the
+dev-loop fixture writes a one-line re-export of the real config into its
+throwaway root and runs there, which moves the compiled file with it.
+`tests/unit/schema.test.ts` is safe for a different reason — `execFileSync` runs
+its builds one at a time — so keep it that way.
+
+**`npm run dev` can orphan the Velite watcher.** Ctrl-C kills both, because Node
+installs its own SIGINT handler. But when `next dev` exits on its own — port
+already in use, a crash, a config error — nothing signals the watcher; it
+reparents to init and keeps running. The subshell does not change this: it exits
+with `next dev` and leaves its background job behind. Retry a failed start a few
+times and several watchers end up rewriting `.velite/` and `public/static/` at
+once, which races the schema fixture tests. If a dev start fails, check before
+retrying:
+
+```bash
+ps -eo pid,command | grep 'velite --watch --strict'   # kill any survivors first
+```
+
+**Use that form, not `pgrep -f 'velite --watch'`.** The `pgrep` pattern matches
+any process whose argv merely *contains* the string — during a code review it
+matched about 170 processes, because the review packet text itself names the
+script and every reviewer leg's argv carried it. The `ps | grep` form matches the
+real command line and reports actual survivors.
+
+This is a known, accepted trade. Fixing the process lifetime properly would mean
+adding `concurrently` as a dependency for a hazard that only appears after a
+failed start.
+
+**Two Velite processes must not run against the same config at once.** Velite
+compiles whichever config it finds to one fixed path,
+`node_modules/.velite.config.compiled.mjs`, and imports it back. A process that
+imports it mid-write gets a module with no `collections` and fails with
+`'collections' is required in 'velite.config.ts'`. Measured with no test code
+involved: 0 failures in 30 runs at concurrency 2, then 2 failures in ~30 runs at
+each of concurrency 4 and 6. `tests/unit/schema.test.ts` is safe only because it
+uses `execFileSync` and builds one at a time. A test that needs its own watcher
+writes a one-line re-export of the real config into its throwaway root, so Velite
+compiles into that fixture's `node_modules` instead.
+
+**A save made in the first moments of a watch can be silently lost.** Velite
+prints `watching for changes` *before* it constructs the Chokidar watcher, and
+that watcher runs with `ignoreInitial: true`, so a write landing during the
+initial scan is folded into the scan's baseline and emits no event. Nothing is
+broken — save again and it rebuilds. Worth knowing before debugging a rebuild
+that never came.
+
+**`npm run typecheck` fails on a stale route type after a route is deleted.**
+Next 16 leaves `.next/types/validator.ts` referencing the removed page, and `tsc`
+reports what looks like a real error in a file nobody wrote. Run `npm run build`
+first — every verification sequence in this repo is `test`, `lint`, `build`,
+`typecheck`, in that order.
 
 ## Rules
 
@@ -88,6 +210,31 @@ strict on purpose:
 
 If a test fails, fix the code or report the failure with its output.
 
+**Do not assert on a source file read as a string.** A regex matched against a
+module's text is defeated from both directions: a comment carrying the right
+value satisfies an assertion the shipped code violates, and a comment mentioning
+the wrong one fails an assertion the code satisfies. A mutation pass beat seven
+assertions across the OG, token, and robots suites this way. One of them stayed
+green against a card whose background was set to the text colour, which renders
+it invisible, because the right hex was still sitting in a comment two lines
+above. Export the thing being judged and assert on its value:
+`src/lib/og-card.tsx` exists so the tests can read an element tree and an options
+object instead of `src/app/og/route.tsx`'s text.
+
+Two kinds of assertion are exceptions and stay, both because there is no value
+to export.
+
+`globals.css` is read as text because a stylesheet has no value form at all.
+
+A **prohibition** is read as text because absence has none either. Three scans in
+`tokens.test.ts` walk every `.ts`, `.tsx`, `.css`, and `.mdx` file under `src/`
+looking for `outline-none`, the `outline: none` longhand, and a raw colour value,
+and each one asserts that something is not there. Their failure mode also runs the
+safe way round: a comment mentioning the banned thing fails a test the code
+satisfies, which is a cheap failure that explains itself in its own message. The
+hazard the rule above exists for is the opposite one, where a comment makes a real
+violation pass.
+
 **TDD.** Write the failing test first, run it, capture the RED output, then
 implement. Report the RED output — it is how the orchestrator knows the test was
 written before the code.
@@ -102,6 +249,14 @@ single source of role metadata. The token file is read by its own contrast test.
 Frontmatter references a `roleId` rather than an org string. If you find yourself
 fighting one of these, the fight is the feature — do not route around it.
 
+**An unreferenced file is not automatically a dead file.** A hand-authored or
+higher-resolution source stays in the tree even when nothing imports it, because
+it is the only editable version of something the site ships. The two chart SVGs
+under `public/images/blog/pipeline-drift/` are the example: their PNG exports are
+embedded in a write-up, so deleting the SVGs as "unreferenced" threw away the
+only way to edit a diagram that is on the site. Before deleting an unreferenced
+asset, check whether it is the source of one that is referenced.
+
 ## Conventions
 
 - **Colour and type come from tokens only.** Use `var(--color-text)`,
@@ -109,8 +264,51 @@ fighting one of these, the fight is the feature — do not route around it.
   Do not introduce a raw hex value or an arbitrary Tailwind colour — the contrast
   test cannot see them, and the palette is three neutral steps plus one accent by
   design.
-- **The accent (`--color-accent`, acid green) is spent in exactly three places:**
-  the headline italic, hover and focus states, and the primary CTA. Nowhere else.
+- **The accent (`--color-accent`, acid green) is spent in exactly four places:**
+  the headline italic, hover and focus states, the primary CTA, and the single
+  payoff figure in a chart. Nowhere else.
+
+  The fourth was added on 2026-07-27, on Josh's call, when the two
+  `pipeline-drift` charts were recoloured for the dark palette. A chart makes one
+  claim — passes dropping from 5.5–9 to 3 — and an all-neutral version rendered
+  the before- and after-numbers at identical weight, so the payoff read flat.
+  **One accent mark per chart, on the number the chart exists to show.** A second
+  mark in the same image spends the budget: `generative-passes.svg` lifts its
+  "One combined edit" box with a brighter border (`#4a4f4b`) instead.
+
+  Chart SVGs hard-code the token hex values rather than referencing
+  `var(--color-*)`, because sharp rasterizes them outside the browser and cannot
+  resolve a CSS custom property. That is the one sanctioned place a raw hex
+  appears; it does not license one in `src/`.
+
+  **`src/lib/og-card.tsx` is the second sanctioned place, and the only one in
+  `src/` besides the token file itself.** Satori rasterizes the Open Graph card
+  outside a browser for the same reason, so `var(--color-bg)` resolves to nothing
+  and the card has to name the values. It hard-codes `--color-bg` and
+  `--color-text` and no other colour.
+
+  `tests/unit/tokens.test.ts` imports the card's exported element tree, reads the
+  colours out of its style objects, and fails if either stops matching
+  `globals.css` or if a third colour appears anywhere in the tree. "Anywhere"
+  holds only because the readers in `tests/unit/helpers/element-tree.ts` refuse a
+  tree they cannot fully walk rather than returning the part they managed to see:
+  a component-typed child, a prop other than `style` and `children`, an `<img>`,
+  and a `url()` in a style value each throw `UnreadableTree`. An earlier version
+  returned `[]` instead, and four separate constructs shipped a visibly wrong card
+  with the whole suite green, the plainest being a `<Tagline/>` that printed
+  `AVAILABLE FOR HIRE` in red. Growing the card past a plain nest of styled divs
+  means teaching those readers the construct in the same commit.
+
+  What joins those assertions to the image that ships is a single identity check
+  in `tests/unit/og-route.test.ts`: it mocks `next/og`, captures the constructor
+  arguments, and requires the first one to be the exported `ogCard` itself rather
+  than a tree of equal shape. Without it an inline tree in the route draws
+  whatever it likes while every assertion above stays green, which is what
+  happened.
+
+  Adding a raw hex anywhere else in `src/` is still out, and a third scan in
+  `tokens.test.ts` reads every file under `src/` to enforce it, exempting only the
+  card and `globals.css`.
 - **No rendered text below 12px** (`--text-xs`). This is an acceptance criterion,
   asserted by both a unit test and a Playwright sweep.
 - **Every interactive element needs a `:focus-visible` style** distinct from the

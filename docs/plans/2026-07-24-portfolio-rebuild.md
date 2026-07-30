@@ -4,6 +4,170 @@
 
 **Design doc:** `docs/plans/2026-07-24-portfolio-rebuild-design.md` (approved; read it before Task 1)
 
+---
+
+## Execution status — last updated 2026-07-30
+
+**Tasks 0 through 22 are complete and reviewed. Task 23 Step 4 is next.** Read decisions 20 through 24 first. They record the responsive choice, deferred review findings, the static Open Graph card, and the preview-protection decision that changes the final task.
+
+Work happens in the worktree at `/Users/joshvanlente/Development/JoshVanlente-portfolio-impl` on `feat/portfolio-rebuild-impl`, 65 commits ahead of `feat/portfolio-rebuild`. The original checkout at `/Users/joshvanlente/Development/JoshVanlente-portfolio` stays on `feat/portfolio-rebuild` as a deliberate untouched copy of the old MDX tree — **do not modify it**.
+
+| Task | State | Review |
+|---|---|---|
+| 0. Worktree and branch | done | exempt |
+| 1. Velite spike | done | exempt — 8/8 conditions passed |
+| 2. Scaffold Next 16 | done | 3 models, quorum 3/3, 9 fixes applied |
+| 3. Design tokens and fonts | done | 3 models, quorum 3/3, 20 fixes across the 3–4 group |
+| 4. `src/data/profile.ts` | done | reviewed with Task 3 |
+| 5. `velite.config.ts` + fixtures | done | 3 models, quorum 3/3, **2 criticals** found and fixed |
+| 6. Content loader | done | 3 models, quorum 3/3, **2 majors** found and fixed |
+| 7. Frontmatter for five write-ups | done | reviewed with Task 8 |
+| 8. Image asset pass | done | 3 models, quorum 3/3, 13 findings, 10 fixed, 3 escalated to Josh and resolved |
+| 9. MDX rendering | done | **4 rounds**, 7 commits — see decision 13 |
+| 10. Write-up route and 404 | done | reviewed with Task 11 |
+| 11. Work index and `CaseRow` | done | 3 models, quorum 3/3, 5 majors — all fixed in `c645119` |
+| 12. `Rail` and the skip link | done | reviewed with Tasks 13–14 |
+| 13. `MetricStrip`, `TrackRecord` | done | reviewed with Tasks 12–14 |
+| 14. Homepage | done | 3 models, quorum 3/3, 26 findings (0 critical, 5 major), 11 fixed in `6790a48`, 2 more in `54a43fa` |
+| 15. About page | done | reviewed with Task 16 |
+| 16. Metadata | done | 3 models, quorum 3/3, 20 findings (0 critical, 6 major), 11 fixed in `64a0687`, 5 more in `af150ee` |
+| 17. `sitemap.ts`, `robots.ts`, OG route | done | **3 rounds**, 34 findings; see decision 23 |
+| 18. Mobile layout prototype | done | exempt — Josh chose variant A |
+| 19. Responsive implementation | done | review fixes in `21fbf4d` |
+| 20. Lighthouse CI | done | 9 audits passed at 100 performance and accessibility |
+| 21. Final quality sweep | done | review fixes in `48d3e5e` |
+| 23. Cutover, Steps 1–3 | done | exempt — protected preview matched `f860adf`; manual checklist 37/37 |
+| 22. Playwright e2e | done | low review, no findings; preview suite 20/20 |
+| 23. Cutover, Steps 4–7 | in progress | Step 4 is next |
+
+Suite is **240 tests green across 31 Vitest files, plus 20 Playwright tests green against the protected preview** (77 Vitest tests at the start of Task 9, 195 at the start of Task 17). `npm run test`, `npm run lint`, `npm run build`, and `npm run typecheck` are all green.
+
+**The Tasks 12–14 review found three majors that a green build hid, and all three are the same shape: a thing that looks implemented and reaches nothing.** The rail hardcoded its navigation, so the section labels and the `work`/`track` anchor ids each lived in two files and a rename would have silently orphaned the anchor. `--color-accent-hover` was pinned by two `tokens.test.ts` rows under "CTA hover" while no element used it — a green contrast test vouching for a colour that never shipped. And the two linked metric cells were pixel-identical to the two plain ones, so the homepage's only route into the write-ups was invisible. The review also established that the obvious fix for the third is a no-op: `hover:text-accent` on the `<Link>` compiles and does nothing, because each child span sets its own colour and wins on specificity. **Check the built CSS, not the class list.**
+
+### Decisions taken during execution, in addition to the three at the top of this file
+
+1. **Node re-pinned from 22 to 24 LTS** (Josh's call). Node 22 is out of active LTS, and neither it nor a version manager was installed. Every pin in this plan reads 24. Homebrew's `node@24` is now the machine's default `node`; `brew unlink node@24 && brew link --overwrite node` reverts it.
+2. **`AGENTS.md` was written at the repo root** before Task 2, because the executing-plans safety gate stops every Codex dispatch without one — 18 of the 24 tasks route to Codex. It carries the conventions, the two-Zod rule, and the `npm run dev` watcher hazard. **Read it before any task.**
+3. **Task 2 was re-routed from Codex to a Claude subagent** (Josh's call) because its deletion list included `src/pages/api/{authenticate,check-auth}.ts` and the safety gate stops on auth-adjacent reach. Later tasks route as annotated.
+4. **`typecheck` now regenerates Velite output first** — `velite build --strict && tsc --noEmit`. See the note under Task 2 Step 4.
+5. **Task 21's dependency criterion was amended**, with `cookie` via `@lhci/cli` recorded as an accepted exception. See the Acceptance Criteria section.
+6. **The `dev` script keeps the `&` form**, with its watcher-orphaning hazard documented in `AGENTS.md` rather than fixed with a new dependency.
+7. **`@theme static`** in `globals.css` — without `static`, Tailwind 4 tree-shook 11 of 16 tokens out of the shipped CSS, and Tasks 9 and 13 reference tokens through raw `var()`, which Tailwind cannot see.
+9. **Images are split across two scripts, and the split is load-bearing.** `scripts/resize-images.mjs` was a one-time photo migration: it deletes each source after converting, and all ten sources are already gone, so it cannot re-run without `git checkout 7a8489b -- public/images content/work` first. `scripts/export-charts.mjs` and `scripts/make-smarter-payouts-cover.mjs` are re-runnable generators that delete nothing. **Never route a hand-authored source through the resize script** — doing that destroyed the two chart SVGs once already. A new photograph goes through a trimmed `JOBS` list; a new chart or generated card gets a generator.
+10. **The comparison slider's two frames are processed identically, and two tests enforce it.** They ship at 1280×720 and the same WebP quantizer index. Task 8 originally squeezed each under the 300KB budget independently, landing them at quality 59 and 78 — which degraded the *unenhanced* frame more than the enhanced one, in the one widget whose job is letting a reader judge the enhancement. `tests/unit/helpers/webp-quantizer.ts` reads the quality back out of the VP8 header, because sharp can write a quality but cannot read one. Task 9 renders this slider; do not re-encode either frame alone.
+11. **Charts spend the accent once, on the payoff number.** `AGENTS.md`'s accent rule now names four places rather than three. Both `pipeline-drift` charts were drawn light-mode and would have rendered as white slabs on `#0a0b0b`; they are recoloured to the tokens, with hex values hard-coded because sharp rasterizes them outside the browser and cannot resolve a CSS custom property. Task 9 is the first task that actually renders them.
+12. **Task 6 ships two deviations from its own written implementation**, both from its review, and both there to make a claimed invariant provable. `resolveRole` and `filterPublished` are now composed by `resolveAndFilter` in `content-rules.ts` rather than sequenced inline in `content.ts`, because the plan's version of the "resolve drafts before filtering" test called `resolveRole` directly — and `resolveRole` never reads `draft`, so the test passed whichever order the loader used. `assertHeadlineSlugs` takes an optional third argument, every item including drafts, so a headline slug pointing at a real-but-drafted write-up says so instead of reading like a misspelling. Neither changes the loader's runtime behaviour. Both are the two-module split doing its job, so do not "restore" the plan text over them.
+13. **Task 9 took seven commits and four review rounds, and the pattern is worth knowing before Task 17.** Each round's findings were real and mostly invisible to a green build: an `import` in an MDX body compiled clean and threw an anonymous `SyntaxError` at render; a raw `<img />` in MDX bypassed the dimension plugin entirely; a throw inside the tree walk orphaned in-flight sharp promises and buried the good error message; Tailwind 4 kept its default `--text-*--line-height` siblings so every heading rendered at leading nobody chose. Two rounds also *introduced* defects that the next round caught. **Do not read a green `npm run build` as evidence that a dynamic-boundary task is done.**
+14. **The review grace cap is 2400s on `Review: high` tasks** (Josh's call, 2026-07-27), and 900s elsewhere. On Task 9 the two fast legs finished in 102–350s, agreed with each other, and were wrong about mechanism three separate times — twice filing a Major that did not exist. The slow native leg took 1050–1260s because it compiled bodies, built probe routes, and read the emitted CSS, and it found every build-integrity bug. **Task 17 is the only remaining `Review: high` task.** Its findings-only reviewer must not finalise on a fast 2-of-3 majority.
+15. **The test suite now runs two Vitest projects.** `node` keeps the original globs and environment; `dom` runs `tests/component/**/*.test.tsx` on jsdom, with `tests/component/setup.ts` polyfilling `PointerEvent` and pointer capture. Do not flip the whole suite to jsdom — `schema.test.ts` and `dev-loop.test.ts` spawn real processes and must not run in a DOM.
+16. **Two plan claims that "no unit test is possible here" were false, and both are now tested.** Task 9 said the slider's pointer and font-swap behaviour could not be unit-tested because jsdom does no layout; Task 10 said importing the route into Vitest would fail at import time on `next/navigation` and `next/image`. Both premises were true in isolation and neither conclusion followed — `aria-valuenow` is a clean observable, and `tests/component/BeforeAfterSlider.test.tsx` already renders `next/image` unmocked with no `vi.mock` anywhere. **A test that passes identically before and after a fix is the thing to avoid; "hard to test" is not the same as "impossible".**
+17. **No route renders a `<main>` any more, and Task 12 must add one.** All three routes rendered their own, which would have nested `<main>` inside Task 12's `layout.tsx` wrapper and pointed the skip link at the wrong element. They now render a plain `<div>`. **Task 12 adds `<main id="main" tabIndex={-1}>` to `layout.tsx`** — until it does, the detail page's `<header>` claims the `banner` landmark, because it is a direct child of `<body>`. Task 12's `<main>` demotes it automatically.
+18. **`SectionHeader` and `CaseRow` both take a heading-level prop.** `SectionHeader` is `level?: 1 | 2`, default 2; `CaseRow` is `level?: 2 | 3`, default 3. `/work` passes 1 and 2 respectively. The defaults are correct under a homepage that owns its own `<h1>`, so **Task 14 should not need to pass either** — but check the rendered outline, because giving `/work` an `<h1>` is exactly what exposed a skipped h1 → h3 level the first time.
+19. **A figure paragraph is marked during the MDX transform, not matched in CSS.** `src/lib/mdx/rehype-figure-paragraph.ts` stamps `data-figure` on a paragraph whose entire content is one image; `Prose` selects `[&_p[data-figure]]:max-w-none`. The two `:has(… :only-child)` rules it replaced were both wrong the same way — CSS `:only-child` counts element siblings and ignores text nodes, so `text ![alt](x) text` lost the 68ch measure. **`registry.tsx` does not override `p`, which is the only reason the marker survives to the DOM.** If a `p` component is ever added there without spreading props, every figure silently reverts and nothing catches it.
+20. **Task 12 specified a class the repo's own guard forbids, and the guard won.** The task text puts `focus:outline-none` on `<main>`, but `tests/unit/tokens.test.ts` bans `outline-none` anywhere in `src/` — added in Task 3, because the base ring is an acceptance criterion. Omitting it was correct, and the consequence was real: activating the skip link painted the ring around `<main>`, which is the whole page column at 2404px against an 800px viewport, so it rendered as a green line down the left edge that survived scrolling. The fix is `#main:focus-visible { outline: none }` in the base layer, scoped to that one programmatic, non-interactive target. **The review's proposed `outline-offset: -2px` was refuted rather than adopted** — insetting a 2404px-tall rectangle leaves a 2404px-tall rectangle, so the line would have stayed. A reviewer separately proposed evading the ban by writing the CSS longhand; the guard now bans `outline: none` and `outline: 0` in components too, exempting `globals.css` where the sanctioned exception lives and is pinned by its own test.
+21. **The fold criterion missed at 0.4605 and was fixed by trimming the hero, not by the recorded fallback.** The design doc's declared variable was moving the metric strip below the work list; Josh chose the hero trim instead (2026-07-29). The gap was **3.66px**, not the ~40px first estimated from the ratio — at 92.5px thumbnail height, 0.5 needs `top ≤ 753.75` against a measured 757.41. 24px came out of the container and the hero's bottom padding, and the ratio is now **0.7416**. The review and the QA pass measured 0.4605 independently and agreed to four decimal places, which is why the number was trusted. **Type sizes and the 12px floor stay fixed; vertical space is the only variable.**
+22. **`src/app/layout.tsx` has no automated coverage, and that is a knowing gap.** It imports `@/lib/fonts`, which uses `next/font/google` and needs the Next SWC transform, so a jsdom test fails at import with `TypeError: (0, Inter) is not a function`. Covering it means mocking an internal module, which no test in this repo does. The file carries `<main id="main" tabIndex={-1}>` — the single attribute making the skip link work — and **Tasks 16 and 19 both edit it**. Task 22's Playwright suite is the right home for the assertion, since it runs against a real browser: add "Tab, Enter on the skip link, `document.activeElement.id === 'main'`" there.
+23. **Task 17 took three review rounds and three commits, and every round found that the previous round's tests did not reach the thing they named.** Read this before writing a test for anything that renders.
+
+    The feature question came first. The route was specified to take its title from a `?title=` query parameter, and **nothing on the site ever passed one**: `site.ts` links a bare `/og`, and every write-up overrides `og:image` with its own required `cover`. So every card served was the fallback, which printed the name and role three times over at three sizes. Josh chose to delete the parameter. That dissolved five of round 1's sixteen findings rather than fixing them, including a character cap that bounded characters while the canvas bounded height (CJK overran vertically at the cap; any unbroken token overran horizontally at about 27 characters) and an emoji fallback path that sent the title text to `fonts.googleapis.com` and could fan out to roughly 120 third-party requests per hit. **Deleting an unused input is worth more than hardening it.**
+
+    Then the test question, three times, each a level up from the last:
+    - **Round 2** found the new assertions regexed the route's **source text**. A comment reading `weight: 700` kept a test green while the code shipped `400`; setting the background to the text colour, which renders the card invisible, passed every token assertion as long as the right hex sat in a comment. A source-text assertion is satisfied by a comment and broken by one.
+    - **Round 3** found the repair asserted on **exported values** with nothing proving the shipped code used them. Replacing `ImageResponse`'s first argument with an inline tree shipped the word HIJACKED in red, at 57905 bytes against the real 68864, with all 22 assertions green. **Assert identity: `expect(captured).toBe(ogCard)`, because `toEqual` against a rebuilt tree is defeated by a copy.**
+    - Round 3 also found the tree readers returned `[]` for anything they could not walk, so "and nothing else" was a claim they could not make. Four channels each shipped a visibly wrong card with a green suite: a component-typed child, which hides its whole subtree and defeats any prop allowlist; SVG `fill`; Satori's `tw` prop; and a non-array iterable child. **A reader that cannot read something must throw, not return empty.** An allowlist of colour-bearing props is a list someone has to keep complete forever.
+
+    Two process notes. The `tw` channel escapes only where `style` leaves that property unset, because an explicit `style` value wins, so the obvious mutation looks inert and the real one does not. And **agent reports were wrong three times and re-verification caught each**: a mutation leg claimed an assertion could never fail when deleting the fallback did fail it, claimed a dimension change went green when `metadata.test.ts` already pinned it, and a review orchestrator twice returned a progress note that read like a finished review. The tell remains the missing `Reviewers:`/`Quorum:` block. On round 3 the Gemini leg ran 1417 seconds and wrote zero bytes, so that round is an honest 2 of 3.
+
+24. **Tasks 22 and 23 use Vercel Protection Bypass for Automation** (Josh's call, 2026-07-30). Preview protection stays on. Playwright reads `VERCEL_AUTOMATION_BYPASS_SECRET` from the local environment and sends it in the required `x-vercel-protection-bypass` header on every request. The secret is never committed, printed, or placed in a saved URL. The manual browser pass uses the same header.
+
+    The optional `x-vercel-set-bypass-cookie: true` flow is not used. A live stateless-client probe returned a 307 redirect loop with that header, while the required bypass header alone returned the application with HTTP 200. Agent-browser and all 20 Playwright tests passed with the required header alone.
+
+    LinkedIn's crawler cannot send the header. Putting the secret in a URL would disclose a project-wide credential to LinkedIn and browser history, so the LinkedIn composer check moves from the protected preview to Task 23's production verification. The preview pass still verifies the canonical Open Graph tags and opens each advertised image directly.
+
+**Task 17's `?title=` parameter is deleted, and the three amendments this section used to carry are void.** They are recorded here only so a reader of Task 17's own text knows why it says what it says. The section previously observed that `src/lib/site.ts` points every cover-less page's `og:image` at a bare `/og`, so a route taking its title from a query parameter would receive `null`, and it prescribed a fallback string, a no-parameter verification case, and a length cap. The first review round drew the further conclusion: if nothing ever passes the parameter, the parameter should not exist. Josh chose deletion on 2026-07-29. `/og` is now one prerendered static card that says his name and his role, once each, from `profile.ts`. **Task 17's Step 3 text still describes the query parameter; ignore it, and do not restore the parameter.** See decision 23.
+
+`/og` is live and every page that advertises it resolves. The old instruction not to deploy to a public origin before Task 17 is satisfied.
+
+**An em dash sweep is owed, and Josh deferred it to later (2026-07-29).** He asked for em dashes out of the About narrative when he approved it, and the same objection applies to prose elsewhere on the site. Seven reader-visible instances remain in two places: **the homepage lede** (one, in copy the design doc froze as final and `home-page.test.tsx` asserts character for character) and **published write-up bodies** (six, across `cutting-six-of-seven-steps`, `all-in-one-rental-platform`, and `product-led-growth-strategy`). Swapping each for a comma, colon, or full stop is the fix, and touching the lede means updating its golden-record assertion in the same commit. **The date ranges are a separate class and stay** — `2023—2025` and `2025—now` use the em dash as a range separator, which is standard typography rather than a writing tic, and the same goes for the `"%s — Josh Van Lente"` title template. A reviewer proposed sweeping those too and was rejected; applying that "fix" would have broken the title template. **Task 21's sweep is the natural home**, since it already reads every file.
+
+### Blockers and open questions
+
+- **All content inputs for Tasks 7 and 8 are answered and shipped** — see "Content inputs, as answered" below. **Task 15's About inputs arrived on 2026-07-29** — see "About page inputs" below. **Josh signed the narrative off on 2026-07-29** with one change — em dashes replaced by a comma and a colon — and it shipped in `36fb7a4`. `tests/unit/about.test.ts` now holds it as a golden record, transcribed longhand, so a later edit is a deliberate act.
+
+### About page inputs, as answered on 2026-07-29
+
+Josh's answers to the three open questions. Task 15 writes these; it does not improve on them.
+
+| Input | Answer |
+|---|---|
+| Narrative | Keep the old site's intro as the base and extend it. Three additions in his words: he enjoys **big, hard problems that need systems thinking**; lately that has meant **"rethinking what is required of users to produce value vs can be done via automation or agents"** — he rejected a first draft's "rethinking how customers experience our product, with AI at the forefront" as too vague, so **do not restore the generic version**; and a personal close covering **two kids and his wife**, experiencing things through their eyes, plus **hiking, backpacking, and golf**. A three-paragraph draft was agreed in conversation and awaits his final wording. |
+| Education | **San Diego State University, B.S. Finance, minor Environmental Economics.** No graduation year. |
+| Supporting credentials | **Drop the three university bullets** (Associated Students representative, Environmental Business Club finance officer, Cricket Wireless internship) — they read junior at this career stage. **Drop the six "Skills" cards** entirely. Education is the only supporting credential. |
+
+**Task 15 Step 2's third correction is void.** That step lists three résumé errors to fix, the third being that the education minor "was listed as Environmental Economics; it is Sustainability." Josh was asked directly and chose to keep **Environmental Economics** (2026-07-29). The other two corrections stand: the "Prouct Manager" misspelling, and Ampush understated as Product Manager rather than Senior Product Manager. **A correction recorded in a plan is not automatically right — this one had been carried since the design doc and was wrong.**
+- **The image budget test now scans all of `public/`, not just `public/images/`.** Task 10's OG route and any favicon export land inside that scope, so an oversized card fails the suite rather than shipping quietly. Task 17's OG route turned out not to touch that scope at all: it is prerendered into `.next/`, not written to `public/`, so the budget test never sees it. The card is 68KB.
+- **A draft's cover image is publicly served, and no route-level guard covers assets.** Velite copies every cover into `public/static/` before the loader's draft filtering exists, so `draft-fixture`'s cover ships as `/static/cover-845fcd12.webp`. Today that is harmless: it is an 86-byte, 64×40 placeholder. The mechanism is not harmless. A real draft with a real cover photograph would be publicly readable at a hashed URL before the write-up is published. Nothing links or indexes it, so it is not a search-engine leak, and the sitemap containment Task 17 proves for **routes** does not extend to **assets**. **Task 21.**
+- **`public/fonts/Inter.ttf` is a second, unlinked copy of the site typeface**, 415KB, now read only by the OG card, while every page loads Inter through `next/font/google` in `src/lib/fonts.ts`. The two are not even the same weight: the bundled file is a static Bold face. Changing the site's typeface would silently leave the card behind. Consolidating means touching the font loading every page depends on, which is why it is **Task 21** rather than Task 17.
+- **`/og` is served with `cache-control: public, max-age=0, must-revalidate`, and that is accepted.** Next discards `ImageResponse`'s own `immutable, max-age=31536000` and records the revalidating header for the prerendered file. Correctness is fine and a redeploy invalidates cleanly; browsers and crawlers simply revalidate rather than cache a 68KB PNG. There is no supported override while the route stays `force-static`, and static is worth more than the header.
+- **The preview-protection decision is resolved.** Josh chose Vercel Protection Bypass for Automation on 2026-07-30; see decision 24. The generated secret lives only in the gitignored `.env.local` during cutover.
+- **`README.md` still sells the Once UI template**, including a Deploy button pointing at `once-ui-system/magic-portfolio`. No task owns it, and Task 21's hygiene grep is scoped to `src/` so it reports green regardless. Rewriting it needs Josh's voice.
+- A hard-killed test run leaks a fixture directory under `tests/.tmp/`. Gitignored and inert, but they accumulate; a `globalSetup` that clears the directory would sweep them.
+- **`npm install` reports 21 vulnerabilities, 18 of them high**, all pre-existing and none introduced by this rebuild. Three packages also have install scripts pending `allowScripts` approval (`fsevents` ×2, `unrs-resolver`). **Task 21's hygiene sweep is the natural home.**
+- **`/work` and `/about` appear in no metadata task.** Task 16 names the write-up route and the homepage, so those two will inherit the root default rather than the `"%s — Josh Van Lente"` template. A plan gap, not a diff defect — fix it when Task 16 runs.
+- **`tsconfig.json` has no `noUncheckedIndexedAccess`.** `CaseRow` carries a runtime guard on `outcomes[0]` because the schema's `.min(1)` does not reach the type system — Zod 4's `.min()` returns `this`, so `WorkItem` infers `Outcome[]` rather than a non-empty tuple. Turning the flag on would surface the same class of bug repo-wide, at the cost of a sweep well outside any current task.
+
+**Tasks 15 and 16 both shipped beyond their stated file lists, deliberately.** Task 16's list named `layout.tsx`, `work/[slug]/page.tsx`, and `site.ts`; it also touched `work/page.tsx` and `about/page.tsx` to close the recorded gap where those two routes had no metadata. The follow-up fix in `af150ee` additionally touched `profile.ts`, `page.tsx`, and `SectionHeader.tsx`. Every one is recorded in a commit body.
+
+Two findings from the Tasks 15–16 review remain open and are assigned:
+
+- **The page-shell class string `mx-auto w-full max-w-[75rem] px-4 py-16 sm:px-8 sm:py-24` is identical in three routes.** The homepage deliberately differs (documented, fold criterion) and `not-found` differs again, so a shared shell would cover three of five call sites. Marginal now; revisit if a fourth route lands. **Task 21 at the earliest.**
+
+Findings from the Tasks 12–14 review that its own scope could not fix. Each names where it belongs:
+
+- **`/work` is unreachable from every page.** The rail's three nav links are `/#work`, `/#track`, and `/about`; "Selected work" points at the homepage section, not the work index. The route exists and no page links to it. **Assigned to Task 19**, which owns the rail's responsive treatment and is the natural place to decide whether it gains a fourth link or the homepage's "Selected work" header links through. Sharper after Task 16: `/work` now carries its own metadata and canonical, and Task 17 will list it in the sitemap, so it will be indexable and still unreachable by a human. This is a plan gap — no task ever assigned the link.
+- **`/about` is a live 404 on every route until Task 15 lands**, because the rail links it from every page. Expected, and the reason Task 15 cannot be deferred.
+- **The `↗` in "LinkedIn ↗" is inside the accessible name**, pinned by `home-page.test.tsx`, so a screen reader says "LinkedIn up-right arrow". The glyph also conventionally signals a new tab, which the link does not open. **Task 16's accessibility pass** should either `aria-hidden` the glyph or add `target="_blank"` with `rel="noopener"` — both change a pinned test, so it needs a deliberate call.
+- **Two component tests assert facts about their own fixtures.** `MetricStrip.test.tsx` re-implements `getHeadlineOutcomes`' href contract in its fixture, so it would keep passing against a contract the app no longer uses; `TrackRecord.test.tsx` duplicates `dates.test.ts` with the component barely involved. **Task 21's sweep** is the place to tighten them.
+- **`globals.css`'s `@theme static` comment is now half-false** — it cites Task 13's serif numerals as reaching tokens through raw `var()`, and they use utilities. The `static` keyword is still load-bearing for other reasons. **Task 21.**
+- **CTA tap targets are 41/43px** where `not-found.tsx` deliberately uses `min-h-11` (44px). **Task 19**, where touch is the subject.
+- **`<aside>` for the rail leaves the site with no `banner` landmark.** Subjective, raised by one reviewer. **Task 16 or 19** if it is worth addressing at all.
+
+Three findings from the Tasks 10–11 review were deferred to **Task 19**, where responsive behaviour is the actual subject rather than a side effect:
+
+- At 320px a wrapped `CaseRow` title makes the focus ring fragment into five stacked boxes, one per line box. It satisfies the rule and reads as a rendering bug. Moving the ring to the `<li>` would give one rectangle and pair with the padding treatment already there.
+- `SectionHeader`'s accessible name is `"WORK"`, not `"Work"` — Chrome folds `text-transform: uppercase` into the computed name, and some screen readers spell all-caps letter by letter. Applies site-wide.
+- The shipped responsive treatment is an 80px thumbnail at a 640px breakpoint with the year column kept; the design doc specifies 90px and dropping the year below 900px. At 320px the first row is 445px tall with the year floating at its midpoint, far from its title. **Task 19 will need to unwind this rather than build on it.**
+
+Four items came out of Task 6's review that its own three-file scope could not fix. Each names where it belongs. (The `s.isodate()` one has already served its purpose — Task 7's dates are all canonical — but the schema is still loose, so it stays listed for Task 5's file.)
+
+- **`s.isodate()` accepts a date that parses in local time, and Task 7 is where that bites.** The schema only requires `Date.parse` not to return `NaN`, so `2026-1-1` is accepted and resolves against the machine's timezone — in Tokyo it lands in the previous year. Every canonical `YYYY-MM-DD` date is unaffected, so today's content is safe. **Write every `publishedAt` in Task 7 as a full `YYYY-MM-DD`**, and consider tightening the schema to a regex.
+- **`s.path()` also strips a trailing `/index`.** A file at `content/work/index.mdx` arrives as `sourcePath === "work"`, so the filename-mismatch error would name `content/work.mdx` and advise a rename in a circle. The fix is `s.path({ removeIndex: false })` in `velite.config.ts` — Task 5's file, one line. No write-up is named `index`, so this is a trap rather than a live bug.
+- **Nothing stops a page importing `work` from `#content` directly** and rendering drafts, which would route around the single filtering point the loader exists to be. About six lines of `no-restricted-imports` in `eslint.config.mjs` would enforce it. **Task 21's hygiene sweep is the natural home.**
+- **`Rawish` in `content-rules.ts` is a hand-written shadow of the schema**, and its optional properties mean renaming `roleId` in `velite.config.ts` typechecks clean and fails at runtime blaming the content author. This is a real cost of the two-module split, accepted knowingly rather than overlooked.
+
+### Content inputs, as answered on 2026-07-27
+
+Josh answered four of the five blocking inputs. Task 7 writes these verbatim; it does not improve on them.
+
+| Input | Answer |
+|---|---|
+| `deterministic-ai-photo-pipeline` outcome | `metric: "Cost parity"` / `label: "Matched the incumbent vendor, in-house"`, plus `metric: "Per-step"` / `label: "Audit log for every enhancement"`. **This write-up has no win metric, and that is the finding, not a gap to paper over.** Josh's account: the goal was to cut cost, the pipeline roughly matched the outgoing vendor's cost, and quality improved — but he never benchmarked the vendor's photos, so the quality gain is unmeasured and must not be given a number. The `BeforeAfterSlider` already in the body carries that claim by showing it. Cost parity is a real result: it brought the pipeline in-house, which is what made the sequel's 50% reduction possible. The plan's claim that this write-up "contains no numbers" was also wrong — its Results section carries "+0.05–0.12 increase in mean luminance … keeping SSIM within our target threshold". That line stays in the body; it was declined as a headline metric because a reader cannot calibrate it, not because it is untrue. |
+| `product-led-growth-strategy` outcome | `metric: "#1"` / `label: "Growth channel by new users and units"`, plus `metric: "Lowest"` / `label: "Acquisition cost of any channel"`. Neither is new: the write-up's Outcome section says "#1 Growth Channel … top source of new users and units", and `profile.ts` says "Activated the company's #1 growth channel via a PLG initiative". A rank is not a measure, and that limitation is accepted knowingly. |
+| Smarter Payouts cover | A typographic cover built in the site's three-token palette from the write-up's own Outcomes section — "35% faster payouts", "<0.1% added clawbacks", "Azibo · 2024". Every figure is verbatim from the body. It is a real designed asset, not a placeholder, and it replaces `mindblown-wow.gif` (864KB, auto-playing, a reaction meme). Built in Task 8; Task 7 writes the path. |
+| `timeframe` for all five | Derived from the role each write-up maps to and the periods already in `headlineOutcomes`, **not** from the year in `publishedAt`. That documented default is wrong for at least three of five — `product-led-growth-strategy` is published 2024-04 but the work sits in `azibo-senior-pm`, which ended 2023-03, and `all-in-one-rental-platform` is published 2024-04 while its own headline metric reads 2023—2025. Shipped values, all using an em dash to match `profile.ts`: PLG `2022—2023`, all-in-one `2023—2025`, smarter-payouts `2024`, photo pipeline `2025`, cutting-six `2025—2026`. |
+| `cutting-six-of-seven-steps` cost figure | **Corrected after Task 7 ran, twice.** The file shipped with the title claiming "58% cheaper" and the summary claiming "58% of the cost" — the same digits meaning a 58% cut and a 42% cut, both on one card. Then Josh corrected the starting cost from `$0.40` to `$0.34`. `$0.17 ÷ $0.34` is exactly one half, so the title, the summary, and the outcome metric all read **50%** and the body reads `$0.34 → $0.17`. `$0.34` appears nowhere in either repo or in git history — it came from Josh directly, which is why it could not have been caught by reading the tree. |
+| `product-led-growth-strategy` → `azibo-senior-pm` | **Confirmed by the repo, no longer a question.** `profile.ts` attaches "Activated the company's #1 growth channel via a PLG initiative" to `azibo-senior-pm` (2022-02 → 2023-03). |
+
+### Verification
+
+**From Task 7 onward the normal commands work.** `npm run test`, `npm run build`, and `npm run typecheck` are all green, and they are what to use. Each regenerates `.velite/` first, so they exercise the real content tree.
+
+Before Task 7 all three failed by design, because they invoke Velite against frontmatter that was not valid yet, and the workaround was to call `npx next build`, `npx vitest run`, `npx tsc --noEmit`, and `npx eslint .` directly. That period is over — the note survives only so a reader of the earlier task text knows why it says what it says.
+
+A correction worth keeping: the plan asserted `deterministic-ai-photo-pipeline` "contains no numbers". It does — its Results section carries a mean-luminance and SSIM figure. Verify a claim like that against the file before acting on it.
+
+Recovery tags `pre-task-3` through `pre-task-8` mark the commit before each of those tasks.
+
 **Goal:** Replace the Once UI `magic-portfolio` template with a site Josh owns end to end — a typed content pipeline that fails the build on bad frontmatter, a three-token colour scale, and a homepage that gives a hiring manager the name, positioning, four attributed metrics, and visible case-study evidence inside 20 seconds on a phone or a laptop.
 
 **Non-Goals** *(verbatim from the design doc — this is the scope contract)*:
@@ -61,7 +225,9 @@ Carried from the design doc. Two adjustments are marked.
 **Removal and hygiene**
 
 - [ ] `grep -r once-ui src/` returns nothing, and `src/once-ui/` is deleted.
-- [ ] `npm ci` succeeds, and none of `next-intl`, `yahoo-fantasy`, `sass`, `@types/cookie`, `cookie`, `react-masonry-css`, `next-themes`, `prismjs`, `@types/prismjs`, `remixicon`, `@floating-ui/react-dom`, `classnames`, `@csstools/postcss-global-data`, `postcss-custom-media`, `postcss-flexbugs-fixes`, `postcss-preset-env`, or `autoprefixer` appears in `package.json` or `package-lock.json`.
+- [ ] `npm ci` succeeds, and none of `next-intl`, `yahoo-fantasy`, `sass`, `@types/cookie`, `cookie`, `react-masonry-css`, `next-themes`, `prismjs`, `@types/prismjs`, `remixicon`, `@floating-ui/react-dom`, `classnames`, `@csstools/postcss-global-data`, `postcss-custom-media`, `postcss-flexbugs-fixes`, `postcss-preset-env`, or `autoprefixer` appears as a **direct dependency in `package.json`**, or in `package-lock.json` other than inside a pinned build tool's own dependency tree.
+
+  *(Amended 2026-07-27 during Task 2's review, on Josh's call. The original banned these from `package-lock.json` outright, and that criterion fails the moment Task 2 lands: `@lhci/cli@0.15.1 → express@4.22.2 → cookie@0.7.2` puts `cookie` in the lockfile. Pinning `@lhci/cli` instead of fetching it with `npx` was a deliberate choice recorded in Task 2 Step 4, and Task 21's own guidance already says not to force-remove a framework's transitive dependency. The criterion's intent is that no Once UI template leftover survives, not that npm's graph is policed. **`cookie` via `@lhci/cli` is a recorded, accepted exception.** Any other lockfile hit is still a failure, and must be traced with `npm ls <package>` before anyone accepts it.)*
 - [ ] `next.config.*` is a single file.
 
 **Content pipeline**
@@ -460,7 +626,7 @@ Notes on three of these:
     "build": "velite build --clean --strict && next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "velite build --strict && tsc --noEmit",
     "test": "velite build --strict && vitest run",
     "test:watch": "vitest",
     "lighthouse": "lhci autorun",
@@ -494,7 +660,7 @@ Notes on three of these:
 Three of these are answers to specific traps:
 
 - **`"lint": "eslint ."`, not `"next lint"`.** Next removed `next lint` in 16 (deprecated in 15.5). The scaffold would ship a lint script that errors on first use, and Task 21's sweep would report a failure unrelated to any acceptance criterion. `eslint-config-next` still ships and supports the flat config this task writes.
-- **`"test"` regenerates Velite output first.** `.velite/` is gitignored, so on a clean checkout `#content` resolves to nothing and every suite importing the loader fails at module load. Regenerating first makes `npm run test` work from a fresh clone.
+- **`"test"` and `"typecheck"` both regenerate Velite output first.** `.velite/` is gitignored, so on a clean checkout `#content` resolves to nothing and every suite importing the loader fails at module load. `typecheck` needs the same treatment for the same reason: once Task 6's `src/lib/content.ts` imports `#content`, a bare `tsc --noEmit` on a fresh clone or a cold CI job dies with `TS2307: Cannot find module '#content'`. *(Corrected 2026-07-27 during Task 2's review. The original wrote `"typecheck": "tsc --noEmit"`, which only appeared to work because Task 21 Step 2 happens to run `npm run test` on the line above it — reorder those two lines and it fails.)*
 - **`@playwright/test` and `@lhci/cli` are pinned here, not fetched by `npx` in Tasks 20 and 22.** Both tasks run these tools; leaving them undeclared means an executor invents the install mid-task and gets an unpinned version.
 
 `velite` is a devDependency: it runs at build time, generating `.velite/` — which the app imports and which Step 7 gitignores, so it is regenerated rather than committed. `sharp` stays a runtime dependency for `next/image` optimization.
@@ -628,7 +794,7 @@ Append:
 rm -rf node_modules package-lock.json
 npm install
 npx vitest run
-npm run typecheck
+npx tsc --noEmit
 npm run lint
 npx next build
 grep -r once-ui src/ ; echo "grep exit=$?"
@@ -1422,7 +1588,12 @@ If the `--strict` failure message names the file but not the field, the spike's 
 ```bash
 npx velite build --clean --strict; echo "exit=$?"
 ```
-Expected: non-zero. The five files in `content/work/` still carry template frontmatter, so this *should* fail — and the failure output is Task 7's worklist. Capture it.
+Expected: non-zero. The five files in `content/work/` still carry template frontmatter, so this *should* fail — and the failure output is Task 7's starting point. Capture it.
+
+**Two things about that output, both established during this task's review. Task 7 needs them or it will chase phantoms.**
+
+- **It is a starting point, not a complete worklist.** Zod skips `.superRefine` whenever the base object aborts, so the exactly-one-of `roleId` rule is invisible on any file that is also missing a required field — which is all five today. None of them has a `roleId`, `org`, or `role`, yet no `roleId` error appears. A second wave arrives once the first is fixed. Re-run until it is clean rather than treating one pass as the whole job.
+- **`slug` is listed twice per file, and that is one problem, not two.** Velite's `s.slug()` is `.and(unique(...))`, an intersection of two string schemas parsed against one shared context, so a missing value fails both branches and prints twice. The headline count is inflated: 29 rows, 24 distinct problems.
 
 **Step 7: Commit**
 
@@ -1513,14 +1684,17 @@ describe("resolveRole", () => {
   });
 });
 
+// sourcePath values here are extension-LESS, because that is what s.path()
+// emits. Writing "work/a.mdx" in a fixture would make these tests green against
+// a shape the build never produces.
 describe("assertFilenamesMatchSlugs", () => {
   it("accepts a matching pair", () => {
-    expect(() => assertFilenamesMatchSlugs([item({ slug: "a", sourcePath: "work/a.mdx" })]))
+    expect(() => assertFilenamesMatchSlugs([item({ slug: "a", sourcePath: "work/a" })]))
       .not.toThrow();
   });
 
   it("throws naming both the file and the slug when they differ", () => {
-    expect(() => assertFilenamesMatchSlugs([item({ slug: "a", sourcePath: "work/wrong-name.mdx" })]))
+    expect(() => assertFilenamesMatchSlugs([item({ slug: "a", sourcePath: "work/wrong-name" })]))
       .toThrow(/wrong-name\.mdx.*"a"/s);
   });
 
@@ -1528,8 +1702,8 @@ describe("assertFilenamesMatchSlugs", () => {
     // a.mdx declares "b" and b.mdx declares "a". The two SETS are equal, so a
     // set-to-set check passes while both URLs are wrong. Per-entry catches it.
     expect(() => assertFilenamesMatchSlugs([
-      item({ slug: "b", sourcePath: "work/a.mdx" }),
-      item({ slug: "a", sourcePath: "work/b.mdx" }),
+      item({ slug: "b", sourcePath: "work/a" }),
+      item({ slug: "a", sourcePath: "work/b" }),
     ])).toThrow(/a\.mdx.*"b"/s);
   });
 });
@@ -1616,11 +1790,16 @@ export function assertFilenamesMatchSlugs(items: { slug: string; sourcePath: str
   // declaring slug "b" while b.mdx declares slug "a" — the two sets are equal
   // and both URLs are silently wrong. sourcePath comes from s.path() in the
   // schema, so each entry carries the file it was actually parsed from.
+  // s.path() STRIPS the extension: a file at content/work/a.mdx arrives as
+  // "work/a", not "work/a.mdx". Verified against velite 0.4.0 during Task 5's
+  // review. So the stem needs no .replace(), and the error message has to append
+  // the extension itself — otherwise it names content/work/a, a path that does
+  // not exist, which is the exact failure this rule was written to prevent.
   for (const { slug, sourcePath } of items) {
-    const stem = sourcePath.split("/").pop()!.replace(/\.mdx$/, "");
+    const stem = sourcePath.split("/").pop()!;
     if (stem !== slug) {
       throw new Error(
-        `content/${sourcePath}: filename does not match its declared slug "${slug}". ` +
+        `content/${sourcePath}.mdx: filename does not match its declared slug "${slug}". ` +
           `Rename the file to ${slug}.mdx, or change the slug to "${stem}".`,
       );
     }
@@ -1786,7 +1965,9 @@ draft: false
 ---
 ```
 
-`content/work/cutting-six-of-seven-steps.mdx` — this one already has `outcomes` in the right shape; keep all three:
+`content/work/cutting-six-of-seven-steps.mdx` — this one already has `outcomes` in the right shape; keep all three.
+
+**Superseded on 2026-07-27: every `58%` below is now `50%`, and the body's starting cost is `$0.34`, not `$0.40`.** Josh corrected the starting cost after the task ran. The three fields below carried two different readings of the same figure — the title said "58% cheaper" while the summary said "58% of the cost", which is a 42% cut — and the body's `$0.40 → $0.17` supported neither once the real starting cost arrived. `$0.17 ÷ $0.34` is exactly one half, so the title, the summary, and the outcome metric all read 50%. The block below is left as-authored because it is the record of what the task was given, not what ships.
 ```yaml
 ---
 slug: "cutting-six-of-seven-steps"
@@ -2814,7 +2995,7 @@ Three, all recorded in the design doc's Known content gaps, and all in content t
 
 - "Product Manager" was misspelled "Prouct Manager" three times.
 - Ampush was understated as Product Manager rather than Senior Product Manager (already correct in `profile.ts` from Task 4).
-- The education minor was listed as Environmental Economics; it is Sustainability.
+- ~~The education minor was listed as Environmental Economics; it is Sustainability.~~ **Void — do not apply.** Josh was asked directly on 2026-07-29 and chose to keep **Environmental Economics**. This "correction" was carried from the design doc and was itself the error.
 
 **Step 3: Verify and commit**
 
@@ -2995,12 +3176,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
 `src/app/og/route.tsx`: rewrite from scratch. The old one imported `next-intl`'s `getTranslations` and Once UI's `renderContent`, both gone. Keep the shape — `ImageResponse`, 1920×1080, `runtime: "edge"`, the local `public/fonts/Inter.ttf` — and take the title from a query parameter with `profile.name` and `profile.role` below it. Match the new palette: `--color-bg` background, `--color-text` text.
 
+> **This paragraph is superseded and is kept only as the record of what was specified.** As shipped, the route takes **no query parameter** and is **not** an edge function: it is prerendered static, and it prints `profile.name` with `profile.role` beneath it. The card's tree and options live in `src/lib/og-card.tsx` so the tests can assert on real values. **Do not restore `?title=`, the edge runtime, or a second copy of the dimensions.** See decision 23.
+
 The design doc has each write-up's `cover` serve as its `og:image` with this route as the fallback, so the route only renders for pages with no cover — the homepage, the work index, and About.
 
 **Step 4: Run to verify it passes**
 
 Run: `npx vitest run tests/unit/sitemap.test.ts`
 Expected: PASS, 3 tests.
+
+> **As shipped, `sitemap.test.ts` holds 10 tests, not 3**, and the task also added `tests/unit/og-route.test.ts`, `tests/unit/robots.test.ts`, and `tests/unit/helpers/element-tree.ts`. The three the plan named are all present and unchanged, the draft-leak test and its `draft-fixture` guard among them.
 
 **Step 5: Verify end to end**
 
@@ -3202,6 +3387,8 @@ npm ls <package>   # no --depth, so the full path to the root is visible
 
 A package pulled in by `next` or `tailwindcss` is a different fact from Josh's code depending on it. Report which one it is, and do not force-remove a framework's transitive dependency — the criterion is about the template's leftovers, not about npm's graph.
 
+**One hit is already known and accepted:** `cookie@0.7.2`, via `@lhci/cli@0.15.1 → express@4.22.2`. Confirmed with `npm ls cookie` during Task 2's review. Report it as the recorded exception rather than as a failure, and do not try to remove it — dropping `@lhci/cli` would mean Task 20 fetches an unpinned Lighthouse CI at run time, which is the problem pinning it was meant to avoid. Every *other* lockfile hit is still a real failure.
+
 **Step 2: Content pipeline**
 
 ```bash
@@ -3282,7 +3469,7 @@ git commit -am "chore: static verification sweep fixes"
 - [ ] `/gallery` → 404
 - [ ] `/sitemap.xml` → 8 URLs, no draft slugs
 - [ ] `/robots.txt` → allows all, names the sitemap
-- [ ] `/og?title=Test` → a 1920×1080 PNG on the near-black background
+- [ ] `/og` → a 1920×1080 PNG on the near-black background
 
 ### Motion
 
@@ -3306,13 +3493,27 @@ git commit -am "chore: static verification sweep fixes"
 
 **Step 1: Point Playwright at the preview, and recon it**
 
-The suite runs against a deployed URL, so the base URL is an input rather than a constant:
+The suite runs against a deployed URL, so the base URL is an input rather than a constant. A protected preview also needs the automation secret that Josh chose in decision 24:
 
 ```ts
 // playwright.config.ts
+const previewUrl = process.env.PREVIEW_URL;
+const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+
+if (previewUrl && !bypassSecret) {
+  throw new Error("PREVIEW_URL requires VERCEL_AUTOMATION_BYPASS_SECRET");
+}
+
 export default defineConfig({
   testDir: "tests/e2e",
-  use: { baseURL: process.env.PREVIEW_URL ?? "http://localhost:3000" },
+  use: {
+    baseURL: previewUrl ?? "http://localhost:3000",
+    extraHTTPHeaders: bypassSecret
+      ? {
+          "x-vercel-protection-bypass": bypassSecret,
+        }
+      : undefined,
+  },
 });
 ```
 
@@ -3519,6 +3720,14 @@ Then hand back to Task 23 Step 4, which pushes this suite and lets the preview r
 
 Note the current production deployment's Vercel ID and commit SHA, in writing, before anything ships. A rollback plan discovered during an outage is not a rollback plan.
 
+**Recorded 2026-07-30, before the cutover push:**
+
+- Vercel deployment URL: `https://magic-portfolio-for-next-3kxvhhbh8.vercel.app`
+- GitHub deployment ID: `3300265866`
+- Commit SHA: `2fe9d083e757f53b6a791d124ea407f6c78ad0e4`
+
+The public GitHub deployment record confirms that this immutable Vercel URL completed successfully as Production. Vercel's internal `dpl_…` identifier requires project authentication and is not present in the public record; the immutable URL and GitHub deployment ID are the available rollback handles.
+
 **Step 2: Delete the prototypes**
 
 Before the PR, not after. `prototypes/` is deleted as part of the branch so the deletion is in the merge — a commit made after the merge would need its own second PR and deploy, which is how "cleanup" quietly never happens.
@@ -3532,7 +3741,9 @@ The prototype code was written under prototype constraints — no tests, no erro
 
 **Step 3: Deploy a preview and verify a URL matrix**
 
-Push `feat/portfolio-rebuild-impl`. Against the preview URL, check: every retained route, every removed route, `/sitemap.xml`, `/robots.txt`, canonical tags, and social previews (paste a write-up URL into LinkedIn's post composer and confirm the card).
+Push `feat/portfolio-rebuild-impl`. Against the preview URL, check every retained route, every removed route, `/sitemap.xml`, `/robots.txt`, canonical tags, and the Open Graph tags and images. Send `x-vercel-protection-bypass` on every browser request, using `VERCEL_AUTOMATION_BYPASS_SECRET` from the local environment.
+
+LinkedIn cannot send that header, so its composer check runs against production in Step 6. Do not put the bypass secret in a URL to make the preview crawlable.
 
 Then run the Manual Test Checklist in full, and hand off to Task 22.
 
@@ -3551,7 +3762,7 @@ Then open one PR from `feat/portfolio-rebuild` to `main`. Use the `evernest-supe
 
 **Step 6: Verify production**
 
-After the merge deploys, re-run the URL matrix against `joshvanlente.com`. **Confirm that `/en/*` 404s in production** — that is the deliberate decision, and this is the last moment to change Josh's mind about it before every indexed link breaks for real. The mitigation, if he wants it, is about six lines in `next.config.ts`.
+After the merge deploys, re-run the URL matrix against `joshvanlente.com`. Paste a write-up URL into LinkedIn's post composer and confirm its card now that the crawler can reach the site. **Confirm that `/en/*` 404s in production** — that is the deliberate decision, and this is the last moment to change Josh's mind about it before every indexed link breaks for real. The mitigation, if he wants it, is about six lines in `next.config.ts`.
 
 **Step 7: Clean up the worktree**
 
@@ -3599,7 +3810,7 @@ Tasks 22 and 23 are numbered in dependency order rather than execution order: Ta
 7. **Tasks 10–11 — write-up page, 404, and work index.** All low; overlappable. Seam: Task 14 reuses `CaseRow`. QA surface: `/work`, all five `/work/<slug>`, `/work/draft-fixture` (404), and `/work/does-not-exist` in agent-browser, including a keyboard pass.
 8. **Tasks 12–14 — homepage.** All low; overlappable. Seam: Task 16 attaches metadata over these routes. QA surface: `/` at 1280×800 in agent-browser, including the fold measurement, the `#work`/`#track` anchors, and the skip link moving focus.
 9. **Tasks 15–16 — About and metadata.** All low; overlappable. Seam: Task 17 consumes the site constants. QA surface: `/about` renders, and `curl` on a write-up shows canonical and OG tags.
-10. **Task 17 — sitemap, robots, OG (solo).** Dynamic boundary: the three public surfaces a draft could leak into. QA surface: `/sitemap.xml`, `/robots.txt`, `/og?title=Test`.
+10. **Task 17 — sitemap, robots, OG (solo).** Dynamic boundary: the three public surfaces a draft could leak into. QA surface: `/sitemap.xml`, `/robots.txt`, and `/og`, which as shipped takes no query parameter.
 11. **Task 19 — responsive implementation.** Low. Task 18 is a prototype and sits outside groups. QA surface: 390×844 and 320×568 in agent-browser, plus a re-check of the 1280×800 fold.
 12. **Tasks 20–21 — Lighthouse and the static sweep.** Low; overlappable. QA surface: the Lighthouse report and the sweep's criterion-by-criterion output.
 
@@ -3611,7 +3822,7 @@ Task 0, Task 1, Task 18, the Manual Test Checklist, Task 22, and Task 23 sit out
 
 ## Notes for whoever executes this
 
-**The build is green at the end of every task from Task 2 onward, and no task ships a knowingly-red test.** The one accommodation is stated in the task itself: Tasks 2 through 6 verify with `npx next build` and `npx vitest run` rather than `npm run build` and `npm run test`, because both npm scripts invoke Velite against real content that is not valid until Task 7. That is a sequencing fact, not a license to leave failing tests behind.
+**The build is green at the end of every task from Task 2 onward, and no task ships a knowingly-red test.** The one accommodation is stated in the task itself: Tasks 2 through 6 verify with `npx next build`, `npx vitest run`, and `npx tsc --noEmit` rather than `npm run build`, `npm run test`, and `npm run typecheck`, because all three npm scripts invoke Velite against real content that is not valid until Task 7. That is a sequencing fact, not a license to leave failing tests behind. *(`typecheck` joined that list on 2026-07-27 — see the note under Task 2 Step 4.)*
 
 **Three checks are deliberately placed later than the code they verify**, because earlier they would fail for the wrong reason and train an executor to weaken them: the module-scope build-failure proof (Task 10 Step 5, the first point where Velite output is valid *and* a page imports the loader), the widget chunk isolation on real pages (Task 9 Step 5), and the whole e2e suite (Task 22, post-deploy). Each says at its own site where its proof lives.
 
