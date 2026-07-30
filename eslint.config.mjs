@@ -16,6 +16,33 @@ const config = [
     ],
   },
   ...nextCoreWebVitals,
+  // Velite exposes every item, including drafts, through #content. The loader
+  // is the one place that applies the published-only rule before rendering.
+  // Keep that boundary enforceable so a later route cannot publish a draft by
+  // importing generated data directly.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "#content",
+              message:
+                "Import published work through @/lib/content; only src/lib/content.ts may read #content.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/lib/content.ts"],
+    rules: {
+      "no-restricted-imports": "off",
+    },
+  },
 ];
 
 export default config;

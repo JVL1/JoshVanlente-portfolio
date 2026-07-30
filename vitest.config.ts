@@ -3,6 +3,10 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
+    // A hard-killed schema or dev-loop test cannot reach its afterEach cleanup.
+    // Clear those inert fixture trees before each Vitest run so they do not
+    // accumulate under tests/.tmp between local runs.
+    globalSetup: ["./tests/global-setup.ts"],
     // Two projects rather than one environment, because the two kinds of test
     // here need opposite things. The schema, dev-loop, and fixture suites spawn
     // real processes and read the tree off disk; jsdom gives them nothing and

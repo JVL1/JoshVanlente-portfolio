@@ -36,7 +36,7 @@ describe("the homepage", () => {
 
     const lede = container.querySelector("[data-testid='lede']");
     expect(lede?.textContent).toBe(
-      "Ten years building 0→1 products and platforms in vertical SaaS and fintech. Mostly that means research, collaboration, and working out when a bet is actually worth making — then shipping proof along the way that earns the next step. Currently building an AI agent platform at Evernest.",
+      "Ten years building 0→1 products and platforms in vertical SaaS and fintech. Mostly that means research, collaboration, and working out when a bet is actually worth making, then shipping proof along the way that earns the next step. Currently building an AI agent platform at Evernest.",
     );
     expect(lede?.querySelector("strong")?.textContent).toBe(
       "an AI agent platform",

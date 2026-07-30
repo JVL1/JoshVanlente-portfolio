@@ -11,9 +11,9 @@
    references it. Without it Tailwind 4 tree-shakes the unreferenced ones: on the
    placeholder page only 3 of 10 colours and 0 of 6 type sizes reached the shipped
    CSS. Utility classes would pull most of them back as components land, but the
-   ported BeforeAfterSlider (Task 9) and the serif numerals (Task 13) reference
-   tokens through raw var(), which Tailwind cannot see — and a var() pointing at a
-   tree-shaken token resolves to nothing and fails silently rather than loudly. */
+   ported BeforeAfterSlider (Task 9) references tokens through raw var(), which
+   Tailwind cannot see — and a var() pointing at a tree-shaken token resolves to
+   nothing and fails silently rather than loudly. */
 @theme static {
   /* Colour — three neutral steps, not six. Contrast against #0a0b0b in comments. */
   --color-bg:            #0a0b0b;

@@ -1,18 +1,43 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { MetricStrip } from "@/components/site/MetricStrip";
-import { profile } from "@/data/profile";
 import type { ResolvedHeadlineOutcome } from "@/lib/content";
 
-const outcomes: ResolvedHeadlineOutcome[] = profile.headlineOutcomes.map(
-  (outcome) => ({
-    ...outcome,
-    href: outcome.slug ? `/work/${outcome.slug}` : null,
-  }),
-);
+const outcomes: ResolvedHeadlineOutcome[] = [
+  {
+    metric: "3.5×",
+    label: "Gross margin per user",
+    org: "Azibo",
+    period: "2023—2025",
+    slug: "all-in-one-rental-platform",
+    href: "/work/all-in-one-rental-platform",
+  },
+  {
+    metric: "$300M+",
+    label: "Annual payment volume",
+    org: "Azibo",
+    period: "2023—2025",
+    href: null,
+  },
+  {
+    metric: "9%",
+    label: "Faster time to lease",
+    org: "Evernest",
+    period: "2025—2026",
+    slug: "cutting-six-of-seven-steps",
+    href: "/work/cutting-six-of-seven-steps",
+  },
+  {
+    metric: "50%",
+    label: "Lower cost per enhanced photo",
+    org: "Evernest",
+    period: "2025—2026",
+    href: null,
+  },
+];
 
 describe("MetricStrip", () => {
-  it("renders the four profile outcomes with their attributions", () => {
+  it("renders the supplied outcomes with their attributions", () => {
     render(<MetricStrip outcomes={outcomes} />);
 
     const metrics = screen.getAllByTestId("metric");
@@ -21,9 +46,7 @@ describe("MetricStrip", () => {
     expect(metrics).toHaveLength(4);
     expect(attributions).toHaveLength(4);
     expect(attributions.map((item) => item.textContent)).toEqual(
-      profile.headlineOutcomes.map(
-        (outcome) => `${outcome.org} · ${outcome.period}`,
-      ),
+      outcomes.map((outcome) => `${outcome.org} · ${outcome.period}`),
     );
   });
 
