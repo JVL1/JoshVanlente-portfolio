@@ -290,6 +290,27 @@ test.describe("content evidence and navigation", () => {
 });
 
 test.describe("responsive layout", () => {
+  test("the desktop rail uses the same visible inset on both sides", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await page.goto("/");
+
+    const leftInset = await page.getByRole("banner").evaluate((element) => {
+      const style = getComputedStyle(element);
+      return (
+        element.getBoundingClientRect().left +
+        Number.parseFloat(style.paddingLeft)
+      );
+    });
+    const rightInset = await page.getByRole("contentinfo").evaluate((element) =>
+      Number.parseFloat(getComputedStyle(element).paddingRight),
+    );
+
+    expect(leftInset).toBe(rightInset);
+    expect(leftInset).toBe(20);
+  });
+
   test("the profile name stays on one line across rail layouts", async ({
     page,
   }) => {

@@ -10,8 +10,8 @@ export function Rail({ children }: RailProps) {
   const rest = tail.join(" ");
 
   return (
-    <div className="mx-auto grid min-h-screen max-w-[1440px] grid-cols-1 min-[900px]:grid-cols-[288px_minmax(0,1fr)]">
-      <header className="border-b border-border px-4 pb-0 pt-8 min-[360px]:px-5 min-[900px]:sticky min-[900px]:top-0 min-[900px]:col-start-1 min-[900px]:row-start-1 min-[900px]:grid min-[900px]:h-screen min-[900px]:grid-rows-[auto_minmax(0,1fr)_9rem] min-[900px]:overflow-y-auto min-[900px]:border-b-0 min-[900px]:border-r min-[900px]:p-11 min-[900px]:px-5">
+    <div className="grid min-h-screen grid-cols-1 min-[900px]:grid-cols-[288px_minmax(0,1fr)]">
+      <header className="border-b border-border px-4 pb-0 pt-8 min-[360px]:px-5 min-[900px]:sticky min-[900px]:top-0 min-[900px]:col-start-1 min-[900px]:row-start-1 min-[900px]:grid min-[900px]:h-screen min-[900px]:grid-rows-[auto_minmax(0,1fr)_9rem] min-[900px]:overflow-y-auto min-[900px]:border-b-0 min-[900px]:border-r min-[900px]:px-5 min-[900px]:py-11">
         <div>
           <p
             data-testid="profile-name"
