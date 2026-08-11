@@ -31,17 +31,24 @@ export default async function Home() {
     <div className="mx-auto w-full max-w-[75rem] px-4 py-9 min-[360px]:px-5 min-[900px]:px-8 min-[900px]:py-12">
       {/* The hero is tighter than the sibling routes' `py-16 sm:py-24` because
           the fold is an acceptance criterion: at 1280×800 at least half the
-          first case-study thumbnail must be visible without scrolling. Measured
-          at 0.46 before this trim, which missed. Type sizes and the 12px floor
-          are fixed, so vertical space here is the only variable left. */}
+          first case-study thumbnail must be visible without scrolling. The
+          sub-headline's max-width exists for that fold, not for measure: the
+          line must hold one line at 1280. At max-w-[26ch] it wrapped to two
+          and the ratio fell to 0.39; on one line it measures 0.83. */}
       <section className="pb-8">
         <h1 className="max-w-[18ch] text-[clamp(38px,11.2vw,46px)] font-bold leading-none tracking-[-0.045em] [overflow-wrap:anywhere] min-[900px]:max-w-[19ch] min-[900px]:text-[clamp(38px,5.2vw,68px)]">
-          I find the bet worth making, then earn the right to{" "}
+          Hi, I&rsquo;m{" "}
           <em className="font-serif font-normal italic tracking-[-0.015em] text-accent">
-            finish it
+            Josh
           </em>
           .
         </h1>
+        <p
+          data-testid="subhead"
+          className="mt-4 max-w-[44ch] text-2xl font-medium leading-snug tracking-tight min-[900px]:text-3xl"
+        >
+          I turn questions into things we can test.
+        </p>
         <p
           data-testid="lede"
           className="mt-6 max-w-[74ch] text-lg leading-relaxed text-text-muted"

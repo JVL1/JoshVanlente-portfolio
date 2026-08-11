@@ -21,14 +21,15 @@ describe("the homepage", () => {
     ).toBe(true);
   });
 
-  it("renders the final headline with its closing phrase emphasized", async () => {
-    render(await Home());
+  it("renders the greeting headline with the name emphasized", async () => {
+    const { container } = render(await Home());
 
     const headline = screen.getByRole("heading", { level: 1 });
-    expect(headline.textContent).toBe(
-      "I find the bet worth making, then earn the right to finish it.",
-    );
-    expect(headline.querySelector("em")?.textContent).toBe("finish it");
+    expect(headline.textContent).toBe("Hi, I’m Josh.");
+    expect(headline.querySelector("em")?.textContent).toBe("Josh");
+
+    const subhead = container.querySelector("[data-testid='subhead']");
+    expect(subhead?.textContent).toBe("I turn questions into things we can test.");
   });
 
   it("renders the final lede and strengthens the current platform", async () => {
