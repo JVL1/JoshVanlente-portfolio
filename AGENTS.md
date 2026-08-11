@@ -191,6 +191,25 @@ reports what looks like a real error in a file nobody wrote. Run `npm run build`
 first — every verification sequence in this repo is `test`, `lint`, `build`,
 `typecheck`, in that order.
 
+**A build does not clear the same failure under `.next/dev/types/`.** Lines 39
+and 40 of `tsconfig.json` include two generated type roots, `.next/types` and
+`.next/dev/types`. `next build` writes the first one. Only `next dev` writes the
+second, and it writes a validator for every page it served. Delete a page, or
+serve a throwaway page you never commit, and that validator stays on disk and
+names a module `tsc` cannot resolve:
+
+```
+.next/dev/types/validator.ts(62,39): error TS2307: Cannot find module
+'../../../src/app/headline-lab/page.js'
+```
+
+The build above cannot fix this one, because the build never touches that
+directory. Remove it and run the check again:
+
+```bash
+rm -rf .next/dev
+```
+
 ## Rules
 
 **Never invent content.** Metrics, outcomes, dates, and narrative copy come from
