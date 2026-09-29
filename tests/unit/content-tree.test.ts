@@ -9,10 +9,11 @@ import { work } from "#content";
 import { profile } from "@/data/profile";
 
 describe("the real content tree", () => {
-  it("generates six items, of which exactly one is a draft", () => {
-    expect(work).toHaveLength(6);
-    expect(work.filter((i) => i.draft).map((i) => i.slug)).toEqual([
+  it("generates seven items, of which exactly two are drafts", () => {
+    expect(work).toHaveLength(7);
+    expect(work.filter((i) => i.draft).map((i) => i.slug).toSorted()).toEqual([
       "draft-fixture",
+      "fog-of-war",
     ]);
   });
 

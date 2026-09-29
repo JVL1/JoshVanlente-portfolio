@@ -2,6 +2,9 @@ import Image from "next/image";
 // A thin "use client" wrapper, NOT the slider itself and NOT next/dynamic here.
 // This module is a server module; see the note in BeforeAfterSliderLazy.tsx.
 import { BeforeAfterSlider } from "./BeforeAfterSliderLazy";
+import { BarChart } from "./BarChart";
+import { Comparison } from "./Comparison";
+import { HexPath } from "./HexPath";
 
 type MdxImageProps = {
   src: string;
@@ -34,4 +37,7 @@ function MdxImage({ src, alt, width, height }: MdxImageProps) {
 export const components = {
   img: MdxImage,
   BeforeAfterSlider,
+  BarChart,
+  Comparison,
+  HexPath,
 };

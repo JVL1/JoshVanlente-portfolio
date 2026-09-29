@@ -1,0 +1,112 @@
+---
+slug: "fog-of-war"
+title: "Fog of war: a stale golden set, a fake gain, and a score I can finally trust"
+summary: "I set out to raise one eval score. The path ran through the golden set itself: the rules our estimators said they used, the rules their edits showed, and a prompt full of old guardrails."
+publishedAt: "2026-09-29"
+roleId: "evernest-staff-pm"
+timeframe: "2026"
+tags: ["AI/LLM", "Evals"]
+outcomes:
+  - metric: "~40 min"
+    label: "Saved on each renovation estimate"
+  - metric: "+2.5 pts"
+    label: "F1 gain over the shipped version"
+  - metric: "9 in 10"
+    label: "AI-drafted lines that estimators keep"
+cover: "./fog-of-war/cover.webp"
+draft: true
+---
+
+The first gain I got on our AI estimator was fake. A new set of rules raised the score by 2.5 points on the estimates they came from. On estimates they had never seen, the same rules lost 2.6 points.
+
+That result changed how I think about evals. An eval score is only as true as its golden set, the set of past cases where we know the right answer. Ours held habits that nobody wrote down, and some of those habits had changed.
+
+## What the estimator does
+
+When a resident moves out of one of our rental homes, an inspector walks the unit and writes a report. An estimator turns that report into a renovation estimate: every repair, in every room, priced from our price book. By hand, that took about 45 minutes.
+
+Now a model reads the report and drafts the lines, and the estimator reviews them. Estimators keep 90% of the model's lines. **Review now takes about 5 minutes instead of 45**, which gives the team back about 90 hours a month.
+
+I measure the model with F1. It compares the model's draft with the estimate that the estimator sends to the owner, and it counts both extra lines and missed lines. Our first golden set held nine inspections, and we scored about 76%. I set a target of 90%. The goal was clear. The path to it was dark, like the map at the start of a game of Civilization.
+
+## Most of the errors were not the model's fault
+
+I sorted every error on the nine golden-set inspections by cause. That lifted the first patch of fog, and what it revealed surprised me: the model was the smallest problem on the map.
+
+<BarChart
+  title="Where the 189 errors came from"
+  rows={[
+    { label: "Estimator rules nobody wrote down", value: 115 },
+    { label: "Scoring and golden-set problems", value: 33 },
+    { label: "Answers that change between runs", value: 23 },
+    { label: "Gaps in the inspection report", value: 10 },
+    { label: "The model misread the report", value: 8, highlight: true },
+  ]}
+/>
+
+Most came from rules that we had not documented. For example, when a room gets fully painted, the painter fills the nail holes as part of the job. The model wrote a separate drywall repair for each wall with holes, and the estimator deleted them. The model did what the prompt told it to do. The prompt did not know what our estimators knew.
+
+## Clarifying the rules gave a false improvement
+
+The obvious first step was to make the rules clear. I compared the estimators' edits with the prompt and listed every rule that was missing or that their edits went against. The estimators wrote the correct rule for each one, and I added their answers to the prompt.
+
+At first, this looked promising: F1 rose by 2.5 points on the nine inspections. But I had explored only the land around my capital and assumed that the whole continent looked the same. So I ran the same prompt on nine inspections that we had never analyzed. It scored 2.6 points worse than production.
+
+To find out why, I read the edit logs of 100 estimates: every line that the model drafted, and what the estimator did with it. Some of the estimators' answers contradicted their own edits.
+
+<Comparison
+  left="What the sheet said"
+  right="What the edit logs showed"
+  rows={[
+    { topic: "Smoke detectors", left: "One line for the whole unit", right: "One line for each room" },
+    { topic: "Sticker removal", left: "The cleaning line covers it", right: "Its own line in", accent: "20 of 24" },
+  ]}
+/>
+
+What people say they do and what they do are different data sets. I rebuilt the rules from the edit logs, and I kept only the rules that held for every estimator. That version beat production by 2.3 points on estimates it had never seen, and we shipped it.
+
+## New rules broke the golden set
+
+After that release, the senior estimators sent a new list of mistakes. Together we turned it into five written rules. I checked each rule against the edit logs. Where the edits did not yet follow a rule, all of the estimators agreed that it was our best practice now.
+
+The new rules conflicted with the golden set, so a model that followed them would score as wrong. I changed the golden set to match the rules, and I added the 20 newest estimates. The old set was a map of land we had explored once and not looked at since.
+
+Did I move the goalposts? Yes, on purpose. The rules came first, and the whole team agreed to them. I updated the golden set before I tested any new prompt against it. And the change made our numbers worse: the version we had just shipped lost more than 3 points. That lower number was the first baseline I trusted.
+
+## The fix I believed in failed
+
+With a golden set that I trusted, I went back to the prompt. It had grown one fix at a time to more than 400 rules, and about 50 of them conflicted. One line said "missing an item is the worst error." Four others said "when in doubt, omit."
+
+The fix seemed simple. I rewrote the prompt so that each rule appeared once. It was shorter and cleaner, and it scored worse. So did the next three versions.
+
+That one hurt. I had clarified the rules, rebuilt the golden set, and cleaned up the prompt, and the score went down.
+
+The one saving grace was that the evals showed me why. Without the "when in doubt, omit" rules, the model wrote lines that nobody wanted. Those rules looked like conflicts. In fact, they were guardrails that came from real failures.
+
+## The messy prompt won
+
+So I went back to the messy prompt. I kept every guardrail, and I added the five new rules one at a time, only where the old text contradicted them. This version beat the shipped version by 2.5 points on the newest estimates. It was also more stable: about 12% of its lines changed from one run to the next, down from 17%. We shipped it.
+
+## Fog of war
+
+<HexPath
+  title="The map so far"
+  steps={[
+    { label: "Move 1", value: "+2.5 / −2.6", title: "Rules from a sheet", note: "Fake: it lost on unseen ones" },
+    { label: "Move 2", value: "+2.3", title: "Rules from edit logs", note: "Shipped" },
+    { label: "Move 3", value: "−3", title: "Golden set rebuilt", note: "First baseline I trusted" },
+    { label: "Move 4", value: "0 of 4", title: "Clean rewrite", note: "All four versions lost" },
+    { label: "Move 5", value: "+2.5", title: "Messy prompt, new rules", note: "Shipped", state: "win" },
+    { label: "Goal", value: "90%", title: "The goal", note: "Still in the fog", state: "fog" },
+  ]}
+/>
+
+Every game of Civilization starts on a dark map. You explore, and the resources you find decide which wins are in reach.
+
+This project played out like that. I explored with evals and with direct feedback from the estimators. The best resource was one I did not plan for: the edit logs. They showed how our estimators actually work, and they changed what winning meant. The win was no longer a better prompt. It was a standard that the whole team agreed on, with a prompt and a golden set that follow it.
+
+The golden set was the hardest part of the map to read. In Civilization, fog of war returns when your unit moves on, showing the last thing you saw. A rival's city can grow, and your map still shows the small one. Our golden set was that old view.
+
+We are not at 90%. I still believe that a shorter prompt is the way forward, but I do not yet know which guardrails it must keep. That is the fun of this work.
+
+The score I trust now is lower than the one I started with. But now I know that when it goes up, our estimators will get a draft closer to final.
