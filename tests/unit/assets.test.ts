@@ -48,7 +48,7 @@ describe("image assets", () => {
 
   it("keeps every cover under 300KB", () => {
     const covers = find("content/work/*/cover.*");
-    expect(covers.length).toBe(6); // five published write-ups plus the draft fixture
+    expect(covers.length).toBe(7); // five published write-ups, the draft fixture, and the fog-of-war draft
     for (const c of covers) {
       expect(sizeOf(c), `${c} is ${Math.round(sizeOf(c) / 1024)}KB`).toBeLessThan(
         BUDGET_BYTES,
