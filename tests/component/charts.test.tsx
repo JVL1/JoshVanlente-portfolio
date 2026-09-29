@@ -103,4 +103,12 @@ describe("HexPath", () => {
 
     expect([...accented(container)].map((m) => m.textContent)).toEqual(["+2.5"]);
   });
+
+  it("draws a caption only when given a title", () => {
+    const { container, rerender } = render(<HexPath title="The map so far" steps={steps} />);
+    expect(container.querySelector("figcaption")?.textContent).toBe("The map so far");
+
+    rerender(<HexPath steps={steps} />);
+    expect(container.querySelector("figcaption")).toBeNull();
+  });
 });
