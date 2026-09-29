@@ -88,8 +88,14 @@ export function HexPath({ title, steps }: { title: string; steps: HexStep[] }) {
                     ))}
                   </div>
                 </div>
+                {/* From xl up, a title never wraps: a long title widens its own
+                    column and takes the width from the short ones. Below xl,
+                    six unwrapped titles overflow the row. */}
                 <div>
-                  <div data-testid="hex-title" className="text-md font-semibold text-text">
+                  <div
+                    data-testid="hex-title"
+                    className="text-md font-semibold text-text xl:whitespace-nowrap"
+                  >
                     {step.title}
                   </div>
                   <div className="mt-1 text-sm text-text-muted">{step.note}</div>
