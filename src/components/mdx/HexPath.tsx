@@ -29,14 +29,19 @@ const fog =
  * figure renders inside Prose, which caps every <ol> at the reading measure and
  * gives every <p> paragraph margins. Real <ol> and <p> squeezed the row into
  * the measure and opened a gap under each title.
+ *
+ * The caption is optional: leave it out when a heading right above the figure
+ * already names it.
  */
-export function HexPath({ title, steps }: { title: string; steps: HexStep[] }) {
+export function HexPath({ title, steps }: { title?: string; steps: HexStep[] }) {
   return (
     <figure className="my-10" data-testid="hex-path">
-      <figcaption className="font-mono text-xs uppercase tracking-[0.08em] text-text-subtle">
-        {title}
-      </figcaption>
-      <div className="relative mt-8">
+      {title ? (
+        <figcaption className="font-mono text-xs uppercase tracking-[0.08em] text-text-subtle">
+          {title}
+        </figcaption>
+      ) : null}
+      <div className={`relative ${title ? "mt-8" : ""}`}>
         <div
           aria-hidden
           className="absolute top-14 right-[8%] left-[8%] hidden border-t border-dashed border-border-strong md:block"
@@ -45,7 +50,7 @@ export function HexPath({ title, steps }: { title: string; steps: HexStep[] }) {
           aria-hidden
           className="absolute top-10 bottom-10 left-[2.2rem] border-l border-dashed border-border-strong md:hidden"
         />
-        <div role="list" className="relative flex flex-col gap-6 md:flex-row md:gap-2">
+        <div role="list" className="relative flex flex-col gap-3 md:flex-row md:gap-2">
           {steps.map((step) => {
             const state = step.state ?? "done";
             const lines = step.value.split(" / ");
