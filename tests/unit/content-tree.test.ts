@@ -9,17 +9,16 @@ import { work } from "#content";
 import { profile } from "@/data/profile";
 
 describe("the real content tree", () => {
-  it("generates seven items, of which exactly two are drafts", () => {
+  it("generates seven items, of which exactly one is a draft", () => {
     expect(work).toHaveLength(7);
     expect(work.filter((i) => i.draft).map((i) => i.slug).toSorted()).toEqual([
       "draft-fixture",
-      "fog-of-war",
     ]);
   });
 
   it("never returns a draft from any surface", async () => {
     const items = await getWorkItems();
-    expect(items).toHaveLength(5);
+    expect(items).toHaveLength(6);
     expect(items.every((i) => i.draft === false)).toBe(true);
     expect(await getAllWorkSlugs()).toEqual(items.map((i) => i.slug));
     expect(await getWorkItem("draft-fixture")).toBeNull();

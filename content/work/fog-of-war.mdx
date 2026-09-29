@@ -14,7 +14,7 @@ outcomes:
   - metric: "9 in 10"
     label: "AI-drafted lines that estimators keep"
 cover: "./fog-of-war/cover.webp"
-draft: true
+draft: false
 ---
 
 The first gain I got on our AI estimator was fake. A new set of rules raised the score by 2.5 points on the estimates they came from. On estimates they had never seen, the same rules lost 2.6 points.
@@ -55,7 +55,7 @@ At first, this looked promising: F1 rose by 2.5 points on the nine inspections. 
 To find out why, I read the edit logs of 100 estimates: every line that the model drafted, and what the estimator did with it. Some of the estimators' answers contradicted their own edits.
 
 <Comparison
-  left="What the sheet said"
+  left="What the field said"
   right="What the edit logs showed"
   rows={[
     { topic: "Smoke detectors", left: "One line for the whole unit", right: "One line for each room" },
@@ -92,11 +92,11 @@ So I went back to the messy prompt. I kept every guardrail, and I added the five
 <HexPath
   title="The map so far"
   steps={[
-    { label: "Move 1", value: "+2.5 / −2.6", title: "Rules from a sheet", note: "Fake: it lost on unseen ones" },
+    { label: "Move 1", value: "+2.5 / −2.6", title: "Rules from the field", note: "Fake: it lost on unseen ones" },
     { label: "Move 2", value: "+2.3", title: "Rules from edit logs", note: "Shipped" },
     { label: "Move 3", value: "−3", title: "Golden set rebuilt", note: "First baseline I trusted" },
     { label: "Move 4", value: "0 of 4", title: "Clean rewrite", note: "All four versions lost" },
-    { label: "Move 5", value: "+2.5", title: "Messy prompt, new rules", note: "Shipped", state: "win" },
+    { label: "Move 5", value: "+2.5", title: "Patched messy prompt", note: "Shipped", state: "win" },
     { label: "Goal", value: "90%", title: "The goal", note: "Still in the fog", state: "fog" },
   ]}
 />

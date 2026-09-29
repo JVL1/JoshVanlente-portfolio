@@ -11,11 +11,12 @@ import WorkItemPage, { generateStaticParams } from "@/app/work/[slug]/page";
 /** What `notFound()` throws, matched by Next's error boundary. */
 const NOT_FOUND_DIGEST = "NEXT_HTTP_ERROR_FALLBACK;404";
 
-/** The five write-ups under content/work that are not drafts. */
+/** The six write-ups under content/work that are not drafts. */
 const PUBLISHED_SLUGS = [
   "all-in-one-rental-platform",
   "cutting-six-of-seven-steps",
   "deterministic-ai-photo-pipeline",
+  "fog-of-war",
   "product-led-growth-strategy",
   "smarter-payouts-predictive-model",
 ];
