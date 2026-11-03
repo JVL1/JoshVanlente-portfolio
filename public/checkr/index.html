@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="description" content="Checkr case study: a 12–18 month roadmap for continuous, compliance-grade monitoring, and what to ship first.">
+<style>[hidden]{display:none!important}</style>
+<title>Checkr Continuous Compliance</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one slide at a time; the five-step case is the page tracker; the evidence record (a monospace ledger) is the recurring visual device. */
+:root{
+  --bg:#F4F6F3; --surface:#FFFFFF; --ink:#15211F; --muted:#5E6B68; --line:#D6DDD9;
+  --accent:#0F6E5C; --accent-soft:#DDEFE8; --signal:#B9671C; --signal-soft:#F7E8D6; --danger:#A3312E;
+  --display:"Archivo",system-ui,sans-serif; --body:"Source Serif 4",Georgia,serif; --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#111917;--surface:#18221F;--ink:#E9EEEB;--muted:#9FAEA9;--line:#2A3734;--accent:#4FC2A3;--accent-soft:#17352D;--signal:#E8A353;--signal-soft:#3A2A14;--danger:#E07A72;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#111917;--surface:#18221F;--ink:#E9EEEB;--muted:#9FAEA9;--line:#2A3734;--accent:#4FC2A3;--accent-soft:#17352D;--signal:#E8A353;--signal-soft:#3A2A14;--danger:#E07A72;color-scheme:dark}
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.45;margin:0;display:flex;flex-direction:column;min-height:100%}
+*{box-sizing:border-box}
+h1,h2,h3{font-family:var(--display);font-weight:800;line-height:1.05;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(2rem,5vw,3.6rem)}
+h2{font-size:clamp(1.5rem,3.2vw,2.4rem)}
+h3{font-size:1.05rem;font-weight:600}
+p{margin:0}
+.eyebrow{font-family:var(--display);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;color:var(--muted)}
+.muted{color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+
+/* top bar = the five-step case */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:1rem;padding-block:.5rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.case{display:flex;gap:.4rem;flex:1;min-width:0;overflow-x:auto}
+.case div{flex:1 0 auto;min-width:max-content;border-top:3px solid var(--line);padding-top:.3rem;font-family:var(--display);font-size:.7rem;font-weight:600;letter-spacing:.04em;color:var(--muted);white-space:nowrap}
+.case div b{color:var(--muted);margin-right:.3rem}
+.case div.on{border-color:var(--accent);color:var(--ink)}
+.case div.on b{color:var(--accent)}
+.case div.past{border-color:var(--muted)}
+.bar button{font:600 .72rem var(--display);letter-spacing:.06em;text-transform:uppercase;background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:.35rem .6rem;cursor:pointer;flex:none}
+.bar button:hover,.bar button[aria-pressed="true"]{color:var(--ink);border-color:var(--ink)}
+.bar button:focus-visible,.nav button:focus-visible,.step:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+main{flex:1;display:flex;flex-direction:column;padding-block:1.25rem 5rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.slide{display:none;width:100%;max-width:1120px;margin:0 auto;flex-direction:column;gap:1.4rem}
+.slide.active{display:flex}
+.slide header{display:flex;flex-direction:column;gap:.4rem}
+.lede{font-size:1.15rem;max-width:62ch}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.25rem;align-items:start}
+.cols>*{min-width:0}
+@media (min-width:800px){.cols.wl{grid-template-columns:1.4fr 1fr}.cols.wr{grid-template-columns:1fr 1.3fr}.cols.mid{align-items:center}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:1rem 1.1rem;display:flex;flex-direction:column;gap:.4rem;min-width:0}
+.card p,.card li{font-size:.95rem;overflow-wrap:anywhere}
+.callout{border-left:4px solid var(--accent);padding:.6rem 1rem;background:var(--accent-soft);border-radius:0 6px 6px 0}
+.callout.signal{border-color:var(--signal);background:var(--signal-soft)}
+ul{margin:0;padding-left:1.1rem;display:flex;flex-direction:column;gap:.35rem}
+table{border-collapse:collapse;width:100%;font-size:.92rem;background:var(--surface)}
+th,td{text-align:left;padding:.55rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--display);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+tr.hi td{background:var(--accent-soft)}
+tr.lo td{color:var(--muted)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px}
+.stat{display:flex;flex-direction:column;gap:.15rem}
+.stat b{font-family:var(--display);font-size:2.2rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.stat small{color:var(--muted);font-size:.85rem}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem}
+.pill{display:inline-block;font:600 .68rem var(--display);letter-spacing:.08em;text-transform:uppercase;padding:.2rem .5rem;border-radius:3px;background:var(--accent-soft);color:var(--accent);align-self:flex-start}
+.pill.signal{background:var(--signal-soft);color:var(--signal)}
+.pill.off{background:var(--line);color:var(--muted)}
+.yes{color:var(--accent);font-weight:600}
+.no{color:var(--muted)}
+
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.5rem}
+.strip div{border-top:3px solid var(--line);padding-top:.5rem;font-size:.9rem}
+.strip div.on{border-color:var(--accent)}
+.strip div b{display:block;font-family:var(--display);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.2rem}
+
+.ledger{font-family:var(--mono);font-size:.76rem;line-height:1.5;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.75rem 1rem;overflow-x:auto}
+.ledger div{display:grid;grid-template-columns:11.5rem 7.5rem 1fr;gap:1rem;padding:.2rem 0;border-bottom:1px dashed var(--line);white-space:nowrap}
+.ledger div:last-child{border-bottom:0}
+.ledger .k{color:var(--muted)}
+.ledger .ok{color:var(--accent)}
+.ledger .warn{color:var(--signal)}
+.ledger .pending{opacity:.35}
+
+.steps{display:flex;gap:.4rem;flex-wrap:wrap}
+.step{font:600 .74rem var(--display);border:1px solid var(--line);background:var(--surface);color:var(--muted);padding:.4rem .7rem;border-radius:999px;cursor:pointer}
+.step.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.step.done{border-color:var(--accent);color:var(--accent)}
+
+.phases{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.75rem}
+.phase{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.9rem 1rem;border-top:4px solid var(--accent);display:flex;flex-direction:column;gap:.5rem}
+.phase.next{border-top-color:var(--signal)}
+.phase.later{border-top-color:var(--line)}
+.phase .when{font-family:var(--display);font-weight:800;font-size:1.3rem}
+.phase .unlock{font-size:.9rem;padding:.4rem .6rem;background:var(--accent-soft);border-radius:4px}
+.phase.next .unlock{background:var(--signal-soft)}
+.phase.later .unlock{background:var(--bg)}
+.phase ul{font-size:.9rem}
+
+/* segment grid with row labels */
+.seggrid{display:grid;grid-template-columns:6.5rem repeat(3,1fr);gap:.5rem 1rem;align-items:stretch}
+.seggrid .lab{font-family:var(--display);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);display:flex;align-items:center}
+.seggrid .hd{font-family:var(--display);font-weight:800;font-size:1.05rem}
+.seggrid .c{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.6rem .8rem;font-size:.92rem;min-width:0}
+.seggrid .c.hi{background:var(--accent-soft);border-color:var(--accent)}
+.seggrid .cad{font-family:var(--display);font-weight:800;font-size:1.3rem;color:var(--accent)}
+.seggrid .dim .cad{color:var(--muted)}
+@media (max-width:700px){.seggrid{grid-template-columns:1fr}.seggrid .lab{margin-top:.5rem}}
+
+.diagram{width:100%;max-width:100%;height:auto;display:block}
+.diagram text{font-family:var(--display);font-size:13px;fill:var(--ink)}
+.diagram .m{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+.diagram .box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.diagram .core{fill:var(--accent-soft);stroke:var(--accent);stroke-width:2}
+.diagram .arrow{stroke:var(--ink);stroke-width:1.5;fill:none;marker-end:url(#ah)}
+.diagram .arrow.back{stroke:var(--accent)}
+.diagram .ring{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.diagram .ring.r2{fill:var(--accent-soft);fill-opacity:.45}
+.diagram .ring.r3{fill:var(--accent-soft)}
+.diagram .ring.r4{fill:var(--accent);stroke:var(--accent)}
+.diagram .onaccent{fill:#fff}
+.diagram .lbl{font-weight:600}
+.diagram .bar1{fill:var(--muted)}
+.diagram .bar2{fill:var(--accent)}
+.diagram .axis{stroke:var(--line);stroke-width:1}
+.diagram .ghost{fill:var(--line)}
+.stack .L{transition:opacity .35s ease,transform .35s ease}
+.stack .L.hide{opacity:0;transform:translateY(8px)}
+.stack .L.dim{opacity:.35}
+.stack .L.lit rect.core,.stack .L.lit rect.box{stroke:var(--signal);stroke-width:3;fill:var(--signal-soft)}
+.stack .L.lit .arrow{stroke:var(--signal);stroke-width:3}
+.stack .bracket{fill:none;stroke:var(--accent);stroke-width:2}
+.stack .ship{fill:var(--accent);font-weight:600;letter-spacing:.14em}
+.stack .evt{display:none;fill:var(--signal);font-weight:600}
+.stack .have{fill:var(--bg);stroke:var(--line);stroke-width:1.5;stroke-dasharray:4 3}
+.stack .have-t{fill:var(--muted)}
+.stack .new{fill:var(--surface);stroke:var(--accent);stroke-width:1.5}
+.stack .new-t{fill:var(--accent);font-weight:600}
+.stack .new.nx{stroke:var(--signal)}
+.stack .new-t.nx{fill:var(--signal)}
+.stack .L.lit .have{fill:var(--signal-soft);stroke:var(--signal)}
+.stack .L.lit .evt{display:block}
+.stack .L.lit .sub{display:none}
+.ledger div{transition:opacity .3s ease}
+
+
+.nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:1rem;background:var(--bg);border-top:1px solid var(--line);padding-block:.6rem;padding-bottom:calc(.6rem + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));z-index:5}
+.nav button{font:600 .8rem var(--display);background:var(--ink);color:var(--bg);border:0;border-radius:4px;padding:.55rem 1rem;cursor:pointer}
+.nav button:disabled{opacity:.3;cursor:default}
+.nav .where{font-family:var(--mono);font-size:.75rem;color:var(--muted)}
+
+.hint{font-family:var(--mono);font-size:.78rem}
+.section-mark{font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+.clips{display:grid;grid-template-columns:1fr auto 1.25fr;gap:1rem;align-items:stretch}
+@media (max-width:800px){.clips{grid-template-columns:1fr}.clip-arrow{display:none}}
+.clip{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.chrome{display:flex;align-items:center;gap:.35rem;padding:.45rem .7rem;background:var(--bg);border-bottom:1px solid var(--line)}
+.chrome i{width:9px;height:9px;border-radius:50%;background:var(--line);display:inline-block}
+.chrome span{margin-left:.5rem;font:400 .7rem var(--mono);color:var(--muted);flex:1;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:.15rem .6rem;text-align:center}
+.clip-arrow{align-self:center;font-family:var(--display);font-size:2rem;color:var(--accent)}
+.review{font-family:system-ui,sans-serif}
+.rv-body{padding:1.1rem 1.2rem 1.3rem;display:flex;flex-direction:column;gap:.5rem}
+.rv-kicker{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.rv-hl{font-family:system-ui,sans-serif;font-weight:800;font-size:1.5rem;line-height:1.1}
+.rv-verdict{font-size:1.05rem;line-height:1.4;color:var(--danger)}
+.rv-verdict b{color:var(--ink);font-weight:600}
+.news{font-family:Georgia,"Times New Roman",serif}
+.nw-body{padding:1rem 1.3rem 1.3rem;display:flex;flex-direction:column;gap:.55rem}
+.nw-mast{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:1.3rem;letter-spacing:.02em;border-bottom:2px solid var(--ink);padding-bottom:.4rem;text-align:center}
+.nw-hl{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:clamp(1.3rem,2.4vw,1.9rem);line-height:1.12;text-wrap:balance;padding-top:.3rem}
+.nw-dek{font-size:1rem;color:var(--muted);line-height:1.4}
+.nw-meta{font:400 .7rem var(--mono);color:var(--muted)}
+.strip.verbs div{font-size:.88rem}
+.close-line{font-family:var(--display);font-weight:800;font-size:clamp(1.6rem,3.6vw,2.8rem);line-height:1.1;text-wrap:balance;border-left:6px solid var(--accent);padding-left:1rem}
+@media (prefers-reduced-motion:no-preference){.slide.active{animation:in .25s ease-out}@keyframes in{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}}
+@media (max-width:560px){body{font-size:16px}.ledger div{grid-template-columns:1fr;gap:0;white-space:normal}}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="case" id="case" aria-label="The case, in five steps">
+    <div data-s="1"><b>1</b>Growth is monitoring</div>
+    <div data-s="2"><b>2</b>Healthcare first</div>
+    <div data-s="3"><b>3</b>The bar: compliance-grade</div>
+    <div data-s="4"><b>4</b>Distribution</div>
+    <div data-s="5"><b>5</b>Prioritization</div>
+  </div>
+</div>
+
+<main id="deck">
+
+<!-- 1 -->
+<section class="slide" id="s1" data-step="0">
+  <header>
+    <span class="eyebrow">Checkr · case study</span>
+    <h1>Continuous, compliance-grade monitoring</h1>
+    <p class="lede">A 12–18 month roadmap for regulated and safety-sensitive work, and the first thing I would ship.</p>
+  </header>
+  <div class="ledger" aria-label="Sample evidence record">
+    <div><span class="k">2026-11-02T14:03:11Z</span><span class="ok">SOURCE</span><span>Nursys · RN license · checked · status ACTIVE · next check: real-time push</span></div>
+    <div><span class="k">2026-11-02T14:03:11Z</span><span class="ok">SOURCE</span><span>OIG LEIE · checked · no match · cadence MONTHLY · next: 2026-12-01</span></div>
+    <div><span class="k">2026-11-02T14:03:12Z</span><span class="ok">SOURCE</span><span>County criminal (6 feeds) · no new record · cadence CONTINUOUS</span></div>
+    <div><span class="k">2026-11-02T14:03:12Z</span><span class="k">CONSENT</span><span>Ongoing monitoring authorization · signed 2026-03-14 · scope: criminal, license, sanctions</span></div>
+  </div>
+  <p class="muted">Josh Van Lente · November 2026 <span class="hint">· ← → to navigate</span></p>
+</section>
+
+<!-- 2 -->
+<section class="slide" id="s2" data-step="0">
+  <header>
+    <span class="eyebrow">The answer</span>
+    <h2>Start with healthcare staffing. Ship the evidence record and the decision layer first. Then expand to other regulated segments.</h2>
+  </header>
+  <div class="cols">
+    <div class="card"><h3>MVP</h3><p>A per-worker evidence record and the rules that act on it, on the monitoring Checkr already runs, in the dashboard customers already use.</p></div>
+    <div class="card"><h3>Why staffing firms</h3><p>A monthly reporting duty, data Checkr already pulls, and they are already customers.</p></div>
+    <div class="card"><h3>Then expand</h3><p>Same record, new sources: state registries unlock aides and home care; the Clearinghouse unlocks fleets.</p></div>
+  </div>
+  <div>
+    <span class="eyebrow">The case, in five steps</span>
+    <div class="strip" style="margin-top:.5rem">
+      <div class="on"><b>1</b>Growth is monitoring</div>
+      <div><b>2</b>Healthcare first: biggest, most frequent, costliest</div>
+      <div><b>3</b>Compliance-grade is the bar; workflow is the gap</div>
+      <div><b>4</b>Distribution: where customers already work</div>
+      <div><b>5</b>Prioritization and the MVP</div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="slide" id="s4" data-step="1">
+  <header>
+    <span class="section-mark">1 / 5 · Growth is monitoring</span>
+    <h2>Pre-hire has stopped growing. Monitoring is still early.</h2>
+  </header>
+  <div class="cols wl mid">
+    <svg class="diagram" viewBox="0 0 680 320" role="img" aria-label="Left: US background check services market, $4.8B in 2023, $5.1B in 2024, $5.1B in 2025, flat. Right: share of enterprises using continuous workforce monitoring, 9% five years ago to 22% today.">
+      <text class="lbl" x="20" y="26">US pre-hire background check market</text>
+      <text class="m" x="20" y="44">$ billions · IBISWorld</text>
+      <line class="axis" x1="20" y1="270" x2="320" y2="270"/>
+      <rect class="bar1" x="40" y="94" width="70" height="176" rx="2"/>
+      <rect class="bar1" x="135" y="83" width="70" height="187" rx="2"/>
+      <rect class="bar1" x="230" y="84" width="70" height="186" rx="2"/>
+      <text class="lbl" x="75" y="84" text-anchor="middle">$4.8B</text>
+      <text class="lbl" x="170" y="73" text-anchor="middle">$5.1B</text>
+      <text class="lbl" x="265" y="74" text-anchor="middle">$5.1B</text>
+      <text class="m" x="75" y="292" text-anchor="middle">2023</text>
+      <text class="m" x="170" y="292" text-anchor="middle">2024 · +5.5%</text>
+      <text class="m" x="265" y="292" text-anchor="middle">2025 · −0.5%</text>
+
+      <text class="lbl" x="380" y="26">Enterprises using continuous monitoring</text>
+      <text class="m" x="380" y="44">share of employers · industry survey</text>
+      <line class="axis" x1="380" y1="270" x2="660" y2="270"/>
+      <rect class="ghost" x="410" y="198" width="90" height="72" rx="2"/>
+      <rect class="bar2" x="540" y="94" width="90" height="176" rx="2"/>
+      <text class="lbl" x="455" y="188" text-anchor="middle">9%</text>
+      <text class="lbl" x="585" y="84" text-anchor="middle">22%</text>
+      <text class="m" x="455" y="292" text-anchor="middle">five years ago</text>
+      <text class="m" x="585" y="292" text-anchor="middle">today</text>
+      <text class="m" x="20" y="314">Directional: market figure is US services revenue; adoption figure is a vendor-research survey.</text>
+    </svg>
+    <div class="card">
+      <h3>What this means</h3>
+      <p>Pre-hire is mature, and Checkr already serves the largest gig platforms. The growth is after the hire, and four in five employers have not started.</p>
+      <p class="muted" style="font-size:.85rem">A $55 check is paid once. Base monitoring is $20 a year per worker; a compliance tier is $40+, for as long as they stay.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="slide" id="s3" data-step="1">
+  <header>
+    <span class="section-mark">1 / 5 · Growth is monitoring</span>
+    <h2>Checkr today: built for the moment of hire</h2>
+  </header>
+  <div class="tablewrap"><table>
+    <thead><tr><th style="width:28%">Product</th><th>What it does</th><th style="width:32%">Where it stops for a regulated buyer</th></tr></thead>
+    <tbody>
+      <tr><td><b>Pre-hire packages</b></td><td>Criminal, identity, registries, watchlists, drug and health</td><td>Frozen the day the report runs</td></tr>
+      <tr><td><b>Continuous Criminal and MVR</b></td><td>Alerts when a record or driving record changes</td><td>Alerts, not evidence</td></tr>
+      <tr><td><b>Healthcare checks</b></td><td>Sanctions, exclusions, license status, with post-hire monitoring</td><td>Alerts only: no rules, no flow, no survey output</td></tr>
+      <tr><td><b>Assess</b></td><td>Rules-based adjudication, at hire and on continuous criminal</td><td>Criminal records only; optional and client-defined; ends at the decision</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout signal">TechRadar's review (Dec 2025) lists two reasons to avoid Checkr: "not ideal for heavily regulated industries" and "lacks advanced compliance management." The pieces exist. The product for compliance does not.</div>
+</section>
+
+<!-- 5 -->
+<section class="slide" id="s5" data-step="2">
+  <header>
+    <span class="section-mark">2 / 5 · Healthcare first</span>
+    <h2>Three regulated segments. Only one re-checks every month.</h2>
+  </header>
+  <div class="seggrid">
+    <div class="lab"></div>
+    <div class="hd">Healthcare and home care</div>
+    <div class="hd">Transportation</div>
+    <div class="hd">Childcare</div>
+
+    <div class="lab">Size</div>
+    <div class="c hi"><b class="num">6.2M</b> aides and nursing assistants, plus clinicians</div>
+    <div class="c"><b class="num">4.8M</b> CDL drivers</div>
+    <div class="c"><b class="num">1.0M</b> workers, declining</div>
+
+    <div class="lab">Requirement</div>
+    <div class="c hi"><div class="cad">Monthly</div>Federal exclusion-list check (OIG) for every employer; accredited staffing firms also report monthly</div>
+    <div class="c dim"><div class="cad">Annual</div>One Clearinghouse query per driver</div>
+    <div class="c dim"><div class="cad">Every 5 years</div>State-run re-check</div>
+
+    <div class="lab">Penalty</div>
+    <div class="c hi">Federal penalties per claim; loss of accreditation, which hospital contracts require</div>
+    <div class="c">Driver pulled from duty</div>
+    <div class="c">Licensing action</div>
+  </div>
+  <div class="callout">Transportation has the clearest federal rule. Healthcare has the most workers, the most frequent checks, the highest penalties, and buyers already paying for exclusion screening.</div>
+</section>
+
+<!-- 6 -->
+<section class="slide" id="s6" data-step="2">
+  <header>
+    <span class="section-mark">2 / 5 · Healthcare first</span>
+    <h2>Getting specific: who we build for first</h2>
+  </header>
+  <div class="cols wl mid">
+    <svg class="diagram" viewBox="0 0 700 440" role="img" aria-label="Nested rings narrowing from all regulated work to healthcare to staffing firms to accredited firms placing licensed clinicians">
+      <ellipse class="ring" cx="350" cy="220" rx="300" ry="210"/>
+      <ellipse class="ring r2" cx="350" cy="260" rx="240" ry="170"/>
+      <ellipse class="ring r3" cx="350" cy="300" rx="170" ry="120"/>
+      <ellipse class="ring r4" cx="350" cy="345" rx="100" ry="70"/>
+      <text class="lbl" x="350" y="44" text-anchor="middle">Regulated, safety-sensitive work</text>
+      <text class="m" x="350" y="61" text-anchor="middle">healthcare · transportation · childcare</text>
+      <text class="lbl" x="350" y="124" text-anchor="middle">Healthcare and home care</text>
+      <text class="m" x="350" y="141" text-anchor="middle">6M+ workers · monthly cadence</text>
+      <text class="lbl" x="350" y="214" text-anchor="middle">Healthcare staffing firms</text>
+      <text class="m" x="350" y="231" text-anchor="middle">~12,000 firms</text>
+      <text class="lbl onaccent" x="350" y="336" text-anchor="middle">Accredited firms placing</text>
+      <text class="lbl onaccent" x="350" y="352" text-anchor="middle">licensed clinicians</text>
+      <text class="onaccent" x="350" y="370" text-anchor="middle" style="font-size:11px">~325 firms, already customers</text>
+    </svg>
+    <div style="display:flex;flex-direction:column;gap:.75rem">
+      <div class="card"><h3>No new data</h3><p>Checkr already pulls what their accreditor, the Joint Commission, asks for: licenses, exclusions, criminal.</p></div>
+      <div class="card"><h3>Existing relationship</h3><p>Already Checkr customers.</p></div>
+      <div class="card"><h3>Extensible</h3><p>Adding state registries unlocks the rest of healthcare staffing.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="slide" id="s7" data-step="3">
+  <header>
+    <span class="section-mark">3 / 5 · The bar · from who we serve to what we build</span>
+    <h2>Compliance-grade means a surveyor accepts it as proof</h2>
+    <p class="lede">A Joint Commission surveyor, a federal auditor, or a plaintiff's lawyer. Three things have to be true.</p>
+  </header>
+  <div class="cols">
+    <div class="card"><h3>Evidence</h3><p>Every event recorded: consent, source, time, rule, notice, dispute, outcome.</p></div>
+    <div class="card"><h3>Reporting out of the box</h3><p>The monthly packet to the accreditor, and the logs a surveyor asks for, are exports of the record.</p></div>
+    <div class="card"><h3>Enforced process</h3><p>Same alert, same handling. The FCRA process is automated and cannot be skipped.</p></div>
+  </div>
+  <div>
+    <span class="eyebrow">What the record looks like when something happens</span>
+    <div class="ledger" style="margin-top:.5rem">
+      <div><span class="k">2026-11-02T09:14:02Z</span><span class="warn">ALERT</span><span>Nursys · RN license 882114 · status changed ACTIVE → PROBATION · board action 2026-10-30</span></div>
+      <div><span class="k">2026-11-02T09:14:02Z</span><span class="ok">RULE</span><span>HC-STAFF-L2 "license action, patient-facing" → hold placement, open adverse action</span></div>
+      <div><span class="k">2026-11-02T09:31:40Z</span><span class="ok">NOTICE</span><span>Pre-adverse sent · copy of report + summary of rights · wait ≥ 5 business days</span></div>
+      <div><span class="k">2026-11-04T16:02:17Z</span><span class="warn">DISPUTE</span><span>Worker disputes · adverse action PAUSED · reinvestigation opened</span></div>
+      <div><span class="k">2026-11-09T11:20:05Z</span><span class="ok">DISPOSITION</span><span>Confirmed · removed from assignment · by m.rivera (Credentialing) · reason: Joint Commission HR.01.02.05</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="slide" id="s8" data-step="3">
+  <header>
+    <span class="section-mark">3 / 5 · The bar</span>
+    <h2>How we win: nobody has all three</h2>
+  </header>
+  <div class="tablewrap"><table>
+    <thead><tr><th style="width:30%">Who</th><th>Evidence</th><th>Reporting out of the box</th><th>Enforced process</th></tr></thead>
+    <tbody>
+      <tr><td><b>First Advantage, HireRight</b><br><span class="muted" style="font-size:.85rem">the big screening firms · criminal, license, exclusions</span></td><td class="no">Alerts and reports, not one record</td><td class="no">No</td><td class="yes">Partial: adjudication tools, optional</td></tr>
+      <tr><td><b>Verisys, ProviderTrust, Streamline Verify</b><br><span class="muted" style="font-size:.85rem">healthcare compliance tools · exclusions and licenses only · $0.25–1.75 per person</span></td><td class="yes">Partial: screening logs</td><td class="yes">Partial: monthly exclusion attestations</td><td class="no">No decision flow</td></tr>
+      <tr class="hi"><td><b>Checkr</b><br><span class="muted" style="font-size:.85rem">criminal, license, exclusions</span></td><td class="no">Alerts and reports, not one record</td><td class="no">Not yet</td><td class="yes">Partial: Assess, criminal only, optional</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout signal">Everyone in the table has the data. Nobody has all three columns.</div>
+</section>
+
+<!-- 9 -->
+<section class="slide" id="s9" data-step="4">
+  <header>
+    <span class="section-mark">4 / 5 · Distribution</span>
+    <h2>Our customers already work in three places. Build where they are.</h2>
+  </header>
+  <div class="cols">
+    <div class="card"><span class="pill">Today</span><h3>Checkr dashboard</h3><p>Where adjudication and adverse action run today. The MVP lands here.</p><p class="muted" style="font-size:.85rem">Assumption to validate: how much of that work firms do here versus in their ATS.</p></div>
+    <div class="card"><span class="pill signal">Already integrated</span><h3>Bullhorn, WellSky</h3><p>Staffing ATS and 4,000+ home care agencies, pre-hire today. Extend to monitoring.</p></div>
+    <div class="card"><span class="pill off">Held by a competitor</span><h3>AxisCare, AlayaCare</h3><p>Home care agency software, integrated with a rival screener today. Our opening is monitoring and evidence, which the incumbent lacks.</p></div>
+  </div>
+  <div class="callout">Build in the dashboard first: we control it, so it ships and changes fastest. Partner integrations come second: home care agencies live in their scheduling software, not our dashboard, and once that software checks Checkr's status before scheduling, switching vendors becomes costly.</div>
+</section>
+
+<!-- 11 -->
+<section class="slide" id="s11" data-step="5">
+  <header>
+    <span class="section-mark">5 / 5 · Prioritization</span>
+    <h2>Now, next, later: each step unlocks the next segment</h2>
+  </header>
+  <div class="steps" id="s11views" style="margin-top:-.6rem">
+    <button class="step on" data-v="0">The order</button>
+    <button class="step" data-v="1">What we said no to</button>
+    <button class="step" data-v="2">What would reorder it</button>
+  </div>
+  <div class="phases" data-v="0">
+    <div class="phase"><div class="when">Now</div><div class="unlock">Unlocks: accredited staffing firms, paying for the compliance tier</div><ul><li>Evidence record: audit view (the screen a surveyor sees) and exports</li><li>Decision layer: Assess extended to license and exclusion events, rule templates, FCRA steps enforced</li><li>In the Checkr dashboard</li></ul></div>
+    <div class="phase next"><div class="when">Next</div><div class="unlock">Unlocks: the rest of healthcare staffing, home health and home care</div><ul><li>State registries: aides and nursing assistants (ours to build)</li><li>Clearance status pushed to Bullhorn, WellSky, as BD lands them</li><li>Compliance tier on the price list and marketplaces</li></ul></div>
+    <div class="phase later"><div class="when">Later</div><div class="unlock">Unlocks: fleets and delivery, where Checkr MVR already sells</div><ul><li>FMCSA Clearinghouse queries, run on the fleet's behalf</li><li>Submit the monthly packet for them, not just export it</li><li>Clearance status in AxisCare, AlayaCare</li></ul></div>
+  </div>
+  <div class="cols" data-v="1" hidden>
+    <div class="card"><h3>Arrest feed</h3><p>No healthcare mandate requires it. Every vendor can buy the same feed. Many states restrict employment use of non-conviction records.</p></div>
+    <div class="card"><h3>Childcare</h3><p>Five-year re-check cycle, run through state portals, and a shrinking workforce.</p></div>
+  </div>
+  <div class="cols" data-v="2" hidden>
+    <div class="card"><h3>Legal won't allow mandatory FCRA steps</h3><p>Make them the default with logged overrides.</p></div>
+    <div class="card"><h3>Design partners place mostly aides</h3><p>State registries move into Now.</p></div>
+    <div class="card"><h3>Firms work in Bullhorn, not the dashboard</h3><p>Status push to Bullhorn moves into Now; it is one field and one webhook.</p></div>
+    <div class="card"><h3>Fleets will pay for an annual check</h3><p>Clearinghouse moves up. Assumed not; worth validating.</p></div>
+  </div>
+</section>
+
+<!-- 12 -->
+<section class="slide" id="s12" data-step="5">
+  <header>
+    <span class="section-mark">5 / 5 · Prioritization · MVP</span>
+    <h2>MVP: the record and the decision layer, in the dashboard</h2>
+  </header>
+  <svg class="diagram stack" id="stack" viewBox="0 0 900 380" role="img" aria-label="A stack. Top: surfaces, Checkr dashboard now, Bullhorn and WellSky next, AxisCare and AlayaCare later. Under the partners: partner API, with report status today plus clearance status and acknowledgement next. Below: decision layer with Assess today plus new events, actions and enforced FCRA steps; then evidence record; then the monitoring sources Checkr already runs.">
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+    <g class="L" id="L-sources">
+      <rect class="box" x="60" y="312" width="800" height="60" rx="6"/>
+      <text class="lbl" x="460" y="332" text-anchor="middle">Monitoring Checkr already runs</text>
+      <text class="m sub" x="300" y="357" text-anchor="middle">criminal · driving · licenses · exclusions</text>
+      <text class="m evt" x="300" y="357" text-anchor="middle"></text>
+      <text class="m" x="775" y="357" text-anchor="middle">(later) Clearinghouse</text>
+    </g>
+    <g class="L" id="L-registries">
+      <rect class="new nx" x="520" y="341" width="170" height="24" rx="4"/>
+      <text class="m new-t nx" x="605" y="357" text-anchor="middle">+ state registries</text>
+    </g>
+    <g class="L" id="L-record">
+      <rect class="core" x="60" y="248" width="800" height="52" rx="6"/>
+      <text class="lbl" x="460" y="270" text-anchor="middle">Evidence record</text>
+      <text class="m sub" x="460" y="288" text-anchor="middle">consent · every event · exports: personnel file, monthly attestation</text>
+      <text class="m evt" x="460" y="288" text-anchor="middle"></text>
+    </g>
+    <g class="L" id="L-decision">
+      <text class="lbl" x="60" y="170">Decision layer</text>
+      <text class="m evt" x="860" y="170" text-anchor="end"></text>
+      <rect class="core" x="60" y="178" width="800" height="58" rx="6"/>
+      <rect class="have" x="68" y="186" width="200" height="42" rx="4"/>
+      <text class="m have-t" x="168" y="203" text-anchor="middle">Assess today</text>
+      <text class="m have-t" x="168" y="218" text-anchor="middle">rules on criminal records</text>
+      <rect class="new" x="276" y="186" width="160" height="42" rx="4"/>
+      <text class="m new-t" x="356" y="203" text-anchor="middle">+ new events</text>
+      <text class="m" x="356" y="218" text-anchor="middle">license, exclusion</text>
+      <rect class="new" x="444" y="186" width="212" height="42" rx="4"/>
+      <text class="m new-t" x="550" y="203" text-anchor="middle">+ actions</text>
+      <text class="m" x="550" y="218" text-anchor="middle">notify · tasks: hold, remove</text>
+      <rect class="new" x="664" y="186" width="188" height="42" rx="4"/>
+      <text class="m new-t" x="758" y="203" text-anchor="middle">+ FCRA steps</text>
+      <text class="m" x="758" y="218" text-anchor="middle">enforced, not optional</text>
+    </g>
+    <g class="L" id="L-dash">
+      <rect class="core" x="60" y="16" width="200" height="50" rx="6"/>
+      <text class="lbl" x="160" y="38" text-anchor="middle">Checkr dashboard</text>
+      <text class="m sub" x="160" y="55" text-anchor="middle">now · the queue</text>
+      <text class="m evt" x="160" y="55" text-anchor="middle"></text>
+      <path class="arrow back" d="M215 66 L215 176"/><path class="arrow" d="M245 176 L245 68"/>
+    </g>
+    <g class="L" id="L-api">
+      <text class="lbl" x="290" y="86">Partner API</text>
+      <rect class="core" x="290" y="94" width="570" height="58" rx="6"/>
+      <rect class="have" x="298" y="102" width="170" height="42" rx="4"/>
+      <text class="m have-t" x="383" y="119" text-anchor="middle">today</text>
+      <text class="m have-t" x="383" y="134" text-anchor="middle">report status at hire</text>
+      <path class="arrow back" d="M560 152 L560 176"/><path class="arrow" d="M590 176 L590 154"/>
+    </g>
+    <g class="L" id="L-partners">
+      <rect class="box" x="290" y="16" width="180" height="50" rx="6"/>
+      <text x="380" y="38" text-anchor="middle">Bullhorn</text><text class="m" x="380" y="55" text-anchor="middle">next</text>
+      <rect class="box" x="490" y="16" width="180" height="50" rx="6"/>
+      <text x="580" y="38" text-anchor="middle">WellSky</text><text class="m" x="580" y="55" text-anchor="middle">next</text>
+      <rect class="box" x="690" y="16" width="170" height="50" rx="6"/>
+      <text x="775" y="38" text-anchor="middle">AxisCare · AlayaCare</text><text class="m" x="775" y="55" text-anchor="middle">later</text>
+      <path class="arrow back" d="M425 66 L425 92"/><path class="arrow" d="M455 92 L455 68"/>
+      <path class="arrow back" d="M565 66 L565 92"/><path class="arrow" d="M595 92 L595 68"/>
+      <path class="arrow back" d="M760 66 L760 92"/><path class="arrow" d="M790 92 L790 68"/>
+      <rect class="new nx" x="476" y="102" width="186" height="42" rx="4"/>
+      <text class="m new-t nx" x="569" y="119" text-anchor="middle">+ clearance status</text>
+      <text class="m" x="569" y="134" text-anchor="middle">pushed on change</text>
+      <rect class="new nx" x="670" y="102" width="182" height="42" rx="4"/>
+      <text class="m new-t nx" x="761" y="119" text-anchor="middle">+ acknowledgement</text>
+      <text class="m" x="761" y="134" text-anchor="middle">back into the record</text>
+    </g>
+    <g class="L" id="L-ship">
+      <path class="bracket" d="M44 16 L36 16 L36 300 L44 300"/>
+      <text class="m ship" transform="translate(24 158) rotate(-90)" text-anchor="middle">MVP</text>
+    </g>
+  </svg>
+  <div class="steps" id="build">
+    <button class="step" data-i="0">Sources</button>
+    <button class="step" data-i="1">Record</button>
+    <button class="step" data-i="2">Decision layer</button>
+    <button class="step" data-i="3">Dashboard</button>
+    <button class="step" data-i="4">Registries</button>
+    <button class="step" data-i="5">Partners</button>
+  </div>
+  <p class="muted" id="walkNote" style="font-size:1rem;min-height:1.5em;margin-top:-.4rem"></p>
+</section>
+
+<!-- 13 -->
+<section class="slide" id="s13" data-step="0">
+  <header>
+    <span class="eyebrow">Close</span>
+    <h2>From "not ideal for regulated industries" to the default for regulated work</h2>
+  </header>
+  <div class="clips">
+    <div class="clip review">
+      <div class="chrome"><i></i><i></i><i></i><span>techradar.com · Dec 2025</span></div>
+      <div class="rv-body">
+        <div class="rv-kicker">Reviews · Background check services</div>
+        <h3 class="rv-hl">Checkr review</h3>
+        <p class="rv-verdict"><b>Reasons to avoid:</b> not ideal for heavily regulated industries. Lacks advanced compliance management.</p>
+      </div>
+    </div>
+    <div class="clip-arrow" aria-hidden="true">→</div>
+    <div class="clip news">
+      <div class="chrome"><i></i><i></i><i></i><span>May 2028 · fictional, on purpose</span></div>
+      <div class="nw-body">
+        <div class="nw-mast">Compliance Monthly</div>
+        <h3 class="nw-hl">Checkr becomes the default for regulated work as staffing firms standardize on its compliance record</h3>
+        <p class="nw-dek">Firms say their monthly accreditation reporting is now automatic, every adverse action is defensible, and credentialing teams spend their time on exceptions instead of paperwork.</p>
+        <div class="nw-meta">Staff writer · May 2028</div>
+      </div>
+    </div>
+  </div>
+  <div class="strip verbs">
+    <div class="on"><b>Start</b>Accredited healthcare staffing firms, in the dashboard they already use.</div>
+    <div class="on"><b>Ship</b>The evidence record and the decision layer, FCRA steps enforced.</div>
+    <div class="on"><b>Expand</b>Same record, new sources: registries, then the Clearinghouse.</div>
+  </div>
+</section>
+
+</main>
+
+<div class="nav">
+  <button id="prev">← Prev</button>
+  <span class="where" id="where">1 / 13</span>
+  <button id="next">Next →</button>
+</div>
+
+<script>
+(function(){
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var n=slides.length, cur=0;
+  var caseEl=document.getElementById('case');
+  var caseItems=[].slice.call(caseEl.children);
+  function show(i,push){
+    cur=Math.max(0,Math.min(n-1,i));
+    slides.forEach(function(s,j){s.classList.toggle('active',j===cur);});
+    var step=+slides[cur].dataset.step;
+    caseItems.forEach(function(c){var k=+c.dataset.s;c.className=k===step?'on':(k<step?'past':'');});
+    document.getElementById('where').textContent=(cur+1)+' / '+n;
+    document.getElementById('prev').disabled=cur===0;
+    document.getElementById('next').disabled=cur===n-1;
+    var id=slides[cur].id;
+    if(push!==false){try{history.replaceState(null,'','#'+id);}catch(e){}}
+    window.scrollTo(0,0);
+  }
+  function fromHash(){var m=(location.hash||'').match(/^#s(\d+)$/);show(m?parseInt(m[1],10)-1:0,false);}
+  document.getElementById('prev').onclick=function(){show(cur-1);};
+  document.getElementById('next').onclick=function(){show(cur+1);};
+  window.addEventListener('hashchange',fromHash);
+  caseItems.forEach(function(c){c.style.cursor='pointer';c.addEventListener('click',function(){var k=+c.dataset.s;for(var j=0;j<n;j++){if(+slides[j].dataset.step===k){show(j);break;}}});});
+  document.addEventListener('keydown',function(e){
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+    if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){show(cur+1);e.preventDefault();}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){show(cur-1);e.preventDefault();}
+    else if(e.key==='Home'){show(0);}else if(e.key==='End'){show(n-1);}
+  });
+  /* inner steps: a slide can register {max,set}; arrow keys step inside before moving on */
+  var inner={}, innerPos={};
+  function setInner(id,k){innerPos[id]=k;inner[id].set(k);}
+
+  /* slide 11: three views */
+  var v11=[].slice.call(document.querySelectorAll('#s11views .step')),p11=[].slice.call(document.querySelectorAll('#s11 [data-v]:not(.step)'));
+  inner.s11={max:2,set:function(k){v11.forEach(function(x,j){x.classList.toggle('on',j===k);});p11.forEach(function(x){x.hidden=(+x.dataset.v!==k);});}};
+  v11.forEach(function(b){b.onclick=function(){setInner('s11',+b.dataset.v);};});
+
+  /* slide 12: build the stack, then walk one alert */
+  var L={};['sources','record','decision','api','dash','registries','partners','ship'].forEach(function(k){L[k]=document.getElementById('L-'+k);});
+  var buildOrder=[['sources'],['record'],['decision'],['dash','ship'],['registries'],['partners','api']];var NB=buildOrder.length;
+  var buildNotes=["What Checkr monitors today.","One record per worker: consent, every event, the exports. History stays with Checkr.","Assess does criminal today. Add license and exclusion events, actions, and the FCRA steps as floors.","The queue: tasks, disputes, exports. A named person confirms here; the record logs it. This is the MVP.","Next, track one: state registries unlock aides and nursing assistants.","Next, track two: partners consume a current clearance status and acknowledge it. Logic stays in Checkr."];
+  var s12steps=[].slice.call(document.querySelectorAll('#build .step'));
+  inner.s12={max:NB-1,set:function(k){
+    var shown={};for(var i=0;i<=Math.min(k,NB-1);i++)buildOrder[i].forEach(function(x){shown[x]=1;});
+    var lit=null;
+    Object.keys(L).forEach(function(x){var g=L[x];g.classList.toggle('hide',!shown[x]);g.classList.toggle('lit',x===lit);g.classList.toggle('dim',lit!==null&&x!==lit&&x!=='ship'&&x!=='api');});
+    s12steps.forEach(function(b){var j=+b.dataset.i;b.classList.toggle('on',j===k);b.classList.toggle('done',j<k);});
+    document.getElementById('walkNote').textContent=buildNotes[k];
+  }};
+  s12steps.forEach(function(b){b.onclick=function(){setInner('s12',+b.dataset.i);};});
+  setInner('s11',0);setInner('s12',NB-1);
+  var tx=null,ty=null;
+  document.addEventListener('touchstart',function(e){var t=e.changedTouches[0];tx=t.clientX;ty=t.clientY;},{passive:true});
+  document.addEventListener('touchend',function(e){if(tx===null)return;var t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;tx=null;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){show(cur+(dx<0?1:-1));}},{passive:true});
+  fromHash();
+})();
+</script>
+
+</body></html>
