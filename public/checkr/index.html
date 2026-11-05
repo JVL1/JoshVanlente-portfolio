@@ -457,7 +457,7 @@ tr.lo td{color:var(--muted)}
     <button class="step" data-v="2">What would reorder it</button>
   </div>
   <div class="phases" data-v="0">
-    <div class="phase"><div class="when">Now</div><div class="unlock">Unlocks: accredited staffing firms, paying for the compliance tier</div><ul><li>Evidence record: audit view (the screen a surveyor sees) and exports</li><li>Decision layer: Assess extended to license and exclusion events, rule templates, FCRA steps enforced</li><li>In the Checkr dashboard</li></ul></div>
+    <div class="phase"><div class="when">Now</div><div class="unlock">Unlocks: accredited staffing firms, paying for the compliance tier</div><ul><li>Evidence record: audit view (the screen a surveyor sees) and exports</li><li>Decision layer: Assess extended to license and exclusion events; rule templates with the FCRA steps locked</li><li>In the Checkr dashboard</li></ul></div>
     <div class="phase next"><div class="when">Next</div><div class="unlock">Unlocks: the rest of healthcare staffing, home health and home care</div><ul><li>State registries: aides and nursing assistants (ours to build)</li><li>Clearance status pushed to Bullhorn, WellSky, as BD lands them</li><li>Compliance tier on the price list and marketplaces</li></ul></div>
     <div class="phase later"><div class="when">Later</div><div class="unlock">Unlocks: fleets and delivery, where Checkr MVR already sells</div><ul><li>FMCSA Clearinghouse queries, run on the fleet's behalf</li><li>Submit the monthly packet for them, not just export it</li><li>Clearance status in AxisCare, AlayaCare</li></ul></div>
   </div>
@@ -479,7 +479,7 @@ tr.lo td{color:var(--muted)}
     <span class="section-mark">5 / 5 · Prioritization · MVP</span>
     <h2>MVP: the record and the decision layer, in the dashboard</h2>
   </header>
-  <svg class="diagram stack" id="stack" viewBox="0 0 900 380" role="img" aria-label="A stack. Top: surfaces, Checkr dashboard now, Bullhorn and WellSky next, AxisCare and AlayaCare later. Under the partners: partner API, with report status today plus clearance status and acknowledgement next. Below: decision layer with Assess today plus new events, actions and enforced FCRA steps; then evidence record; then the monitoring sources Checkr already runs.">
+  <svg class="diagram stack" id="stack" viewBox="0 0 900 380" role="img" aria-label="A stack. Top: surfaces, Checkr dashboard now, Bullhorn and WellSky next, AxisCare and AlayaCare later. Under the partners: partner API, with report status today plus clearance status and acknowledgement next. Below: decision layer with Assess today plus new events, actions and rule templates with the FCRA steps locked; then evidence record; then the monitoring sources Checkr already runs.">
     <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
     <g class="L" id="L-sources">
       <rect class="box" x="60" y="312" width="800" height="60" rx="6"/>
@@ -505,15 +505,15 @@ tr.lo td{color:var(--muted)}
       <rect class="have" x="68" y="186" width="200" height="42" rx="4"/>
       <text class="m have-t" x="168" y="203" text-anchor="middle">Assess today</text>
       <text class="m have-t" x="168" y="218" text-anchor="middle">rules on criminal records</text>
-      <rect class="new" x="276" y="186" width="160" height="42" rx="4"/>
-      <text class="m new-t" x="356" y="203" text-anchor="middle">+ new events</text>
-      <text class="m" x="356" y="218" text-anchor="middle">license, exclusion</text>
-      <rect class="new" x="444" y="186" width="212" height="42" rx="4"/>
-      <text class="m new-t" x="550" y="203" text-anchor="middle">+ actions</text>
-      <text class="m" x="550" y="218" text-anchor="middle">notify · tasks: hold, remove</text>
-      <rect class="new" x="664" y="186" width="188" height="42" rx="4"/>
-      <text class="m new-t" x="758" y="203" text-anchor="middle">+ FCRA steps</text>
-      <text class="m" x="758" y="218" text-anchor="middle">enforced, not optional</text>
+      <rect class="new" x="276" y="186" width="150" height="42" rx="4"/>
+      <text class="m new-t" x="351" y="203" text-anchor="middle">+ new events</text>
+      <text class="m" x="351" y="218" text-anchor="middle">license, exclusion</text>
+      <rect class="new" x="434" y="186" width="202" height="42" rx="4"/>
+      <text class="m new-t" x="535" y="203" text-anchor="middle">+ actions</text>
+      <text class="m" x="535" y="218" text-anchor="middle">notify · tasks: hold, remove</text>
+      <rect class="new" x="644" y="186" width="208" height="42" rx="4"/>
+      <text class="m new-t" x="748" y="203" text-anchor="middle">+ rule templates</text>
+      <text class="m" x="748" y="218" text-anchor="middle">editable · FCRA steps locked</text>
     </g>
     <g class="L" id="L-dash">
       <rect class="core" x="60" y="16" width="200" height="50" rx="6"/>
@@ -603,6 +603,11 @@ tr.lo td{color:var(--muted)}
 (function(){
   var slides=[].slice.call(document.querySelectorAll('.slide'));
   var n=slides.length, cur=0;
+  /* presenter view: a notes tab open on this site follows the slide showing here, and can ask for next or previous */
+  var bc=null;try{bc=new BroadcastChannel('checkr-deck');}catch(e){}
+  function titleOf(s){var h=s&&s.querySelector('h1,h2');return h?h.textContent:'';}
+  function sync(){if(!bc)return;var s=slides[cur],b=s.querySelector('.steps .step.on');bc.postMessage({t:'slide',id:s.id,pos:cur+1,n:n,title:titleOf(s),next:titleOf(slides[cur+1]),step:b?b.textContent:''});}
+  if(bc)bc.onmessage=function(e){var d=e.data||{};if(d.t==='hello')sync();else if(d.t==='go')show(cur+(d.by<0?-1:1));};
   var caseEl=document.getElementById('case');
   var caseItems=[].slice.call(caseEl.children);
   function show(i,push){
@@ -616,6 +621,7 @@ tr.lo td{color:var(--muted)}
     var id=slides[cur].id;
     if(push!==false){try{history.replaceState(null,'','#'+id);}catch(e){}}
     window.scrollTo(0,0);
+    sync();
   }
   function fromHash(){var m=(location.hash||'').match(/^#s(\d+)$/);show(m?parseInt(m[1],10)-1:0,false);}
   document.getElementById('prev').onclick=function(){show(cur-1);};
@@ -630,7 +636,7 @@ tr.lo td{color:var(--muted)}
   });
   /* inner steps: a slide can register {max,set}; arrow keys step inside before moving on */
   var inner={}, innerPos={};
-  function setInner(id,k){innerPos[id]=k;inner[id].set(k);}
+  function setInner(id,k){innerPos[id]=k;inner[id].set(k);sync();}
 
   /* slide 11: three views */
   var v11=[].slice.call(document.querySelectorAll('#s11views .step')),p11=[].slice.call(document.querySelectorAll('#s11 [data-v]:not(.step)'));
@@ -640,7 +646,7 @@ tr.lo td{color:var(--muted)}
   /* slide 12: build the stack, then walk one alert */
   var L={};['sources','record','decision','api','dash','registries','partners','ship'].forEach(function(k){L[k]=document.getElementById('L-'+k);});
   var buildOrder=[['sources'],['record'],['decision'],['dash','ship'],['registries'],['partners','api']];var NB=buildOrder.length;
-  var buildNotes=["What Checkr monitors today.","One record per worker: consent, every event, the exports. History stays with Checkr.","Assess does criminal today. Add license and exclusion events, actions, and the FCRA steps as floors.","The queue: tasks, disputes, exports. A named person confirms here; the record logs it. This is the MVP.","Next, track one: state registries unlock aides and nursing assistants.","Next, track two: partners consume a current clearance status and acknowledge it. Logic stays in Checkr."];
+  var buildNotes=["What Checkr monitors today.","One record per worker: consent, every event, the exports. History stays with Checkr.","Assess does criminal today. Add license and exclusion events, actions, and rule templates: firms customize the process, the FCRA steps stay locked.","The queue: tasks, disputes, exports. A named person confirms here; the record logs it. This is the MVP.","Next, track one: state registries unlock aides and nursing assistants.","Next, track two: partners consume a current clearance status and acknowledge it. Logic stays in Checkr."];
   var s12steps=[].slice.call(document.querySelectorAll('#build .step'));
   inner.s12={max:NB-1,set:function(k){
     var shown={};for(var i=0;i<=Math.min(k,NB-1);i++)buildOrder[i].forEach(function(x){shown[x]=1;});
