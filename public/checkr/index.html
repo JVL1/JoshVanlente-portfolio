@@ -603,6 +603,11 @@ tr.lo td{color:var(--muted)}
 (function(){
   var slides=[].slice.call(document.querySelectorAll('.slide'));
   var n=slides.length, cur=0;
+  /* presenter view: a notes tab open on this site follows the slide showing here, and can ask for next or previous */
+  var bc=null;try{bc=new BroadcastChannel('checkr-deck');}catch(e){}
+  function titleOf(s){var h=s&&s.querySelector('h1,h2');return h?h.textContent:'';}
+  function sync(){if(!bc)return;var s=slides[cur],b=s.querySelector('.steps .step.on');bc.postMessage({t:'slide',id:s.id,pos:cur+1,n:n,title:titleOf(s),next:titleOf(slides[cur+1]),step:b?b.textContent:''});}
+  if(bc)bc.onmessage=function(e){var d=e.data||{};if(d.t==='hello')sync();else if(d.t==='go')show(cur+(d.by<0?-1:1));};
   var caseEl=document.getElementById('case');
   var caseItems=[].slice.call(caseEl.children);
   function show(i,push){
@@ -616,6 +621,7 @@ tr.lo td{color:var(--muted)}
     var id=slides[cur].id;
     if(push!==false){try{history.replaceState(null,'','#'+id);}catch(e){}}
     window.scrollTo(0,0);
+    sync();
   }
   function fromHash(){var m=(location.hash||'').match(/^#s(\d+)$/);show(m?parseInt(m[1],10)-1:0,false);}
   document.getElementById('prev').onclick=function(){show(cur-1);};
@@ -630,7 +636,7 @@ tr.lo td{color:var(--muted)}
   });
   /* inner steps: a slide can register {max,set}; arrow keys step inside before moving on */
   var inner={}, innerPos={};
-  function setInner(id,k){innerPos[id]=k;inner[id].set(k);}
+  function setInner(id,k){innerPos[id]=k;inner[id].set(k);sync();}
 
   /* slide 11: three views */
   var v11=[].slice.call(document.querySelectorAll('#s11views .step')),p11=[].slice.call(document.querySelectorAll('#s11 [data-v]:not(.step)'));
