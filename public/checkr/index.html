@@ -479,7 +479,7 @@ tr.lo td{color:var(--muted)}
     <span class="section-mark">5 / 5 · Prioritization · MVP</span>
     <h2>MVP: the record and the decision layer, in the dashboard</h2>
   </header>
-  <svg class="diagram stack" id="stack" viewBox="0 0 900 380" role="img" aria-label="A stack. Top: surfaces, Checkr dashboard now, Bullhorn and WellSky next, AxisCare and AlayaCare later. Under the partners: partner API, with report status today plus clearance status and acknowledgement next. Below: decision layer with Assess today plus new events, actions and rule templates with the FCRA steps locked; then evidence record; then the monitoring sources Checkr already runs.">
+  <svg class="diagram stack" id="stack" viewBox="0 0 900 380" role="img" aria-label="A stack. Top: surfaces, Checkr dashboard now, Bullhorn and WellSky next, AxisCare and AlayaCare later. Under the partners: partner API: partners read a report status today and a clearance status next, and write an acknowledgement back. Below: decision layer with Assess today plus new events, actions and rule templates with the FCRA steps locked; then evidence record; then the monitoring sources Checkr already runs.">
     <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
     <g class="L" id="L-sources">
       <rect class="box" x="60" y="312" width="800" height="60" rx="6"/>
@@ -526,8 +526,8 @@ tr.lo td{color:var(--muted)}
       <text class="lbl" x="290" y="86">Partner API</text>
       <rect class="core" x="290" y="94" width="570" height="58" rx="6"/>
       <rect class="have" x="298" y="102" width="170" height="42" rx="4"/>
-      <text class="m have-t" x="383" y="119" text-anchor="middle">today</text>
-      <text class="m have-t" x="383" y="134" text-anchor="middle">report status at hire</text>
+      <text class="m have-t" x="383" y="119" text-anchor="middle">report status at hire</text>
+      <text class="m have-t" x="383" y="134" text-anchor="middle">today · partners read ↑</text>
       <path class="arrow back" d="M560 152 L560 176"/><path class="arrow" d="M590 176 L590 154"/>
     </g>
     <g class="L" id="L-partners">
@@ -537,15 +537,12 @@ tr.lo td{color:var(--muted)}
       <text x="580" y="38" text-anchor="middle">WellSky</text><text class="m" x="580" y="55" text-anchor="middle">next</text>
       <rect class="box" x="690" y="16" width="170" height="50" rx="6"/>
       <text x="775" y="38" text-anchor="middle">AxisCare · AlayaCare</text><text class="m" x="775" y="55" text-anchor="middle">later</text>
-      <path class="arrow back" d="M425 66 L425 92"/><path class="arrow" d="M455 92 L455 68"/>
-      <path class="arrow back" d="M565 66 L565 92"/><path class="arrow" d="M595 92 L595 68"/>
-      <path class="arrow back" d="M760 66 L760 92"/><path class="arrow" d="M790 92 L790 68"/>
       <rect class="new nx" x="476" y="102" width="186" height="42" rx="4"/>
       <text class="m new-t nx" x="569" y="119" text-anchor="middle">+ clearance status</text>
-      <text class="m" x="569" y="134" text-anchor="middle">pushed on change</text>
+      <text class="m" x="569" y="134" text-anchor="middle">partners read ↑</text>
       <rect class="new nx" x="670" y="102" width="182" height="42" rx="4"/>
       <text class="m new-t nx" x="761" y="119" text-anchor="middle">+ acknowledgement</text>
-      <text class="m" x="761" y="134" text-anchor="middle">back into the record</text>
+      <text class="m" x="761" y="134" text-anchor="middle">partners write ↓</text>
     </g>
     <g class="L" id="L-ship">
       <path class="bracket" d="M44 16 L36 16 L36 300 L44 300"/>
@@ -646,7 +643,7 @@ tr.lo td{color:var(--muted)}
   /* slide 12: build the stack, then walk one alert */
   var L={};['sources','record','decision','api','dash','registries','partners','ship'].forEach(function(k){L[k]=document.getElementById('L-'+k);});
   var buildOrder=[['sources'],['record'],['decision'],['dash','ship'],['registries'],['partners','api']];var NB=buildOrder.length;
-  var buildNotes=["What Checkr monitors today.","One record per worker: consent, every event, the exports. History stays with Checkr.","Assess does criminal today. Add license and exclusion events, actions, and rule templates: firms customize the process, the FCRA steps stay locked.","The queue: tasks, disputes, exports. A named person confirms here; the record logs it. This is the MVP.","Next, track one: state registries unlock aides and nursing assistants.","Next, track two: partners consume a current clearance status and acknowledge it. Logic stays in Checkr."];
+  var buildNotes=["What Checkr monitors today.","One record per worker: consent, every event, the exports. History stays with Checkr.","Assess does criminal today. Add license and exclusion events, actions, and rule templates: firms customize the process, the FCRA steps stay locked.","The queue: tasks, disputes, exports. A named person confirms here; the record logs it. This is the MVP.","Next, track one: state registries unlock aides and nursing assistants.","Next, track two: partners read a current clearance status, pushed when it changes, and write an acknowledgement back into the record. Logic stays in Checkr."];
   var s12steps=[].slice.call(document.querySelectorAll('#build .step'));
   inner.s12={max:NB-1,set:function(k){
     var shown={};for(var i=0;i<=Math.min(k,NB-1);i++)buildOrder[i].forEach(function(x){shown[x]=1;});
