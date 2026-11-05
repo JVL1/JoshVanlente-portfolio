@@ -127,6 +127,12 @@ tr.lo td{color:var(--muted)}
 .diagram .bar2{fill:var(--accent)}
 .diagram .axis{stroke:var(--line);stroke-width:1}
 .diagram .ghost{fill:var(--line)}
+.diagram .chip{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.diagram .chip.alt{fill:var(--bg)}
+.diagram .flow{stroke:var(--ink);stroke-width:1.5;fill:none}
+.diagram .flow.b{stroke:var(--accent)}
+.diagram .ahm{fill:var(--ink)}
+.diagram .ahm.b{fill:var(--accent)}
 .stack .L{transition:opacity .35s ease,transform .35s ease}
 .stack .L.hide{opacity:0;transform:translateY(8px)}
 .stack .L.dim{opacity:.35}
@@ -173,7 +179,6 @@ tr.lo td{color:var(--muted)}
 .nw-hl{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:clamp(1.3rem,2.4vw,1.9rem);line-height:1.12;text-wrap:balance;padding-top:.3rem}
 .nw-dek{font-size:1rem;color:var(--muted);line-height:1.4}
 .nw-meta{font:400 .7rem var(--mono);color:var(--muted)}
-.strip.verbs div{font-size:.88rem}
 .close-line{font-family:var(--display);font-weight:800;font-size:clamp(1.6rem,3.6vw,2.8rem);line-height:1.1;text-wrap:balance;border-left:6px solid var(--accent);padding-left:1rem}
 @media (prefers-reduced-motion:no-preference){.slide.active{animation:in .25s ease-out}@keyframes in{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}}
 @media (max-width:560px){body{font-size:16px}.ledger div{grid-template-columns:1fr;gap:0;white-space:normal}}
@@ -395,13 +400,49 @@ tr.lo td{color:var(--muted)}
 <section class="slide" id="s9" data-step="4">
   <header>
     <span class="section-mark">4 / 5 · Distribution</span>
-    <h2>Our dashboard first, for speed. Partner integrations next, for scale and staying power.</h2>
+    <h2>The process lives in Checkr. Partners get the outcome.</h2>
   </header>
+  <svg class="diagram" viewBox="0 0 900 244" role="img" aria-label="Left, now, in the Checkr dashboard: the evidence record, the decision rules, and notices and disputes. Right, next, partner software such as Bullhorn and WellSky: scheduling and employment. One arrow from Checkr to the partner carries a clearance status: cleared, hold, pending dispute or removed. One arrow back carries an acknowledgement, written into the record.">
+    <defs>
+      <marker id="ah9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="ahm" d="M0 0L10 5L0 10z"/></marker>
+      <marker id="ah9b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="ahm b" d="M0 0L10 5L0 10z"/></marker>
+    </defs>
+    <text class="lbl" x="20" y="20">Checkr</text>
+    <text class="m" x="340" y="20" text-anchor="end">now · in our dashboard</text>
+    <rect class="core" x="20" y="30" width="320" height="204" rx="6"/>
+    <rect class="chip" x="34" y="44" width="292" height="52" rx="4"/>
+    <text class="lbl" x="48" y="66">Evidence record</text>
+    <text class="m" x="48" y="84">every event, for the life of employment</text>
+    <rect class="chip" x="34" y="106" width="292" height="52" rx="4"/>
+    <text class="lbl" x="48" y="128">Decision rules</text>
+    <text class="m" x="48" y="146">same alert, same handling</text>
+    <rect class="chip" x="34" y="168" width="292" height="52" rx="4"/>
+    <text class="lbl" x="48" y="190">Notices and disputes</text>
+    <text class="m" x="48" y="208">FCRA steps enforced</text>
+
+    <text class="lbl" x="490" y="84" text-anchor="middle">Clearance status</text>
+    <path class="flow" d="M342 96 L636 96" marker-end="url(#ah9)"/>
+    <text class="m" x="490" y="116" text-anchor="middle">cleared · hold · pending dispute · removed</text>
+    <text class="lbl" x="490" y="164" text-anchor="middle">Acknowledgement</text>
+    <path class="flow b" d="M638 176 L344 176" marker-end="url(#ah9b)"/>
+    <text class="m" x="490" y="196" text-anchor="middle">written back into the record</text>
+
+    <text class="lbl" x="640" y="20">Bullhorn, WellSky</text>
+    <text class="m" x="880" y="20" text-anchor="end">next</text>
+    <rect class="box" x="640" y="30" width="240" height="204" rx="6"/>
+    <rect class="chip alt" x="654" y="60" width="212" height="52" rx="4"/>
+    <text class="lbl" x="668" y="82">Scheduling</text>
+    <text class="m" x="668" y="100">gates on the status</text>
+    <rect class="chip alt" x="654" y="152" width="212" height="52" rx="4"/>
+    <text class="lbl" x="668" y="174">Employment</text>
+    <text class="m" x="668" y="192">placements, assignments</text>
+  </svg>
   <div class="cols">
-    <div class="card"><span class="pill">Now</span><h3>Checkr dashboard</h3><p>Where adjudication and adverse action run today, and the surface we control: fastest to ship and to change.</p><p class="muted" style="font-size:.85rem">Assumption to validate: how much of that work firms do here versus in their ATS.</p></div>
-    <div class="card"><span class="pill signal">Next</span><h3>Bullhorn, WellSky</h3><p>Already integrated for pre-hire: staffing ATS and 4,000+ home care agencies. Their scheduling gates on a Checkr clearance status; the decision and the record stay in Checkr.</p></div>
-    <div class="card"><span class="pill off">Later</span><h3>AxisCare, AlayaCare</h3><p>Home care agency software integrated with a rival screener today. Our opening is monitoring and evidence, which the incumbent lacks.</p></div>
+    <div class="card"><h3>The process stays enforced</h3><p>Enforced process is the third part of compliance-grade. It cannot depend on each partner building it.</p></div>
+    <div class="card"><h3>A small ask of partners</h3><p>One status to consume, not rules, notices and disputes to build. Less to stall on their roadmap.</p></div>
+    <div class="card"><h3>Checkr stays the source of truth</h3><p>The full record lives with us. If a firm changes its ATS, the history is intact.</p></div>
   </div>
+  <p class="muted" style="font-size:.85rem">Assumption to validate: how much of this work firms do in our dashboard versus in their ATS.</p>
 </section>
 
 <!-- 11 -->
@@ -547,11 +588,6 @@ tr.lo td{color:var(--muted)}
         <div class="nw-meta">Staff writer · May 2028</div>
       </div>
     </div>
-  </div>
-  <div class="strip verbs">
-    <div class="on"><b>Start</b>Accredited healthcare staffing firms, in the dashboard they already use.</div>
-    <div class="on"><b>Ship</b>The evidence record and the decision layer, FCRA steps enforced.</div>
-    <div class="on"><b>Expand</b>Same record, new sources: registries, then the Clearinghouse.</div>
   </div>
 </section>
 
