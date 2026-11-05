@@ -139,6 +139,8 @@ tr.lo td{color:var(--muted)}
 .stack .L.lit rect.core,.stack .L.lit rect.box{stroke:var(--signal);stroke-width:3;fill:var(--signal-soft)}
 .stack .L.lit .arrow{stroke:var(--signal);stroke-width:3}
 .stack .bracket{fill:none;stroke:var(--accent);stroke-width:2}
+.stack .funnel{fill:none;stroke:var(--ink);stroke-width:1.5}
+.stack .rw{fill:var(--ink);font-weight:600}
 .stack .ship{fill:var(--accent);font-weight:600;letter-spacing:.14em}
 .stack .evt{display:none;fill:var(--signal);font-weight:600}
 .stack .have{fill:var(--bg);stroke:var(--line);stroke-width:1.5;stroke-dasharray:4 3}
@@ -371,7 +373,7 @@ tr.lo td{color:var(--muted)}
     <span class="eyebrow">What the record looks like when something happens</span>
     <div class="ledger" style="margin-top:.5rem">
       <div><span class="k">2026-11-02T09:14:02Z</span><span class="warn">ALERT</span><span>Nursys · RN license 882114 · status changed ACTIVE → PROBATION · board action 2026-10-30</span></div>
-      <div><span class="k">2026-11-02T09:14:02Z</span><span class="ok">RULE</span><span>HC-STAFF-L2 "license action, patient-facing" → hold placement, open adverse action</span></div>
+      <div><span class="k">2026-11-02T09:14:02Z</span><span class="ok">RULE</span><span>HC-STAFF-L2 "license action, patient-facing" → open adverse action</span></div>
       <div><span class="k">2026-11-02T09:31:40Z</span><span class="ok">NOTICE</span><span>Pre-adverse sent · copy of report + summary of rights · wait ≥ 5 business days</span></div>
       <div><span class="k">2026-11-04T16:02:17Z</span><span class="warn">DISPUTE</span><span>Worker disputes · adverse action PAUSED · reinvestigation opened</span></div>
       <div><span class="k">2026-11-09T11:20:05Z</span><span class="ok">DISPOSITION</span><span>Confirmed · removed from assignment · by m.rivera (Credentialing) · reason: Joint Commission HR.01.02.05</span></div>
@@ -479,7 +481,7 @@ tr.lo td{color:var(--muted)}
     <span class="section-mark">5 / 5 · Prioritization · MVP</span>
     <h2>MVP: the record and the decision layer, in the dashboard</h2>
   </header>
-  <svg class="diagram stack" id="stack" viewBox="0 0 900 380" role="img" aria-label="A stack. Top: surfaces, Checkr dashboard now, Bullhorn and WellSky next, AxisCare and AlayaCare later. Under the partners: partner API, with report status today plus clearance status and acknowledgement next. Below: decision layer with Assess today plus new events, actions and rule templates with the FCRA steps locked; then evidence record; then the monitoring sources Checkr already runs.">
+  <svg class="diagram stack" id="stack" viewBox="0 -30 900 410" role="img" aria-label="A stack. Top: surfaces, Checkr dashboard now, Bullhorn and WellSky next, AxisCare and AlayaCare later. Under the partners: partner API: partners read a report status today and a clearance status next, and write an acknowledgement back. Below: decision layer with Assess today plus new events, actions and rule templates with the FCRA steps locked; then evidence record; then the monitoring sources Checkr already runs.">
     <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
     <g class="L" id="L-sources">
       <rect class="box" x="60" y="312" width="800" height="60" rx="6"/>
@@ -516,30 +518,33 @@ tr.lo td{color:var(--muted)}
       <text class="m" x="748" y="218" text-anchor="middle">editable · FCRA steps locked</text>
     </g>
     <g class="L" id="L-dash">
-      <rect class="core" x="60" y="16" width="200" height="50" rx="6"/>
-      <text class="lbl" x="160" y="38" text-anchor="middle">Checkr dashboard</text>
-      <text class="m sub" x="160" y="55" text-anchor="middle">now · the queue</text>
-      <text class="m evt" x="160" y="55" text-anchor="middle"></text>
-      <path class="arrow back" d="M215 66 L215 176"/><path class="arrow" d="M245 176 L245 68"/>
+      <rect class="core" x="60" y="-14" width="200" height="50" rx="6"/>
+      <text class="lbl" x="160" y="8" text-anchor="middle">Checkr dashboard</text>
+      <text class="m sub" x="160" y="25" text-anchor="middle">now · the queue</text>
+      <text class="m evt" x="160" y="25" text-anchor="middle"></text>
+      <path class="arrow back" d="M215 36 L215 176"/><path class="arrow" d="M245 176 L245 38"/>
     </g>
     <g class="L" id="L-api">
       <text class="lbl" x="290" y="86">Partner API</text>
       <rect class="core" x="290" y="94" width="570" height="58" rx="6"/>
       <rect class="have" x="298" y="102" width="170" height="42" rx="4"/>
-      <text class="m have-t" x="383" y="119" text-anchor="middle">today</text>
-      <text class="m have-t" x="383" y="134" text-anchor="middle">report status at hire</text>
+      <text class="m have-t" x="383" y="119" text-anchor="middle">report status at hire</text>
+      <text class="m have-t" x="383" y="134" text-anchor="middle">today</text>
       <path class="arrow back" d="M560 152 L560 176"/><path class="arrow" d="M590 176 L590 154"/>
     </g>
     <g class="L" id="L-partners">
-      <rect class="box" x="290" y="16" width="180" height="50" rx="6"/>
-      <text x="380" y="38" text-anchor="middle">Bullhorn</text><text class="m" x="380" y="55" text-anchor="middle">next</text>
-      <rect class="box" x="490" y="16" width="180" height="50" rx="6"/>
-      <text x="580" y="38" text-anchor="middle">WellSky</text><text class="m" x="580" y="55" text-anchor="middle">next</text>
-      <rect class="box" x="690" y="16" width="170" height="50" rx="6"/>
-      <text x="775" y="38" text-anchor="middle">AxisCare · AlayaCare</text><text class="m" x="775" y="55" text-anchor="middle">later</text>
-      <path class="arrow back" d="M425 66 L425 92"/><path class="arrow" d="M455 92 L455 68"/>
-      <path class="arrow back" d="M565 66 L565 92"/><path class="arrow" d="M595 92 L595 68"/>
-      <path class="arrow back" d="M760 66 L760 92"/><path class="arrow" d="M790 92 L790 68"/>
+      <rect class="box" x="290" y="-14" width="180" height="50" rx="6"/>
+      <text x="380" y="8" text-anchor="middle">Bullhorn</text><text class="m" x="380" y="25" text-anchor="middle">next</text>
+      <rect class="box" x="490" y="-14" width="180" height="50" rx="6"/>
+      <text x="580" y="8" text-anchor="middle">WellSky</text><text class="m" x="580" y="25" text-anchor="middle">next</text>
+      <rect class="box" x="690" y="-14" width="170" height="50" rx="6"/>
+      <text x="775" y="8" text-anchor="middle">AxisCare · AlayaCare</text><text class="m" x="775" y="25" text-anchor="middle">later</text>
+      <path class="funnel" d="M290 42 L290 52 L860 52 L860 42"/>
+      <path class="funnel" d="M383 93 L383 80 L569 80 L569 93"/>
+      <path class="arrow" d="M476 80 L476 54"/>
+      <text class="m rw" x="486" y="71">read</text>
+      <path class="arrow back" d="M761 52 L761 92"/>
+      <text class="m rw" x="771" y="71">write</text>
       <rect class="new nx" x="476" y="102" width="186" height="42" rx="4"/>
       <text class="m new-t nx" x="569" y="119" text-anchor="middle">+ clearance status</text>
       <text class="m" x="569" y="134" text-anchor="middle">pushed on change</text>
@@ -548,8 +553,8 @@ tr.lo td{color:var(--muted)}
       <text class="m" x="761" y="134" text-anchor="middle">back into the record</text>
     </g>
     <g class="L" id="L-ship">
-      <path class="bracket" d="M44 16 L36 16 L36 300 L44 300"/>
-      <text class="m ship" transform="translate(24 158) rotate(-90)" text-anchor="middle">MVP</text>
+      <path class="bracket" d="M44 -14 L36 -14 L36 300 L44 300"/>
+      <text class="m ship" transform="translate(24 143) rotate(-90)" text-anchor="middle">MVP</text>
     </g>
   </svg>
   <div class="steps" id="build">
@@ -646,7 +651,7 @@ tr.lo td{color:var(--muted)}
   /* slide 12: build the stack, then walk one alert */
   var L={};['sources','record','decision','api','dash','registries','partners','ship'].forEach(function(k){L[k]=document.getElementById('L-'+k);});
   var buildOrder=[['sources'],['record'],['decision'],['dash','ship'],['registries'],['partners','api']];var NB=buildOrder.length;
-  var buildNotes=["What Checkr monitors today.","One record per worker: consent, every event, the exports. History stays with Checkr.","Assess does criminal today. Add license and exclusion events, actions, and rule templates: firms customize the process, the FCRA steps stay locked.","The queue: tasks, disputes, exports. A named person confirms here; the record logs it. This is the MVP.","Next, track one: state registries unlock aides and nursing assistants.","Next, track two: partners consume a current clearance status and acknowledge it. Logic stays in Checkr."];
+  var buildNotes=["What Checkr monitors today.","One record per worker: consent, every event, the exports. History stays with Checkr.","Assess does criminal today. Add license and exclusion events, actions, and rule templates: firms customize the process, the FCRA steps stay locked.","The queue: tasks, disputes, exports. A named person confirms here; the record logs it. This is the MVP.","Next, track one: state registries unlock aides and nursing assistants.","Next, track two: partners read a current clearance status, pushed when it changes, and write an acknowledgement back into the record. Logic stays in Checkr."];
   var s12steps=[].slice.call(document.querySelectorAll('#build .step'));
   inner.s12={max:NB-1,set:function(k){
     var shown={};for(var i=0;i<=Math.min(k,NB-1);i++)buildOrder[i].forEach(function(x){shown[x]=1;});
